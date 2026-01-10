@@ -5,7 +5,7 @@
   "type": "module",
   "description": "神笔 (Shénbǐ) - A comprehensive child programming platform. Write code like drawing, and watch it come alive!",
   "dependencies": {
-    "@lemonade/sdk": "file:../lemon",
+    "@lemonade/sdk": "file:./packages/lemonade-sdk",
     "@react-oauth/google": "^0.12.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.0.0",
