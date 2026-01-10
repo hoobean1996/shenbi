@@ -10,6 +10,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { getStorage } from '../../../infrastructure/storage/StorageProvider';
 import type { UserSettings } from '../../../infrastructure/storage/types';
 import { warn } from '../../../infrastructure/logging';
+import { useAuth } from './AuthContext';
 
 interface SettingsContextValue {
   // Settings state
@@ -39,12 +40,26 @@ const defaultSettings: UserSettings = {
 };
 
 export function SettingsProvider({ children }: SettingsProviderProps) {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load settings on mount
+  // Load settings only when authenticated
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) {
+      return;
+    }
+
+    // Only fetch settings if authenticated
+    if (!isAuthenticated) {
+      setSettings(defaultSettings);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     getStorage()
       .getSettings()
       .then((s) => {
@@ -58,7 +73,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [isAuthenticated, authLoading]);
 
   // Update settings helper
   const updateSettings = useCallback(async (updates: Partial<UserSettings>) => {

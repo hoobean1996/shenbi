@@ -1,5 +1,6 @@
-export * from './types';
-export { usePeerConnection } from './usePeerConnection';
-export { usePingLatency } from './usePingLatency';
-export { useBattleRoom } from './useBattleRoom';
-export type { BattleRoomState } from './useBattleRoom';
+// Types
+export { type PlayerProgress, generateRoomCode } from './types';
+
+// Polling-based hook
+export { useBattle } from './useBattle';
+export type { BattleState, BattleStatus, UseBattleOptions, UseBattleReturn } from './useBattle';

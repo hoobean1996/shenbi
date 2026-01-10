@@ -285,10 +285,24 @@ export class ApiStorageProvider implements StorageProvider {
   }
 
   async updateSettings(settings: Partial<UserSettings>): Promise<void> {
-    await settingsApi.update({
-      sound_enabled: settings.soundEnabled,
-      preferred_theme: settings.preferredTheme,
-    });
+    // Update sound/theme settings if provided
+    if (settings.soundEnabled !== undefined || settings.preferredTheme !== undefined) {
+      await settingsApi.update({
+        sound_enabled: settings.soundEnabled,
+        preferred_theme: settings.preferredTheme,
+      });
+    }
+
+    // Handle tour completion separately using the dedicated API
+    if (settings.tourCompleted) {
+      const currentCache = this.settingsCache?.tourCompleted || {};
+      for (const [tourId, completed] of Object.entries(settings.tourCompleted)) {
+        // Only call API for newly completed tours
+        if (completed && !currentCache[tourId]) {
+          await settingsApi.completeTour(tourId);
+        }
+      }
+    }
 
     // Invalidate cache
     this.settingsCache = null;

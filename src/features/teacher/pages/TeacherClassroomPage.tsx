@@ -1,24 +1,19 @@
 /**
  * TeacherClassroomPage Component
  *
- * Teacher-only classroom mode - create classroom, manage students, run class.
+ * Teacher-only classroom mode - create session, manage students, run class.
+ * Uses polling-based API instead of WebRTC for reliability.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import {
-  useClassroomConnection,
-  useClassroomRoom,
-  ClassroomMessage,
-  ClassroomStatus,
-} from '../../../core/classroom';
+import { useLiveSession, StudentInfo, LiveStudentProgress } from '../../../core/classroom';
 import { TeacherLobby } from '../components/TeacherLobby';
 import { TeacherDashboard } from '../components/TeacherDashboard';
 import { LevelDefinition } from '../../../core/engine';
 import { useProfile } from '../../../infrastructure/storage';
 import { loadAdventuresFromApi } from '../../../infrastructure/levels';
 import { useLanguage } from '../../../infrastructure/i18n';
-// classroomApi removed - startLiveSession/endLiveSession not available in SDK
 import { ConnectionError } from '../../shared/components/ConnectionError';
 import { Loader2, Star, Home, RotateCcw } from 'lucide-react';
 import { info, error as logError } from '../../../infrastructure/logging';
@@ -27,25 +22,42 @@ export default function TeacherClassroomPage() {
   const navigate = useNavigate();
   const { roomCode: urlRoomCode } = useParams<{ roomCode?: string }>();
   const [searchParams] = useSearchParams();
-  const classId = searchParams.get('classId');
+  const classIdParam = searchParams.get('classId');
+  const classroomId = classIdParam ? parseInt(classIdParam) : null;
   const { t, language } = useLanguage();
 
   // Get teacher name from profile
   const { profile } = useProfile();
   const teacherName = profile?.name || 'Teacher';
 
-  // Classroom room persistence
-  const { savedRoom, loading: sessionLoading, saveRoom, clearRoom } = useClassroomRoom();
+  // Use the new polling-based live session hook
+  const {
+    state: sessionState,
+    loading: sessionLoading,
+    error: sessionError,
+    startSession,
+    setLevel,
+    startPlaying,
+    resetSession,
+    endSession,
+  } = useLiveSession({
+    userName: teacherName,
+    role: 'teacher',
+    onError: (err) => {
+      logError('Live session error', err, undefined, 'TeacherClassroomPage');
+    },
+  });
 
-  // Status and state
-  const [status, setStatus] = useState<ClassroomStatus>('lobby');
-  const [selectedLevel, setSelectedLevel] = useState<LevelDefinition | null>(null);
+  // Level loading state
   const [levels, setLevels] = useState<LevelDefinition[]>([]);
   const [isLoadingLevels, setIsLoadingLevels] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // Show end session modal
   const [showEndModal, setShowEndModal] = useState(false);
+
+  // Local selected level (before starting session)
+  const [selectedLevel, setSelectedLevel] = useState<LevelDefinition | null>(null);
 
   // Load levels on mount
   useEffect(() => {
@@ -67,150 +79,119 @@ export default function TeacherClassroomPage() {
     loadLevels();
   }, [language]);
 
-  // Handle incoming messages
-  const handleMessage = useCallback((message: ClassroomMessage) => {
-    // Handle student messages here if needed
-    info('Message from student', { messageType: message.type }, 'TeacherClassroomPage');
-  }, []);
-
-  // Connection hook - teacher role
-  const { roomCode, isConnected, students, createClassroom, sendToAll, sendToStudent, disconnect } =
-    useClassroomConnection({
-      role: 'teacher',
-      userName: teacherName,
-      onMessage: handleMessage,
-      onStudentJoin: (student) => {
-        info('Student joined', { studentName: student.name }, 'TeacherClassroomPage');
-        // If we have a selected level, send it to the new student
-        if (selectedLevel) {
-          // Small delay to ensure connection is fully established
-          setTimeout(() => {
-            sendToStudent(student.id, { type: 'teacher-set-level', level: selectedLevel });
-            // If class is already playing, also send start signal
-            if (status === 'playing') {
-              sendToStudent(student.id, { type: 'teacher-start' });
-            }
-          }, 100);
-        }
-      },
-      onStudentLeave: (studentId) => {
-        info('Student left', { studentId }, 'TeacherClassroomPage');
-      },
-      onConnected: () => {
-        info('Classroom created', undefined, 'TeacherClassroomPage');
-      },
-      onDisconnected: () => {
-        info('Disconnected', undefined, 'TeacherClassroomPage');
-        setStatus('lobby');
-        clearRoom();
-        navigate('/t/classroom', { replace: true });
-      },
-      onError: (err) => {
-        logError('Classroom error', err, undefined, 'TeacherClassroomPage');
-      },
-    });
-
-  // Handle creating classroom
-  const handleCreateClassroom = useCallback(() => {
-    createClassroom();
-  }, [createClassroom]);
-
-  // Navigate to room URL when room code is generated (after create)
+  // Auto-start session when coming from class detail page with classId
   useEffect(() => {
-    if (roomCode && !urlRoomCode && classId) {
-      // Classroom created, save to API and navigate to room URL
-      saveRoom(parseInt(classId), roomCode, 'teacher', teacherName);
-      // TODO: startLiveSession not available in SDK - live session state managed locally
-      navigate(`/t/classroom/${roomCode}`, { replace: true });
-    }
-  }, [roomCode, urlRoomCode, classId, teacherName, saveRoom, navigate]);
+    if (isLoadingLevels) return;
 
-  // Auto-connect when visiting /t/classroom/:roomCode with saved room
+    // If we have classroomId and session is idle, start a new session
+    if (classroomId && sessionState.status === 'idle' && !sessionLoading) {
+      startSession(classroomId);
+    }
+  }, [classroomId, sessionState.status, sessionLoading, isLoadingLevels, startSession]);
+
+  // Navigate to room URL when room code is generated
   useEffect(() => {
-    // Wait for session to load from API before attempting reconnection
-    if (sessionLoading) return;
-
-    if (urlRoomCode && savedRoom && !roomCode && status === 'lobby') {
-      // We have a URL room code and saved room state
-      if (
-        savedRoom.roomCode.toUpperCase() === urlRoomCode.toUpperCase() &&
-        savedRoom.role === 'teacher'
-      ) {
-        // Saved room matches URL and we were teacher, try to recreate
-        createClassroom(urlRoomCode.toUpperCase());
-      } else {
-        // URL doesn't match saved room or role mismatch, clear and redirect
-        clearRoom();
-        navigate('/t/classroom', { replace: true });
-      }
-    } else if (urlRoomCode && !savedRoom && status === 'lobby') {
-      // URL has room code but no saved room - can't recreate as teacher without being original host
-      // Redirect to lobby
-      navigate('/t/classroom', { replace: true });
+    if (sessionState.roomCode && !urlRoomCode) {
+      navigate(`/t/classroom/${sessionState.roomCode}`, { replace: true });
     }
-  }, [
-    urlRoomCode,
-    savedRoom,
-    sessionLoading,
-    roomCode,
-    status,
-    createClassroom,
-    clearRoom,
-    navigate,
-  ]);
+  }, [sessionState.roomCode, urlRoomCode, navigate]);
 
-  // Auto-create classroom when coming from class detail page with classId
-  useEffect(() => {
-    if (sessionLoading || isLoadingLevels) return;
-
-    // If we have classId but no urlRoomCode and not connected, auto-create
-    if (classId && !urlRoomCode && !roomCode && status === 'lobby') {
-      createClassroom();
+  // Handle creating classroom (called from lobby if no classId)
+  const handleCreateClassroom = useCallback(async () => {
+    if (!classroomId) {
+      // If no classroomId, navigate back to select a class
+      navigate('/t/classroom');
+      return;
     }
-  }, [classId, urlRoomCode, roomCode, status, sessionLoading, isLoadingLevels, createClassroom]);
+    await startSession(classroomId);
+  }, [classroomId, startSession, navigate]);
 
   // Handle level selection
   const handleSelectLevel = useCallback(
-    (level: LevelDefinition) => {
+    async (level: LevelDefinition) => {
       setSelectedLevel(level);
-      // Send level to all connected students
-      sendToAll({ type: 'teacher-set-level', level });
+      // Send level to server (and thus to all connected students via polling)
+      await setLevel(level);
     },
-    [sendToAll]
+    [setLevel]
   );
 
   // Handle starting class
-  const handleStartClass = useCallback(() => {
+  const handleStartClass = useCallback(async () => {
     if (selectedLevel) {
-      setStatus('playing');
-      sendToAll({ type: 'teacher-start' });
+      await startPlaying();
     }
-  }, [selectedLevel, sendToAll]);
+  }, [selectedLevel, startPlaying]);
 
   // Handle reset
-  const handleReset = useCallback(() => {
-    sendToAll({ type: 'teacher-reset' });
-  }, [sendToAll]);
+  const handleReset = useCallback(async () => {
+    await resetSession();
+  }, [resetSession]);
 
-  // Handle end session click - show modal and notify students
+  // Handle end session click - show modal
   const handleEndSession = useCallback(() => {
-    // Notify students that session is ending
-    sendToAll({ type: 'teacher-end-session' });
-    // TODO: endLiveSession not available in SDK - live session state managed locally
-    // Show the end modal
     setShowEndModal(true);
-  }, [sendToAll]);
+  }, []);
+
+  // Handle confirming end session
+  const handleConfirmEndSession = useCallback(async () => {
+    await endSession();
+    setShowEndModal(false);
+    navigate('/t/classroom', { replace: true });
+  }, [endSession, navigate]);
 
   // Handle go home from end modal
-  const handleGoHome = useCallback(() => {
-    clearRoom();
-    disconnect();
+  const handleGoHome = useCallback(async () => {
+    await endSession();
     navigate('/t');
-  }, [disconnect, clearRoom, navigate]);
+  }, [endSession, navigate]);
 
-  // Loading state - show when loading levels OR when auto-creating from classId
-  const isAutoCreating = classId && !urlRoomCode && !roomCode && status === 'lobby';
-  if (isLoadingLevels || sessionLoading || isAutoCreating) {
+  // Convert API students to the Map format expected by TeacherDashboard
+  const studentsMap = useMemo(() => {
+    const map = new Map<string, StudentInfo>();
+    for (const student of sessionState.students) {
+      map.set(student.studentId.toString(), {
+        id: student.studentId.toString(),
+        name: student.studentName,
+        connected: true, // If they're in the list, they're connected
+        progress: {
+          starsCollected: student.starsCollected,
+          completed: student.completed,
+          entities: [], // Not available in polling API - not needed for dashboard
+        },
+      });
+    }
+    return map;
+  }, [sessionState.students]);
+
+  // Derive UI status
+  const getUIStatus = (): 'lobby' | 'waiting' | 'ready' | 'playing' | 'ended' => {
+    switch (sessionState.status) {
+      case 'idle':
+      case 'creating':
+        return 'lobby';
+      case 'waiting':
+        return 'waiting';
+      case 'ready':
+        return 'ready';
+      case 'playing':
+        return 'playing';
+      case 'ended':
+        return 'ended';
+      default:
+        return 'lobby';
+    }
+  };
+
+  const uiStatus = getUIStatus();
+  const currentLevel = sessionState.level || selectedLevel;
+
+  // Determine if connected (has a room code)
+  const isConnected = sessionState.roomCode !== null;
+
+  // Loading state - show when loading levels OR when auto-creating session
+  const isAutoCreating = classroomId && sessionState.status === 'idle' && !sessionLoading;
+  if (isLoadingLevels || (sessionLoading && sessionState.status === 'idle') || isAutoCreating) {
     return (
       <div className="min-h-full bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -223,11 +204,14 @@ export default function TeacherClassroomPage() {
     );
   }
 
-  // Error state - server down
-  if (loadError) {
+  // Error state - server down or session error
+  if (loadError || sessionError) {
     return (
       <div className="min-h-full bg-white flex items-center justify-center p-4">
-        <ConnectionError message={loadError} onRetry={() => window.location.reload()} />
+        <ConnectionError
+          message={loadError || sessionError || 'Unknown error'}
+          onRetry={() => window.location.reload()}
+        />
       </div>
     );
   }
@@ -237,11 +221,11 @@ export default function TeacherClassroomPage() {
     return (
       <div className="min-h-full bg-gray-100">
         {/* Show dashboard in background */}
-        {status === 'playing' && selectedLevel && roomCode && (
+        {uiStatus === 'playing' && currentLevel && sessionState.roomCode && (
           <TeacherDashboard
-            roomCode={roomCode}
-            level={selectedLevel}
-            students={students}
+            roomCode={sessionState.roomCode}
+            level={currentLevel}
+            students={studentsMap}
             onReset={handleReset}
             onEndSession={handleEndSession}
           />
@@ -259,13 +243,7 @@ export default function TeacherClassroomPage() {
 
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => {
-                  setShowEndModal(false);
-                  setStatus('lobby');
-                  clearRoom();
-                  disconnect();
-                  navigate('/t/classroom', { replace: true });
-                }}
+                onClick={handleConfirmEndSession}
                 className="w-full py-4 bg-gradient-to-r from-[#5a8a3a] to-[#7dad4c] text-white text-xl font-bold rounded-2xl hover:opacity-90 shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
               >
                 <RotateCcw className="w-6 h-6" />
@@ -286,25 +264,25 @@ export default function TeacherClassroomPage() {
   }
 
   // Playing - show dashboard
-  if (status === 'playing' && selectedLevel && roomCode) {
+  if (uiStatus === 'playing' && currentLevel && sessionState.roomCode) {
     return (
       <TeacherDashboard
-        roomCode={roomCode}
-        level={selectedLevel}
-        students={students}
+        roomCode={sessionState.roomCode}
+        level={currentLevel}
+        students={studentsMap}
         onReset={handleReset}
         onEndSession={handleEndSession}
       />
     );
   }
 
-  // Lobby - create classroom and wait for students
+  // Lobby/Waiting/Ready - show lobby with students list
   return (
     <TeacherLobby
-      roomCode={roomCode}
+      roomCode={sessionState.roomCode}
       isConnected={isConnected}
       teacherName={teacherName}
-      students={students}
+      students={studentsMap}
       levels={levels}
       selectedLevel={selectedLevel}
       onCreateClassroom={handleCreateClassroom}

@@ -48,11 +48,30 @@ export type {
   SubmissionResponse,
   SubmissionGrade,
   GradebookEntry,
-  // Session types
+  // Session types (legacy)
   BattleSessionResponse,
   BattleSessionCreate,
   ClassroomSessionResponse,
   ClassroomSessionCreate,
+  // Battle types (polling-based)
+  BattleCreate,
+  BattleJoin,
+  BattleStart,
+  BattleComplete,
+  BattleResponse,
+  BattleCompleteResponse,
+  BattleLeaveResponse,
+  // Live session types (polling-based)
+  LiveSessionJoin,
+  LiveSessionJoinByCode,
+  LiveSessionSetLevel,
+  LiveSessionUpdateProgress,
+  LiveSessionResponse,
+  LiveSessionStudentResponse,
+  LiveSessionStartResponse,
+  LiveSessionEndResponse,
+  LiveSessionProgressResponse,
+  JoinByCodeResponse,
 } from '@lemonade/sdk';
 
 // Standard library function type (frontend-specific, not in SDK)
@@ -285,6 +304,83 @@ export const classroomApi = {
 
   getGradebook: (classroomId: number) =>
     wrapSdkCall(() => getLemonClient().shenbiClassrooms.getGradebook(classroomId)),
+};
+
+/**
+ * Battle API (polling-based 1v1 battles)
+ */
+export const battleApi = {
+  /** Create a new battle room. The caller becomes the host. */
+  create: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiBattles']['create']>[0]) =>
+    wrapSdkCall(() => getLemonClient().shenbiBattles.create(data)),
+
+  /** Join an existing battle room as guest. */
+  join: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiBattles']['join']>[0]) =>
+    wrapSdkCall(() => getLemonClient().shenbiBattles.join(data)),
+
+  /** Get current battle state. Poll every 500-1000ms. */
+  get: (roomCode: string) =>
+    wrapSdkCall(() => getLemonClient().shenbiBattles.get(roomCode)),
+
+  /** Start the battle (host only). Sets the level and begins the game. */
+  start: (roomCode: string, data: Parameters<ReturnType<typeof getLemonClient>['shenbiBattles']['start']>[1]) =>
+    wrapSdkCall(() => getLemonClient().shenbiBattles.start(roomCode, data)),
+
+  /** Mark player as completed. First to complete wins. */
+  complete: (roomCode: string, data: Parameters<ReturnType<typeof getLemonClient>['shenbiBattles']['complete']>[1]) =>
+    wrapSdkCall(() => getLemonClient().shenbiBattles.complete(roomCode, data)),
+
+  /** Leave the battle room. */
+  leave: (roomCode: string) =>
+    wrapSdkCall(() => getLemonClient().shenbiBattles.leave(roomCode)),
+};
+
+/**
+ * Live Session API (teacher-led classroom sessions)
+ */
+export const liveSessionApi = {
+  // Teacher actions
+  /** Start a new live session for a classroom (teacher only). */
+  start: (classroomId: number) =>
+    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.start(classroomId)),
+
+  /** Set the level for the session (teacher only). */
+  setLevel: (classroomId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['setLevel']>[1]) =>
+    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.setLevel(classroomId, data)),
+
+  /** Start the game for all students (teacher only). */
+  startPlaying: (classroomId: number) =>
+    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.startPlaying(classroomId)),
+
+  /** Reset all student progress (teacher only). */
+  reset: (classroomId: number) =>
+    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.reset(classroomId)),
+
+  /** End the live session (teacher only). */
+  end: (classroomId: number) =>
+    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.end(classroomId)),
+
+  // Student actions
+  /** Join a live session as a student. */
+  join: (classroomId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['join']>[1]) =>
+    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.join(classroomId, data)),
+
+  /** Join a live session by room code (student). */
+  joinByCode: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['joinByCode']>[0]) =>
+    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.joinByCode(data)),
+
+  /** Update student's progress during the game. */
+  updateProgress: (classroomId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['updateProgress']>[1]) =>
+    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.updateProgress(classroomId, data)),
+
+  /** Leave the live session (student). */
+  leave: (classroomId: number) =>
+    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.leave(classroomId)),
+
+  // Shared
+  /** Get current session state. Poll every 1-2 seconds. */
+  get: (classroomId: number) =>
+    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.get(classroomId)),
 };
 
 /**

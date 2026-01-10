@@ -2,152 +2,93 @@
  * ClassroomPage Component
  *
  * Student-only classroom mode - join a teacher's classroom.
+ * Uses polling-based API instead of WebRTC for reliability.
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import {
-  useClassroomConnection,
-  useClassroomRoom,
-  ClassroomMessage,
-  ClassroomStatus,
-  StudentProgress,
-} from '../../../core/classroom';
+import { useLiveSession, StudentProgress } from '../../../core/classroom';
 import { StudentLobby } from '../components/StudentLobby';
 import { StudentGameView } from '../components/StudentGameView';
 import { LevelDefinition } from '../../../core/engine';
 import { useProfile } from '../../../infrastructure/storage';
 import { useLanguage } from '../../../infrastructure/i18n';
-import { Star, Home } from 'lucide-react';
+import { Star, Home, Loader2 } from 'lucide-react';
 import { info } from '../../../infrastructure/logging';
 
 export default function ClassroomPage() {
   const navigate = useNavigate();
   const { roomCode: urlRoomCode } = useParams<{ roomCode?: string }>();
   const [searchParams] = useSearchParams();
-  const classId = searchParams.get('classId');
+  const classIdParam = searchParams.get('classId');
+  const classroomId = classIdParam ? parseInt(classIdParam) : null;
   const { t } = useLanguage();
 
   // Get student name from profile
   const { profile } = useProfile();
   const studentName = profile?.name || 'Student';
 
-  // Classroom room persistence
-  const { savedRoom, loading: sessionLoading, saveRoom, clearRoom } = useClassroomRoom();
-
-  // Status and state
-  const [status, setStatus] = useState<ClassroomStatus>('lobby');
-  const [error, setError] = useState<string | null>(null);
-  const [level, setLevel] = useState<LevelDefinition | null>(null);
-  const [teacherName, setTeacherName] = useState<string | null>(null);
-  const [sessionEnded, setSessionEnded] = useState(false);
-  const sessionEndedRef = useRef(false);
-
-  // Handle incoming messages
-  const handleMessage = useCallback(
-    (message: ClassroomMessage) => {
-      switch (message.type) {
-        case 'teacher-welcome':
-          setTeacherName(message.teacherName);
-          break;
-
-        case 'teacher-set-level':
-          setLevel(message.level);
-          break;
-
-        case 'teacher-start':
-          setStatus('playing');
-          break;
-
-        case 'teacher-reset':
-          setStatus('waiting');
-          setLevel(null);
-          break;
-
-        case 'teacher-end-session':
-          sessionEndedRef.current = true;
-          setSessionEnded(true);
-          clearRoom();
-          break;
+  // Use the new polling-based live session hook
+  const {
+    state: sessionState,
+    loading: sessionLoading,
+    error: sessionError,
+    joinSession,
+    joinByCode,
+    updateProgress,
+    leaveSession,
+  } = useLiveSession({
+    userName: studentName,
+    role: 'student',
+    onError: (err) => {
+      // Navigate to /classroom on error if we were trying to join via URL
+      if (urlRoomCode) {
+        navigate('/classroom', { replace: true });
       }
     },
-    [clearRoom]
-  );
+  });
 
-  // Connection hook - always student role
-  const { roomCode, isConnected, joinClassroom, sendToTeacher, disconnect } =
-    useClassroomConnection({
-      role: 'student',
-      userName: studentName,
-      onMessage: handleMessage,
-      onConnected: () => {
-        info('Connected to classroom', undefined, 'ClassroomPage');
-        setError(null);
-      },
-      onDisconnected: () => {
-        info('Disconnected from classroom', undefined, 'ClassroomPage');
-        // Don't show error if session was ended gracefully by teacher
-        if (!sessionEndedRef.current) {
-          setError('Disconnected from classroom');
-          setStatus('lobby');
-          clearRoom();
-          navigate('/classroom', { replace: true });
-        }
-      },
-      onError: (err) => {
-        setError(err);
-        clearRoom();
-        // Navigate to /classroom to show error on join form
-        if (urlRoomCode) {
-          navigate('/classroom', { replace: true });
-        }
-      },
-    });
+  // Track if we've auto-joined
+  const [hasAutoJoined, setHasAutoJoined] = useState(false);
 
-  // Handle classroom join
-  const handleJoinClassroom = useCallback(
-    (code: string) => {
-      setError(null);
-      joinClassroom(code);
-    },
-    [joinClassroom]
-  );
+  // Auto-join when visiting /classroom/:roomCode
+  useEffect(() => {
+    if (urlRoomCode && sessionState.status === 'idle' && !sessionLoading && !hasAutoJoined) {
+      setHasAutoJoined(true);
+      joinByCode(urlRoomCode);
+    }
+  }, [urlRoomCode, sessionState.status, sessionLoading, hasAutoJoined, joinByCode]);
+
+  // Auto-join when coming from class detail page with classId
+  useEffect(() => {
+    if (classroomId && sessionState.status === 'idle' && !sessionLoading && !hasAutoJoined) {
+      setHasAutoJoined(true);
+      joinSession(classroomId);
+    }
+  }, [classroomId, sessionState.status, sessionLoading, hasAutoJoined, joinSession]);
 
   // Navigate to room URL when room code is set (after join)
   useEffect(() => {
-    if (roomCode && !urlRoomCode && classId) {
-      // Joined classroom, save to API and navigate to room URL
-      saveRoom(parseInt(classId), roomCode, 'student', studentName);
-      navigate(`/classroom/${roomCode}`, { replace: true });
+    if (sessionState.roomCode && !urlRoomCode) {
+      navigate(`/classroom/${sessionState.roomCode}`, { replace: true });
     }
-  }, [roomCode, urlRoomCode, classId, studentName, saveRoom, navigate]);
+  }, [sessionState.roomCode, urlRoomCode, navigate]);
 
-  // Auto-connect when visiting /classroom/:roomCode
-  useEffect(() => {
-    // Wait for session to load from API before attempting reconnection
-    if (sessionLoading) return;
-
-    // If we have a URL room code and not already connected, auto-join
-    if (urlRoomCode && !roomCode && status === 'lobby' && !error) {
-      // Check if we have a saved session matching this room code
-      if (savedRoom && savedRoom.roomCode.toUpperCase() === urlRoomCode.toUpperCase()) {
-        // Rejoin existing session
-        setError(null);
-        joinClassroom(urlRoomCode.toUpperCase());
-      } else if (!savedRoom) {
-        // No saved session - auto-join directly (e.g., from "Join Now" button)
-        setError(null);
-        joinClassroom(urlRoomCode.toUpperCase());
-      }
-    }
-  }, [urlRoomCode, savedRoom, sessionLoading, roomCode, status, error, joinClassroom]);
+  // Handle classroom join from lobby
+  const handleJoinClassroom = useCallback(
+    async (code: string) => {
+      setHasAutoJoined(true);
+      await joinByCode(code);
+    },
+    [joinByCode]
+  );
 
   // Handle student progress update
   const handleProgressUpdate = useCallback(
-    (progress: StudentProgress) => {
-      sendToTeacher({ type: 'student-progress', studentId: 'self', progress });
+    async (progress: StudentProgress) => {
+      await updateProgress(progress.starsCollected, progress.completed);
     },
-    [sendToTeacher]
+    [updateProgress]
   );
 
   // Handle student complete
@@ -156,14 +97,47 @@ export default function ClassroomPage() {
   }, []);
 
   // Handle exit
-  const handleExit = useCallback(() => {
-    clearRoom();
-    disconnect();
+  const handleExit = useCallback(async () => {
+    await leaveSession();
     navigate('/');
-  }, [disconnect, clearRoom, navigate]);
+  }, [leaveSession, navigate]);
+
+  // Derive UI status
+  const getUIStatus = (): 'lobby' | 'waiting' | 'playing' | 'ended' => {
+    switch (sessionState.status) {
+      case 'idle':
+      case 'joining':
+        return 'lobby';
+      case 'waiting':
+      case 'ready':
+        return 'waiting';
+      case 'playing':
+        return 'playing';
+      case 'ended':
+        return 'ended';
+      default:
+        return 'lobby';
+    }
+  };
+
+  const uiStatus = getUIStatus();
+  const currentLevel = sessionState.level as LevelDefinition | null;
+  const isConnected = sessionState.roomCode !== null;
+
+  // Loading state
+  if (sessionLoading && sessionState.status === 'idle') {
+    return (
+      <div className="min-h-full bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 animate-spin text-[#4a7a2a]" />
+          <div className="text-gray-600 text-xl">Joining classroom...</div>
+        </div>
+      </div>
+    );
+  }
 
   // Session ended by teacher
-  if (sessionEnded) {
+  if (uiStatus === 'ended') {
     return (
       <div className="flex flex-col items-center min-h-full bg-white p-4 pt-16">
         <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
@@ -188,12 +162,12 @@ export default function ClassroomPage() {
   }
 
   // Playing the game
-  if (status === 'playing' && level && teacherName) {
+  if (uiStatus === 'playing' && currentLevel && sessionState.teacherName) {
     return (
       <StudentGameView
         studentName={studentName}
-        teacherName={teacherName}
-        level={level}
+        teacherName={sessionState.teacherName}
+        level={currentLevel}
         onProgressUpdate={handleProgressUpdate}
         onComplete={handleStudentComplete}
         onExit={handleExit}
@@ -201,15 +175,15 @@ export default function ClassroomPage() {
     );
   }
 
-  // Lobby - join classroom
+  // Lobby/Waiting - join classroom or wait for teacher
   return (
     <StudentLobby
       studentName={studentName}
-      roomCode={roomCode}
+      roomCode={sessionState.roomCode}
       isConnected={isConnected}
-      teacherName={teacherName}
-      level={level}
-      error={error}
+      teacherName={sessionState.teacherName}
+      level={currentLevel}
+      error={sessionError}
       onJoinClassroom={handleJoinClassroom}
     />
   );

@@ -3,20 +3,14 @@
  *
  * Real-time multiplayer battle mode where two players compete
  * to finish the same level first.
- * Uses the same UI layout as Adventure's GamePage.
+ * Uses polling-based API instead of WebRTC for reliability.
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Loader2, Trophy, Star, RotateCcw, XCircle } from 'lucide-react';
-import {
-  usePeerConnection,
-  usePingLatency,
-  useBattleRoom,
-  BattleMessage,
-  BattleStatus,
-} from '../../../core/battle';
-import { BattleLobby, LatencyIndicator, BattleCountdown } from '../components/battle';
+import { useBattle, BattleStatus } from '../../../core/battle';
+import { BattleLobby, BattleCountdown } from '../components/battle';
 import { MazeAdventure } from '../components/adventures';
 import { LevelDefinition } from '../../../core/engine';
 import { parseLevel, loadAdventuresFromApi } from '../../../infrastructure/levels/loader';
@@ -24,7 +18,7 @@ import { useProfile } from '../../../infrastructure/storage';
 import { useLanguage } from '../../../infrastructure/i18n';
 import { defaultTheme } from '../../../infrastructure/themes';
 import { ConnectionError } from '../../shared/components/ConnectionError';
-import { info, error as logError } from '../../../infrastructure/logging';
+import { error as logError } from '../../../infrastructure/logging';
 
 // Default battle level (a simple maze)
 const DEFAULT_BATTLE_LEVEL = {
@@ -47,19 +41,35 @@ export default function BattlePage() {
   // Player name from profile
   const { profile } = useProfile();
   const playerName = profile?.name || 'Player';
-  const [opponentName, setOpponentName] = useState<string | null>(null);
 
-  // Battle room persistence
-  const { savedRoom, loading: sessionLoading, saveRoom, clearRoom } = useBattleRoom();
+  // Use the new polling-based battle hook
+  const {
+    state: battleState,
+    loading: battleLoading,
+    error: battleError,
+    createRoom,
+    joinRoom,
+    startBattle,
+    completeBattle,
+    leaveBattle,
+    isHost,
+    isConnected,
+    opponentName,
+    iWon,
+  } = useBattle({
+    playerName,
+    onError: (err) => {
+      // Navigate to /battle on error if we were trying to join via URL
+      if (urlRoomCode) {
+        navigate('/battle', { replace: true });
+      }
+    },
+  });
 
-  // Battle state
-  const [status, setStatus] = useState<BattleStatus>('lobby');
-  const [level, setLevel] = useState<LevelDefinition | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [myComplete, setMyComplete] = useState(false);
-  const [opponentComplete, setOpponentComplete] = useState(false);
-  const [winner, setWinner] = useState<'me' | 'opponent' | null>(null);
+  // Local UI state
   const [showCountdown, setShowCountdown] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [myCompleted, setMyCompleted] = useState(false);
 
   // Level selection state
   const [mazeLevels, setMazeLevels] = useState<LevelDefinition[]>([]);
@@ -67,127 +77,33 @@ export default function BattlePage() {
   const [isLoadingLevels, setIsLoadingLevels] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Track when opponent leaves gracefully
-  const [opponentLeft, setOpponentLeft] = useState(false);
-
-  // Show exit confirmation modal
-  const [showExitModal, setShowExitModal] = useState(false);
-
   // Game state for MazeAdventure
   const [resetKey, setResetKey] = useState(0);
   const [showFailure, setShowFailure] = useState(false);
   const [collectCount, setCollectCount] = useState(0);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
 
-  // Ref for handlePong (to avoid circular dependency with usePingLatency)
-  const handlePongRef = useRef<(() => void) | null>(null);
-
-  // Handle incoming messages
-  const handleMessage = useCallback(
-    (message: BattleMessage) => {
-      switch (message.type) {
-        case 'player-info':
-          // Opponent sent their name
-          setOpponentName(message.name);
-          break;
-
-        case 'ready':
-          // Host sent level data
-          setLevel(message.level);
-          setStatus('ready');
-          break;
-
-        case 'start':
-          // Game starting - show countdown
-          setShowCountdown(true);
-          break;
-
-        case 'state-update':
-          // Opponent's game state changed (not displayed anymore, just tracked for completion)
-          break;
-
-        case 'complete':
-          // Opponent finished
-          setOpponentComplete(true);
-          if (!myComplete) {
-            // Opponent won
-            setWinner('opponent');
-            setStatus('finished');
-          }
-          break;
-
-        case 'reset':
-          // Opponent reset their game
-          break;
-
-        case 'ping':
-          // Respond to ping
-          sendMessage({ type: 'pong' });
-          break;
-
-        case 'pong':
-          // Update latency measurement
-          handlePongRef.current?.();
-          break;
-
-        case 'leave':
-          // Opponent left the battle gracefully
-          setOpponentLeft(true);
-          break;
-      }
-    },
-    [myComplete]
-  );
-
-  // Handle connection events - send player info when connected
-  const handleConnected = useCallback(() => {
-    info('Peer connected', undefined, 'BattlePage');
-    // Note: sendMessage isn't available yet, we'll send player-info in useEffect
-  }, []);
-
-  const handleDisconnected = useCallback(() => {
-    info('Peer disconnected', undefined, 'BattlePage');
-    // If opponent already left gracefully, don't reset state - let the modal handle it
-    if (opponentLeft) {
-      return;
+  // Derive status for UI (map new status to what UI expects)
+  const getUIStatus = (status: BattleStatus): 'lobby' | 'waiting' | 'ready' | 'playing' | 'finished' => {
+    switch (status) {
+      case 'idle':
+      case 'creating':
+      case 'joining':
+        return 'lobby';
+      case 'waiting':
+        return 'waiting';
+      case 'ready':
+        return 'ready';
+      case 'playing':
+        return 'playing';
+      case 'finished':
+        return 'finished';
+      default:
+        return 'lobby';
     }
-    setError('Opponent disconnected');
-    setStatus('lobby');
-    clearRoom();
-    navigate('/battle', { replace: true });
-  }, [opponentLeft, clearRoom, navigate]);
+  };
 
-  const handleError = useCallback(
-    (err: string) => {
-      setError(err);
-      clearRoom();
-      // Navigate to /battle to show error on join form
-      if (urlRoomCode) {
-        navigate('/battle', { replace: true });
-      }
-    },
-    [clearRoom, urlRoomCode, navigate]
-  );
-
-  // Peer connection
-  const { roomCode, isConnected, isHost, createRoom, joinRoom, sendMessage, disconnect } =
-    usePeerConnection({
-      onMessage: handleMessage,
-      onConnected: handleConnected,
-      onDisconnected: handleDisconnected,
-      onError: handleError,
-    });
-
-  // Ping/latency measurement
-  const { latency, handlePong } = usePingLatency({
-    sendMessage,
-    isConnected,
-  });
-
-  // Keep handlePongRef in sync
-  useEffect(() => {
-    handlePongRef.current = handlePong;
-  }, [handlePong]);
+  const uiStatus = getUIStatus(battleState.status);
 
   // Load maze levels on mount or when language changes
   useEffect(() => {
@@ -224,151 +140,67 @@ export default function BattlePage() {
     loadMazeLevels();
   }, [language]);
 
-  // Send player info when connected
+  // Auto-join when visiting /battle/:roomCode
   useEffect(() => {
-    if (isConnected && playerName) {
-      sendMessage({ type: 'player-info', name: playerName });
+    if (urlRoomCode && battleState.status === 'idle' && !battleLoading && !battleError) {
+      // Try to join as guest
+      joinRoom(urlRoomCode);
     }
-  }, [isConnected, playerName, sendMessage]);
+  }, [urlRoomCode, battleState.status, battleLoading, battleError, joinRoom]);
 
-  // When both connected, host sends level data
+  // Navigate to room URL when room is created
   useEffect(() => {
-    // Host: when connected and haven't sent level yet (status is still lobby or waiting)
-    if (isConnected && isHost && (status === 'lobby' || status === 'waiting') && selectedLevel) {
-      // Use selected level
-      setLevel(selectedLevel);
-      setStatus('ready');
-
-      // Send level to opponent
-      sendMessage({ type: 'ready', level: selectedLevel });
+    if (battleState.roomCode && !urlRoomCode) {
+      navigate(`/battle/${battleState.roomCode}`, { replace: true });
     }
-  }, [isConnected, isHost, status, sendMessage, selectedLevel]);
-
-  // When guest connects, wait for host to send level
-  useEffect(() => {
-    // Guest: when connected but haven't received level yet
-    if (isConnected && !isHost && status === 'lobby') {
-      setStatus('waiting');
-    }
-  }, [isConnected, isHost, status]);
+  }, [battleState.roomCode, urlRoomCode, navigate]);
 
   // Handle create room
-  const handleCreateRoom = useCallback(() => {
-    setError(null);
-    createRoom();
+  const handleCreateRoom = useCallback(async () => {
+    await createRoom();
   }, [createRoom]);
 
   // Handle join room
   const handleJoinRoom = useCallback(
-    (code: string) => {
-      setError(null);
-      joinRoom(code);
+    async (code: string) => {
+      await joinRoom(code);
     },
     [joinRoom]
   );
 
-  // Navigate to room URL when room code is generated (after create/join)
-  useEffect(() => {
-    if (roomCode && !urlRoomCode) {
-      // Room created/joined, save to API and navigate to room URL
-      saveRoom(roomCode, isHost, playerName);
-      navigate(`/battle/${roomCode}`, { replace: true });
-    }
-  }, [roomCode, urlRoomCode, isHost, playerName, saveRoom, navigate]);
-
-  // Auto-connect when visiting /battle/:roomCode with saved room
-  useEffect(() => {
-    // Wait for session to load from API before attempting reconnection
-    if (sessionLoading) return;
-
-    if (urlRoomCode && savedRoom && !roomCode && status === 'lobby' && !error) {
-      // We have a URL room code and saved room state (only if no error - avoid retry loop)
-      if (savedRoom.roomCode.toUpperCase() === urlRoomCode.toUpperCase()) {
-        // Saved room matches URL, try to reconnect
-        setError(null);
-        if (savedRoom.isHost) {
-          // Recreate the room as host
-          createRoom(urlRoomCode.toUpperCase());
-        } else {
-          // Rejoin as guest
-          joinRoom(urlRoomCode.toUpperCase());
-        }
-      } else {
-        // URL doesn't match saved room, clear and redirect
-        clearRoom();
-        navigate('/battle', { replace: true });
-      }
-    } else if (urlRoomCode && !savedRoom && status === 'lobby' && !error) {
-      // URL has room code but no saved room - try to join as guest (only if no error)
-      setError(null);
-      saveRoom(urlRoomCode.toUpperCase(), false, playerName);
-      joinRoom(urlRoomCode.toUpperCase());
-    }
-  }, [
-    urlRoomCode,
-    savedRoom,
-    sessionLoading,
-    roomCode,
-    status,
-    error,
-    createRoom,
-    joinRoom,
-    saveRoom,
-    clearRoom,
-    navigate,
-    playerName,
-  ]);
-
   // Handle start game (host only)
-  const handleStartGame = useCallback(() => {
-    // Show countdown for both players
+  const handleStartGame = useCallback(async () => {
+    if (!selectedLevel) return;
     setShowCountdown(true);
-    sendMessage({ type: 'start' });
-  }, [sendMessage]);
+    await startBattle(selectedLevel);
+  }, [selectedLevel, startBattle]);
 
   // Handle countdown complete
   const handleCountdownComplete = useCallback(() => {
     setShowCountdown(false);
-    setStatus('playing');
   }, []);
 
   // Handle play again
   const handlePlayAgain = useCallback(async () => {
-    // Notify opponent before leaving - wait for message to be sent
-    if (isConnected) {
-      sendMessage({ type: 'leave' });
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    // Reset state
-    setMyComplete(false);
-    setOpponentComplete(false);
-    setWinner(null);
-    setOpponentName(null);
-    setOpponentLeft(false);
-    setStatus('lobby');
+    await leaveBattle();
+    setMyCompleted(false);
     setResetKey((k) => k + 1);
     setShowFailure(false);
     setCollectCount(0);
-    clearRoom();
-    disconnect();
+    setShowExitModal(false);
     navigate('/battle', { replace: true });
-  }, [isConnected, sendMessage, disconnect, clearRoom, navigate]);
+  }, [leaveBattle, navigate]);
 
-  // Handle exit button click - show modal and notify opponent
+  // Handle exit button click
   const handleExitClick = useCallback(() => {
-    // Notify opponent before showing modal
-    if (isConnected) {
-      sendMessage({ type: 'leave' });
-    }
     setShowExitModal(true);
-  }, [isConnected, sendMessage]);
+  }, []);
 
-  // Handle go home from exit modal
-  const handleGoHome = useCallback(() => {
-    clearRoom();
-    disconnect();
+  // Handle go home
+  const handleGoHome = useCallback(async () => {
+    await leaveBattle();
     navigate('/');
-  }, [disconnect, clearRoom, navigate]);
+  }, [leaveBattle, navigate]);
 
   // Screen size detection
   useEffect(() => {
@@ -382,18 +214,12 @@ export default function BattlePage() {
 
   // Handle level completion for MazeAdventure
   const handleLevelComplete = useCallback(
-    (stars: number) => {
+    async (stars: number) => {
       setCollectCount(stars);
-      setMyComplete(true);
-      sendMessage({ type: 'complete' });
-
-      if (!opponentComplete) {
-        // I won
-        setWinner('me');
-        setStatus('finished');
-      }
+      setMyCompleted(true);
+      await completeBattle();
     },
-    [opponentComplete, sendMessage]
+    [completeBattle]
   );
 
   // Handle level failure
@@ -406,6 +232,16 @@ export default function BattlePage() {
     setShowFailure(false);
     setResetKey((k) => k + 1);
   }, []);
+
+  // Determine winner from API response
+  const didIWin = iWon === true;
+  const didOpponentWin = iWon === false;
+
+  // Check if opponent left (guest_id becomes null or status changes unexpectedly)
+  const opponentLeft = battleState.status === 'finished' && battleState.winnerId === null;
+
+  // Get the current level (from API state or selected level for host)
+  const currentLevel = battleState.level || (isHost ? selectedLevel : null);
 
   // Loading state
   if (isLoadingLevels) {
@@ -428,14 +264,14 @@ export default function BattlePage() {
     );
   }
 
-  // Render lobby
-  if (status === 'lobby' || status === 'waiting' || status === 'connecting') {
+  // Render lobby (idle, creating, joining, waiting for opponent)
+  if (uiStatus === 'lobby' || uiStatus === 'waiting') {
     return (
       <BattleLobby
-        roomCode={roomCode}
+        roomCode={battleState.roomCode}
         isConnected={isConnected}
         isHost={isHost}
-        error={error}
+        error={battleError}
         playerName={playerName}
         levels={mazeLevels}
         selectedLevel={selectedLevel}
@@ -446,8 +282,8 @@ export default function BattlePage() {
     );
   }
 
-  // Render ready screen (waiting for host to start)
-  if (status === 'ready') {
+  // Render ready screen (both players connected, waiting for host to start)
+  if (uiStatus === 'ready') {
     return (
       <div className="flex flex-col items-center min-h-full bg-white p-4 pt-16">
         {/* Countdown overlay */}
@@ -464,15 +300,22 @@ export default function BattlePage() {
             {isHost ? t('battle.bothPlayersConnected') : t('battle.connected')}
           </h2>
 
-          <p className="text-gray-600 mb-6">{level?.name || 'Battle Arena'}</p>
+          <p className="text-gray-600 mb-2">
+            {playerName} vs {opponentName || '...'}
+          </p>
+          <p className="text-gray-500 mb-6">{selectedLevel?.name || 'Battle Arena'}</p>
 
           {isHost ? (
             <button
               onClick={handleStartGame}
-              disabled={showCountdown}
+              disabled={showCountdown || battleLoading}
               className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-xl transition-colors text-xl"
             >
-              {t('battle.startBattle')}
+              {battleLoading ? (
+                <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+              ) : (
+                t('battle.startBattle')
+              )}
             </button>
           ) : (
             <div className="flex items-center justify-center gap-2 text-gray-600">
@@ -481,44 +324,15 @@ export default function BattlePage() {
             </div>
           )}
         </div>
-
-        {/* Opponent Left Modal */}
-        {opponentLeft && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full text-center animate-[bounceIn_0.5s_ease-out]">
-              <div className="text-8xl mb-4">👋</div>
-
-              <h2 className="text-2xl font-bold text-gray-700 mb-2">{t('battle.opponentLeft')}</h2>
-              <p className="text-gray-600 mb-6">
-                {opponentName || 'Opponent'} {t('battle.hasLeftTheBattle')}
-              </p>
-
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={handlePlayAgain}
-                  className="w-full py-4 bg-gradient-to-r from-[#5a8a3a] to-[#7dad4c] text-white text-xl font-bold rounded-2xl hover:opacity-90 shadow-lg transition-all hover:scale-105"
-                >
-                  {t('battle.playAgain')}
-                </button>
-                <button
-                  onClick={handleGoHome}
-                  className="w-full py-3 bg-[#e8f5e0] hover:bg-[#d4ecc8] text-[#4a7a2a] font-medium rounded-2xl transition-all"
-                >
-                  {t('battle.goHome')}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
 
-  // Render game
-  if (status === 'playing' || status === 'finished') {
+  // Render game (playing or finished)
+  if (uiStatus === 'playing' || uiStatus === 'finished') {
     return (
       <div className="h-screen bg-gray-100 overflow-hidden flex flex-col">
-        {/* Top Bar - Battle Info (matching Classroom style) */}
+        {/* Top Bar - Battle Info */}
         <div className="flex-shrink-0 bg-white border-b shadow-sm px-4 py-3">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             {/* Left: Exit & Level Info */}
@@ -532,9 +346,9 @@ export default function BattlePage() {
               </button>
               <div>
                 <h1 className="text-lg font-bold text-[#4a7a2a]">
-                  ⚔️ {t('battle.title')}: {roomCode}
+                  {t('battle.title')}: {battleState.roomCode}
                 </h1>
-                <p className="text-sm text-gray-600">{level?.name || 'Battle Arena'}</p>
+                <p className="text-sm text-gray-600">{currentLevel?.name || 'Battle Arena'}</p>
               </div>
             </div>
 
@@ -549,9 +363,8 @@ export default function BattlePage() {
               </div>
             </div>
 
-            {/* Right: Latency & End Battle */}
+            {/* Right: End Battle */}
             <div className="flex items-center gap-3">
-              <LatencyIndicator latency={latency} />
               <button
                 onClick={handleExitClick}
                 className="flex items-center gap-2 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
@@ -565,9 +378,9 @@ export default function BattlePage() {
 
         {/* Main Content Area */}
         <div className="flex-1 min-h-0 h-full overflow-hidden relative">
-          {level && (
+          {currentLevel && (
             <MazeAdventure
-              level={level}
+              level={currentLevel}
               theme={defaultTheme}
               resetKey={resetKey}
               isLargeScreen={isLargeScreen}
@@ -579,7 +392,7 @@ export default function BattlePage() {
         </div>
 
         {/* Victory Modal */}
-        {myComplete && status === 'finished' && winner === 'me' && (
+        {uiStatus === 'finished' && didIWin && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full text-center animate-[bounceIn_0.5s_ease-out]">
               <div className="relative mb-4">
@@ -625,7 +438,7 @@ export default function BattlePage() {
         )}
 
         {/* Defeat Modal */}
-        {status === 'finished' && winner === 'opponent' && (
+        {uiStatus === 'finished' && didOpponentWin && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full text-center animate-[bounceIn_0.5s_ease-out]">
               <div className="text-8xl mb-4">😢</div>
@@ -653,7 +466,7 @@ export default function BattlePage() {
         )}
 
         {/* Failure Modal */}
-        {showFailure && !myComplete && (
+        {showFailure && !myCompleted && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full text-center animate-[bounceIn_0.5s_ease-out]">
               <div className="text-8xl mb-4">😢</div>

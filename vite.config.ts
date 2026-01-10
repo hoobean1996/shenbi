@@ -25,8 +25,6 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           // Icons - frequently used
           'vendor-icons': ['lucide-react'],
-          // PeerJS - only needed for multiplayer (battle/classroom)
-          'vendor-peer': ['peerjs'],
           // Drag and drop - only needed for block editor
           'vendor-dnd': ['react-dnd', 'react-dnd-html5-backend', 'react-dnd-touch-backend', 'react-dnd-multi-backend'],
         },
