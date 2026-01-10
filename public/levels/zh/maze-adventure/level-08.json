@@ -1,0 +1,29 @@
+{
+  "id": "maze-08",
+  "name": "当循环",
+  "description": "一直走直到到达目标！",
+  "grid": [
+    "###############",
+    "#>*.*.*.*.*.*G#",
+    "###############"
+  ],
+  "availableCommands": [
+    "move"
+  ],
+  "availableSensors": [
+    "atGoal",
+    "notAtGoal"
+  ],
+  "availableBlocks": [
+    "command",
+    "while"
+  ],
+  "winCondition": "collectedCount() >= 6 and atGoal()",
+  "failCondition": "stepCount() > 20",
+  "teachingGoal": "当循环入门——条件为假时停止重复",
+  "hints": [
+    "「当」循环会一直重复直到条件变为假",
+    "当「不在目标」时，继续前进",
+    "当你到达目标时，循环会自动停止！"
+  ]
+}

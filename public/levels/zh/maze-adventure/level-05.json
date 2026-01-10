@@ -1,0 +1,33 @@
+{
+  "id": "maze-05",
+  "name": "方形路径",
+  "description": "绕着方形走一圈来收集所有星星！",
+  "grid": [
+    "#######",
+    "#>*.*G#",
+    "#.###.#",
+    "#.....#",
+    "#.###.#",
+    "#*...*#",
+    "#######"
+  ],
+  "availableCommands": [
+    "move",
+    "turn"
+  ],
+  "availableSensors": [
+    "atGoal"
+  ],
+  "availableBlocks": [
+    "command",
+    "repeat"
+  ],
+  "winCondition": "collectedCount() >= 4 and atGoal()",
+  "failCondition": "stepCount() > 25",
+  "teachingGoal": "在重复积木里放多个命令",
+  "hints": [
+    "路径形成一个方形",
+    "每条边：前进、前进，然后右转",
+    "重复这个模式4次走完4条边！"
+  ]
+}

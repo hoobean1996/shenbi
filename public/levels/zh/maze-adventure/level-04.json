@@ -1,0 +1,28 @@
+{
+  "id": "maze-04",
+  "name": "重复的魔法",
+  "description": "使用重复积木来收集一排星星！",
+  "grid": [
+    "##########",
+    "#>*****.*G#",
+    "##########"
+  ],
+  "availableCommands": [
+    "move"
+  ],
+  "availableSensors": [
+    "atGoal"
+  ],
+  "availableBlocks": [
+    "command",
+    "repeat"
+  ],
+  "winCondition": "collectedCount() >= 6 and atGoal()",
+  "failCondition": "stepCount() > 15",
+  "teachingGoal": "循环入门——重复积木",
+  "hints": [
+    "不用放很多「前进」积木，用「重复」！",
+    "把「前进」放在「重复」里面，然后设置次数",
+    "重复8次「前进」就能走8步！"
+  ]
+}

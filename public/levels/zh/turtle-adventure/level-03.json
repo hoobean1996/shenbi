@@ -1,0 +1,33 @@
+{
+  "id": "turtle-03",
+  "name": "第3关：左转和右转",
+  "description": "掌握两个方向的转弯！",
+  "gameType": "turtle",
+  "availableCommands": [
+    "move",
+    "turn"
+  ],
+  "availableSensors": [],
+  "availableBlocks": [
+    "command"
+  ],
+  "winCondition": "lineCount >= 4",
+  "failCondition": "stepCount() > 30",
+  "teachingGoal": "学会使用左转命令",
+  "hints": [
+    "turnLeft(90) 让小海龟向左转",
+    "左和右是相反的方向",
+    "试着画一个Z字形！"
+  ],
+  "expectedCode": "forward(2)\nturnLeft(90)\nforward(2)\nturnRight(90)\nforward(2)",
+  "story": {
+    "character": "小海龟雪莉",
+    "dialogue": "我会向右转了，但有时候我也想向左转！你能教我吗？",
+    "goal": "用左转和右转画出有趣的图案"
+  },
+  "textbook": {
+    "title": "左转命令",
+    "content": "turnLeft(角度) 和 turnRight(角度) 是好朋友：\n\n- turnLeft(90) = 向左转90度\n- turnRight(90) = 向右转90度\n\n它们方向相反，但用法一样！\n\n小技巧：turnLeft(90) 等于 turnRight(-90)",
+    "funFact": "你知道吗？你的左手和右手也是好朋友——方向相反但形状相同！"
+  }
+}

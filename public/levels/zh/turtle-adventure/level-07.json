@@ -1,0 +1,35 @@
+{
+  "id": "turtle-07",
+  "name": "第7关：彩色画笔",
+  "description": "给小海龟一支彩色画笔！",
+  "gameType": "turtle",
+  "availableCommands": [
+    "move",
+    "turn",
+    "setColor"
+  ],
+  "availableSensors": [],
+  "availableBlocks": [
+    "command",
+    "repeat"
+  ],
+  "winCondition": "lineCount >= 4 and distanceFromStart < 30",
+  "failCondition": "stepCount() > 30",
+  "teachingGoal": "学会使用setColor命令",
+  "hints": [
+    "setColor(\"red\") 把画笔变成红色",
+    "可用的颜色：red, blue, green, yellow, purple, orange",
+    "试着给每条边换个颜色！"
+  ],
+  "expectedCode": "setColor(\"red\")\nforward(3)\nturnRight(90)\nsetColor(\"blue\")\nforward(3)\nturnRight(90)\nsetColor(\"green\")\nforward(3)\nturnRight(90)\nsetColor(\"yellow\")\nforward(3)",
+  "story": {
+    "character": "小海龟雪莉",
+    "dialogue": "黑色的线好单调！我想用彩虹的颜色来画画！",
+    "goal": "画一个彩色的正方形"
+  },
+  "textbook": {
+    "title": "setColor命令",
+    "content": "setColor(\"颜色名\") 可以改变画笔颜色。\n\n可用的颜色：\n- red（红色）\n- blue（蓝色）\n- green（绿色）\n- yellow（黄色）\n- purple（紫色）\n- orange（橙色）\n- black（黑色）\n\n记得在颜色名外面加引号！",
+    "funFact": "彩虹有7种颜色：红、橙、黄、绿、蓝、靛、紫——你能用代码画一道彩虹吗？"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "turtle-03",
+  "requiredTier": "premium",
+  "name": "Left and Right",
+  "description": "Use both turns to draw a staircase pattern!",
+  "gameType": "turtle",
+  "availableCommands": [
+    "move",
+    "turn"
+  ],
+  "availableSensors": [],
+  "availableBlocks": [
+    "command"
+  ],
+  "winCondition": "lineCount >= 4",
+  "failCondition": "stepCount() > 30",
+  "teachingGoal": "Master both Turn Left and Turn Right",
+  "hints": [
+    "Turn Left goes the opposite direction of Turn Right",
+    "Alternate: forward, turn right, forward, turn left...",
+    "Make a staircase pattern with 4 lines!"
+  ],
+  "expectedCode": "forward(2)\nturnRight(90)\nforward(2)\nturnLeft(90)\nforward(2)\nturnRight(90)\nforward(2)"
+}

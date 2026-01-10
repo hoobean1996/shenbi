@@ -1,0 +1,33 @@
+{
+  "id": "turtle-04",
+  "name": "第4关：画正方形",
+  "description": "挑战：画一个完整的正方形！",
+  "gameType": "turtle",
+  "availableCommands": [
+    "move",
+    "turn"
+  ],
+  "availableSensors": [],
+  "availableBlocks": [
+    "command"
+  ],
+  "winCondition": "lineCount >= 4 and distanceFromStart < 30",
+  "failCondition": "stepCount() > 30",
+  "teachingGoal": "理解正方形的结构，练习重复的动作",
+  "hints": [
+    "正方形有4条等长的边",
+    "每画完一条边，转90度",
+    "前进、转弯、前进、转弯...重复4次"
+  ],
+  "expectedCode": "forward(3)\nturnRight(90)\nforward(3)\nturnRight(90)\nforward(3)\nturnRight(90)\nforward(3)",
+  "story": {
+    "character": "小海龟雪莉",
+    "dialogue": "我想画一个正方形！正方形有4条边，每条边一样长。你能帮我画吗？",
+    "goal": "画一个完整的正方形"
+  },
+  "textbook": {
+    "title": "画正方形",
+    "content": "正方形的特点：\n- 4条边一样长\n- 4个角，都是90度\n\n画正方形的步骤：\n1. forward(3) - 画第一条边\n2. turnRight(90) - 转一个角\n3. 重复步骤1-2四次\n\n注意：最后一次不用转弯，因为已经画完了！",
+    "funFact": "正方形是最整齐的矩形——很多建筑都是用方砖建的！"
+  }
+}
