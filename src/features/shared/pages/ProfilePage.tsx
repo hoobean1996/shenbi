@@ -141,8 +141,12 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row items-center gap-6">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-28 h-28 rounded-3xl bg-white shadow-xl flex items-center justify-center text-6xl border-4 border-white">
-                {profile.avatar || '🧒'}
+              <div className="w-28 h-28 rounded-3xl bg-white shadow-xl flex items-center justify-center text-6xl border-4 border-white overflow-hidden">
+                {profile.avatar?.startsWith('http') ? (
+                  <img src={profile.avatar} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  profile.avatar || '🧒'
+                )}
               </div>
               {isPremium && (
                 <div className="absolute -top-2 -right-2 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center shadow-lg">
@@ -345,6 +349,19 @@ export default function ProfilePage() {
                   {t('profile.avatar')}
                 </label>
                 <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-2xl">
+                  {/* Show Google profile picture option if user has one */}
+                  {profile.avatar?.startsWith('http') && (
+                    <button
+                      onClick={() => setEditForm({ ...editForm, avatar: profile.avatar || '' })}
+                      className={`w-12 h-12 rounded-xl overflow-hidden transition-all ${
+                        editForm.avatar === profile.avatar
+                          ? 'ring-2 ring-[#4a7a2a] scale-110 shadow-md'
+                          : 'border border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <img src={profile.avatar} alt="Google avatar" className="w-full h-full object-cover" />
+                    </button>
+                  )}
                   {AVATAR_OPTIONS.map((avatar) => (
                     <button
                       key={avatar}
