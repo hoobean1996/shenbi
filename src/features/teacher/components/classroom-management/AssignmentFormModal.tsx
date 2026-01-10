@@ -9,8 +9,8 @@ import { X, FileText, Loader2, Calendar } from 'lucide-react';
 import {
   classroomApi,
   adventureApi,
-  ApiAssignmentBrief,
-  ApiAdventureBrief,
+  AssignmentResponse,
+  AdventureListResponse,
   ApiError,
 } from '../../../../infrastructure/services/api';
 import LevelPicker from './LevelPicker';
@@ -18,10 +18,10 @@ import { error as logError } from '../../../../infrastructure/logging';
 
 interface AssignmentFormModalProps {
   classroomId: number;
-  assignment?: ApiAssignmentBrief;
+  assignment?: AssignmentResponse;
   onClose: () => void;
-  onCreated?: (assignment: ApiAssignmentBrief) => void;
-  onUpdated?: (assignment: ApiAssignmentBrief) => void;
+  onCreated?: (assignment: AssignmentResponse) => void;
+  onUpdated?: (assignment: AssignmentResponse) => void;
 }
 
 export default function AssignmentFormModal({
@@ -40,7 +40,7 @@ export default function AssignmentFormModal({
   const [dueDate, setDueDate] = useState('');
   const [maxPoints, setMaxPoints] = useState(100);
 
-  const [adventures, setAdventures] = useState<ApiAdventureBrief[]>([]);
+  const [adventures, setAdventures] = useState<AdventureListResponse[]>([]);
   const [loadingAdventures, setLoadingAdventures] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -50,8 +50,8 @@ export default function AssignmentFormModal({
   useEffect(() => {
     async function loadAdventures() {
       try {
-        const response = await adventureApi.listAdventures({ publishedOnly: true });
-        setAdventures(response.adventures);
+        const response = await adventureApi.list(true);
+        setAdventures(response);
       } catch (err) {
         logError('Failed to load adventures', err, undefined, 'AssignmentFormModal');
       } finally {
@@ -119,26 +119,10 @@ export default function AssignmentFormModal({
 
       if (isEditing) {
         const updated = await classroomApi.updateAssignment(classroomId, assignment.id, data);
-        const brief: ApiAssignmentBrief = {
-          id: updated.id,
-          title: updated.title,
-          adventure_name: updated.adventure_name,
-          level_count: updated.level_count,
-          due_date: updated.due_date,
-          status: updated.status,
-        };
-        onUpdated?.(brief);
+        onUpdated?.(updated);
       } else {
         const created = await classroomApi.createAssignment(classroomId, data);
-        const brief: ApiAssignmentBrief = {
-          id: created.id,
-          title: created.title,
-          adventure_name: created.adventure_name,
-          level_count: created.level_count,
-          due_date: created.due_date,
-          status: created.status,
-        };
-        onCreated?.(brief);
+        onCreated?.(created);
       }
     } catch (err) {
       if (err instanceof ApiError) {
@@ -229,7 +213,7 @@ export default function AssignmentFormModal({
                     <option value="">Select an adventure...</option>
                     {adventures.map((adv) => (
                       <option key={adv.id} value={adv.id}>
-                        {adv.icon} {adv.name} ({adv.level_count} levels)
+                        {adv.icon} {adv.name}
                       </option>
                     ))}
                   </select>

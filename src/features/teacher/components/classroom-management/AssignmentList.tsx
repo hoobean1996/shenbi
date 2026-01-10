@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import {
   classroomApi,
-  ApiAssignmentBrief,
+  AssignmentResponse,
   ApiError,
   AssignmentStatus,
 } from '../../../../infrastructure/services/api';
@@ -35,11 +35,11 @@ export default function AssignmentList({
   onAssignmentCountChange,
 }: AssignmentListProps) {
   const navigate = useNavigate();
-  const [assignments, setAssignments] = useState<ApiAssignmentBrief[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingAssignment, setEditingAssignment] = useState<ApiAssignmentBrief | null>(null);
+  const [editingAssignment, setEditingAssignment] = useState<AssignmentResponse | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [publishingId, setPublishingId] = useState<number | null>(null);
 
@@ -47,9 +47,9 @@ export default function AssignmentList({
     try {
       setLoading(true);
       setError(null);
-      const response = await classroomApi.listAssignments(classroomId);
-      setAssignments(response.assignments);
-      onAssignmentCountChange?.(response.total);
+      const response = await classroomApi.listAssignments(classroomId, true);
+      setAssignments(response);
+      onAssignmentCountChange?.(response.length);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.detail || err.message);
@@ -65,7 +65,7 @@ export default function AssignmentList({
     loadAssignments();
   }, [loadAssignments]);
 
-  const handleDelete = async (assignment: ApiAssignmentBrief) => {
+  const handleDelete = async (assignment: AssignmentResponse) => {
     if (!confirm(`Delete "${assignment.title}"? This action cannot be undone.`)) {
       return;
     }
@@ -84,7 +84,7 @@ export default function AssignmentList({
     }
   };
 
-  const handlePublish = async (assignment: ApiAssignmentBrief) => {
+  const handlePublish = async (assignment: AssignmentResponse) => {
     if (!confirm(`Publish "${assignment.title}"? Students will be able to see and work on it.`)) {
       return;
     }
@@ -104,18 +104,18 @@ export default function AssignmentList({
     }
   };
 
-  const handleAssignmentCreated = (assignment: ApiAssignmentBrief) => {
+  const handleAssignmentCreated = (assignment: AssignmentResponse) => {
     setAssignments((prev) => [assignment, ...prev]);
     setShowCreateModal(false);
     onAssignmentCountChange?.(assignments.length + 1);
   };
 
-  const handleAssignmentUpdated = (updated: ApiAssignmentBrief) => {
+  const handleAssignmentUpdated = (updated: AssignmentResponse) => {
     setAssignments((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
     setEditingAssignment(null);
   };
 
-  const getStatusBadge = (status: 'draft' | 'published' | 'closed') => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'draft':
         return (
@@ -215,16 +215,6 @@ export default function AssignmentList({
                     </div>
 
                     <div className="flex items-center gap-4 text-sm text-gray-600">
-                      {assignment.adventure_name && (
-                        <div className="flex items-center gap-1">
-                          <BookOpen className="w-3.5 h-3.5" />
-                          {assignment.adventure_name}
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1">
-                        <BarChart3 className="w-3.5 h-3.5" />
-                        {assignment.level_count} level{assignment.level_count !== 1 ? 's' : ''}
-                      </div>
                       {dueInfo && (
                         <div
                           className={`flex items-center gap-1 ${

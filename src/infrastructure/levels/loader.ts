@@ -9,9 +9,11 @@ import {
 import type { Language } from '../i18n';
 import {
   adventureApi,
-  ApiAdventureResponse,
-  ApiLevelResponse,
   StdlibFunction,
+} from '../services/api';
+import type {
+  AdventureResponse,
+  LevelResponse,
 } from '../services/api';
 import { warn } from '../logging';
 
@@ -124,28 +126,24 @@ export function parseLevel(
  * Convert API level response to LevelDefinition
  */
 export function convertApiLevelToDefinition(
-  apiLevel: ApiLevelResponse,
-  language?: Language
+  apiLevel: LevelResponse,
+  _language?: Language
 ): LevelDefinition {
-  // Use Chinese translations if available and language is zh
-  const name = language === 'zh' && apiLevel.name_zh ? apiLevel.name_zh : apiLevel.name;
-  const description =
-    language === 'zh' && apiLevel.description_zh ? apiLevel.description_zh : apiLevel.description;
-  const teachingGoal =
-    language === 'zh' && apiLevel.teaching_goal_zh
-      ? apiLevel.teaching_goal_zh
-      : apiLevel.teaching_goal;
-  const hints = language === 'zh' && apiLevel.hints_zh ? apiLevel.hints_zh : apiLevel.hints;
+  // SDK types don't have Chinese translations
+  const name = apiLevel.name;
+  const description = apiLevel.description;
+  const teachingGoal = apiLevel.teaching_goal;
+  const hints = apiLevel.hints as string[] | null;
 
   // Parse grid if present
-  const grid = apiLevel.grid;
+  const grid = apiLevel.grid as string[] | null;
   let width = 0;
   let height = 0;
   let entities: EntityPlacement[] = [];
 
   if (grid && grid.length > 0) {
     height = grid.length;
-    width = Math.max(...grid.map((row) => row.length));
+    width = Math.max(...grid.map((row: string) => row.length));
 
     // Parse entities from grid
     for (let y = 0; y < grid.length; y++) {
@@ -174,15 +172,15 @@ export function convertApiLevelToDefinition(
     height,
     grid: grid || undefined,
     entities,
-    availableCommands: apiLevel.available_commands || undefined,
-    availableSensors: apiLevel.available_sensors || undefined,
-    availableBlocks: apiLevel.available_blocks as BlockCategory[] | undefined,
+    availableCommands: apiLevel.available_commands as unknown as string[] | undefined,
+    availableSensors: apiLevel.available_sensors as unknown as string[] | undefined,
+    availableBlocks: apiLevel.available_blocks as unknown as BlockCategory[] | undefined,
     teachingGoal: teachingGoal || undefined,
     hints: hints || undefined,
     gameType: apiLevel.game_type as GameType,
     expectedCode: apiLevel.expected_code || undefined,
-    winCondition: apiLevel.win_condition || undefined,
-    failCondition: apiLevel.fail_condition || undefined,
+    winCondition: apiLevel.win_condition ? JSON.stringify(apiLevel.win_condition) : undefined,
+    failCondition: apiLevel.fail_condition ? JSON.stringify(apiLevel.fail_condition) : undefined,
     requiredTier: apiLevel.required_tier,
   };
 }
@@ -191,36 +189,29 @@ export function convertApiLevelToDefinition(
  * Convert API adventure response to ParsedAdventure
  */
 export function convertApiAdventureToParsed(
-  apiAdventure: ApiAdventureResponse,
+  apiAdventure: AdventureResponse,
   levels: LevelDefinition[],
-  language?: Language
+  _language?: Language
 ): ParsedAdventure {
-  // Use Chinese translations if available and language is zh
-  const name = language === 'zh' && apiAdventure.name_zh ? apiAdventure.name_zh : apiAdventure.name;
-  const description =
-    language === 'zh' && apiAdventure.description_zh
-      ? apiAdventure.description_zh
-      : apiAdventure.description;
-  const longDescription =
-    language === 'zh' && apiAdventure.long_description_zh
-      ? apiAdventure.long_description_zh
-      : apiAdventure.long_description;
+  // SDK types don't have Chinese translations
+  const name = apiAdventure.name;
+  const description = apiAdventure.description;
 
   return {
     id: apiAdventure.slug,
     name,
     description: description || undefined,
-    longDescription: longDescription || undefined,
+    longDescription: undefined, // SDK doesn't have long_description
     icon: apiAdventure.icon || undefined,
-    themeId: apiAdventure.theme_id || undefined,
+    themeId: undefined, // SDK doesn't have theme_id
     gameType: apiAdventure.game_type as GameType,
-    complexity: apiAdventure.complexity as AdventureComplexity | undefined,
-    tags: apiAdventure.tags || undefined,
-    concepts: apiAdventure.concepts || undefined,
+    complexity: apiAdventure.complexity as unknown as AdventureComplexity | undefined,
+    tags: apiAdventure.tags as unknown as string[] | undefined,
+    concepts: apiAdventure.concepts as unknown as string[] | undefined,
     ageRange: apiAdventure.age_range || undefined,
-    stdlibFunctions: apiAdventure.stdlib_functions || undefined,
+    stdlibFunctions: apiAdventure.stdlib_functions as unknown as StdlibFunction[] | undefined,
     levels,
-    userId: apiAdventure.user_id,
+    userId: apiAdventure.app_id, // Use app_id as userId
   };
 }
 
@@ -231,7 +222,7 @@ export async function loadAdventuresFromApi(language?: Language): Promise<{
   adventures: ParsedAdventure[];
 }> {
   // Get list of all adventures
-  const { adventures: adventureList } = await adventureApi.listAdventures();
+  const adventureList = await adventureApi.list();
 
   // Load full details and levels for each adventure
   const adventures: ParsedAdventure[] = [];
@@ -239,7 +230,7 @@ export async function loadAdventuresFromApi(language?: Language): Promise<{
   for (const brief of adventureList) {
     // Get full adventure details and all its levels (using ID)
     const [adventure, apiLevels] = await Promise.all([
-      adventureApi.getAdventure(brief.id),
+      adventureApi.get(brief.id),
       adventureApi.listLevels(brief.id),
     ]);
 

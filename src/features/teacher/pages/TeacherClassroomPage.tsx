@@ -18,7 +18,7 @@ import { LevelDefinition } from '../../../core/engine';
 import { useProfile } from '../../../infrastructure/storage';
 import { loadAdventuresFromApi } from '../../../infrastructure/levels';
 import { useLanguage } from '../../../infrastructure/i18n';
-import { classroomApi } from '../../../infrastructure/services/api';
+// classroomApi removed - startLiveSession/endLiveSession not available in SDK
 import { ConnectionError } from '../../shared/components/ConnectionError';
 import { Loader2, Star, Home, RotateCcw } from 'lucide-react';
 import { info, error as logError } from '../../../infrastructure/logging';
@@ -120,8 +120,7 @@ export default function TeacherClassroomPage() {
     if (roomCode && !urlRoomCode && classId) {
       // Classroom created, save to API and navigate to room URL
       saveRoom(parseInt(classId), roomCode, 'teacher', teacherName);
-      // Also update the classroom's active_room_code in database
-      classroomApi.startLiveSession(parseInt(classId), roomCode).catch((err) => logError('Failed to start live session', err, undefined, 'TeacherClassroomPage'));
+      // TODO: startLiveSession not available in SDK - live session state managed locally
       navigate(`/t/classroom/${roomCode}`, { replace: true });
     }
   }, [roomCode, urlRoomCode, classId, teacherName, saveRoom, navigate]);
@@ -197,14 +196,10 @@ export default function TeacherClassroomPage() {
   const handleEndSession = useCallback(() => {
     // Notify students that session is ending
     sendToAll({ type: 'teacher-end-session' });
-    // Clear active_room_code in database
-    const currentClassId = classId || savedRoom?.classroomId;
-    if (currentClassId) {
-      classroomApi.endLiveSession(parseInt(String(currentClassId))).catch((err) => logError('Failed to end live session', err, undefined, 'TeacherClassroomPage'));
-    }
+    // TODO: endLiveSession not available in SDK - live session state managed locally
     // Show the end modal
     setShowEndModal(true);
-  }, [sendToAll, classId, savedRoom]);
+  }, [sendToAll]);
 
   // Handle go home from end modal
   const handleGoHome = useCallback(() => {

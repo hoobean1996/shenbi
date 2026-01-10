@@ -9,14 +9,14 @@ import { X, Settings, Loader2, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   classroomApi,
-  ApiClassroomResponse,
+  ClassroomResponse,
   ApiError,
 } from '../../../../infrastructure/services/api';
 
 interface ClassroomSettingsModalProps {
-  classroom: ApiClassroomResponse;
+  classroom: ClassroomResponse;
   onClose: () => void;
-  onUpdated: (classroom: ApiClassroomResponse) => void;
+  onUpdated: (classroom: ClassroomResponse) => void;
 }
 
 export default function ClassroomSettingsModal({
@@ -47,7 +47,7 @@ export default function ClassroomSettingsModal({
       setLoading(true);
       setError(null);
 
-      const updated = await classroomApi.updateClassroom(classroom.id, {
+      const updated = await classroomApi.update(classroom.id, {
         name: name.trim(),
         description: description.trim() || undefined,
         allow_join: allowJoin,
@@ -77,7 +77,7 @@ export default function ClassroomSettingsModal({
 
     try {
       setDeleting(true);
-      await classroomApi.deleteClassroom(classroom.id);
+      await classroomApi.delete(classroom.id);
       navigate('/t/classes');
     } catch (err) {
       if (err instanceof ApiError) {

@@ -19,14 +19,14 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useLanguage } from '../../../infrastructure/i18n';
-import { classroomApi, ApiClassroomBrief, ApiError } from '../../../infrastructure/services/api';
+import { classroomApi, ClassroomResponse, ApiError } from '../../../infrastructure/services/api';
 import CreateClassroomModal from '../components/classroom-management/CreateClassroomModal';
 
 export default function ClassroomManagementPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const [classrooms, setClassrooms] = useState<ApiClassroomBrief[]>([]);
+  const [classrooms, setClassrooms] = useState<ClassroomResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -37,8 +37,8 @@ export default function ClassroomManagementPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await classroomApi.listClassrooms();
-      setClassrooms(response.classrooms);
+      const response = await classroomApi.listOwned();
+      setClassrooms(response);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.detail || err.message);
@@ -67,7 +67,7 @@ export default function ClassroomManagementPage() {
 
     try {
       setDeletingId(classroomId);
-      await classroomApi.deleteClassroom(classroomId);
+      await classroomApi.delete(classroomId);
       setClassrooms((prev) => prev.filter((c) => c.id !== classroomId));
     } catch (err) {
       if (err instanceof ApiError) {
@@ -78,7 +78,7 @@ export default function ClassroomManagementPage() {
     }
   };
 
-  const handleClassroomCreated = (classroom: ApiClassroomBrief) => {
+  const handleClassroomCreated = (classroom: ClassroomResponse) => {
     setClassrooms((prev) => [classroom, ...prev]);
     setShowCreateModal(false);
     // Navigate to the new classroom's detail page
@@ -162,9 +162,6 @@ export default function ClassroomManagementPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-bold text-gray-800 text-lg">{classroom.name}</h3>
-                      {classroom.teacher_name && (
-                        <p className="text-sm text-gray-500">by {classroom.teacher_name}</p>
-                      )}
                     </div>
                     <div
                       className={`px-2 py-1 rounded-full text-xs font-medium ${

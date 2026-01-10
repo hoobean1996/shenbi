@@ -8,16 +8,16 @@ import { useState } from 'react';
 import { X, Edit, Loader2, Star } from 'lucide-react';
 import {
   classroomApi,
-  ApiStudentProgressResponse,
+  SubmissionResponse,
   ApiError,
 } from '../../../../infrastructure/services/api';
 
 interface GradeOverrideModalProps {
   classroomId: number;
   assignmentId: number;
-  submission: ApiStudentProgressResponse;
+  submission: SubmissionResponse;
   onClose: () => void;
-  onUpdated: (submission: ApiStudentProgressResponse) => void;
+  onUpdated: (submission: SubmissionResponse) => void;
 }
 
 export default function GradeOverrideModal({
@@ -47,7 +47,7 @@ export default function GradeOverrideModal({
       setLoading(true);
       setError(null);
 
-      const updated = await classroomApi.overrideGrade(classroomId, assignmentId, submission.id, {
+      const updated = await classroomApi.gradeSubmission(classroomId, assignmentId, submission.id, {
         manual_grade: grade,
         teacher_notes: teacherNotes.trim() || null,
       });
@@ -69,7 +69,7 @@ export default function GradeOverrideModal({
       setLoading(true);
       setError(null);
 
-      const updated = await classroomApi.overrideGrade(classroomId, assignmentId, submission.id, {
+      const updated = await classroomApi.gradeSubmission(classroomId, assignmentId, submission.id, {
         manual_grade: null,
         teacher_notes: teacherNotes.trim() || null,
       });
@@ -105,7 +105,7 @@ export default function GradeOverrideModal({
           {/* Student Info */}
           <div className="p-4 bg-gray-50 rounded-xl">
             <div className="font-medium text-gray-800">
-              {submission.student_name || `Student ${submission.student_id}`}
+              {submission.display_name || `Student ${submission.student_id}`}
             </div>
             <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
               <span>
@@ -113,7 +113,7 @@ export default function GradeOverrideModal({
               </span>
               <span className="flex items-center gap-1">
                 <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-                {submission.total_stars}/{submission.max_stars}
+                {submission.total_stars} stars
               </span>
             </div>
             {submission.grade_percentage !== null && (

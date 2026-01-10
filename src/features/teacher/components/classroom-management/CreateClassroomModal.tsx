@@ -6,11 +6,11 @@
 
 import { useState } from 'react';
 import { X, GraduationCap, Loader2 } from 'lucide-react';
-import { classroomApi, ApiClassroomBrief, ApiError } from '../../../../infrastructure/services/api';
+import { classroomApi, ClassroomResponse, ApiError } from '../../../../infrastructure/services/api';
 
 interface CreateClassroomModalProps {
   onClose: () => void;
-  onCreated: (classroom: ApiClassroomBrief) => void;
+  onCreated: (classroom: ClassroomResponse) => void;
 }
 
 export default function CreateClassroomModal({ onClose, onCreated }: CreateClassroomModalProps) {
@@ -31,23 +31,12 @@ export default function CreateClassroomModal({ onClose, onCreated }: CreateClass
       setLoading(true);
       setError(null);
 
-      const classroom = await classroomApi.createClassroom({
+      const classroom = await classroomApi.create({
         name: name.trim(),
         description: description.trim() || undefined,
       });
 
-      // Convert to brief format for the list
-      const brief: ApiClassroomBrief = {
-        id: classroom.id,
-        name: classroom.name,
-        teacher_name: classroom.teacher_name,
-        join_code: classroom.join_code,
-        member_count: 0,
-        is_active: true,
-        active_room_code: null,
-      };
-
-      onCreated(brief);
+      onCreated(classroom);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.detail || err.message);

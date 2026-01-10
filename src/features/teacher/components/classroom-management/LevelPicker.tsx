@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { Check, Loader2 } from 'lucide-react';
-import { adventureApi, ApiLevelBrief, ApiError } from '../../../../infrastructure/services/api';
+import { adventureApi, LevelResponse, ApiError } from '../../../../infrastructure/services/api';
 
 interface LevelPickerProps {
   adventureId: number;
@@ -19,7 +19,7 @@ export default function LevelPicker({
   selectedLevelIds,
   onSelectionChange,
 }: LevelPickerProps) {
-  const [levels, setLevels] = useState<ApiLevelBrief[]>([]);
+  const [levels, setLevels] = useState<LevelResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,8 +28,8 @@ export default function LevelPicker({
       try {
         setLoading(true);
         setError(null);
-        const adventure = await adventureApi.getAdventure(adventureId);
-        setLevels(adventure.levels);
+        const adventure = await adventureApi.get(adventureId);
+        setLevels(adventure.levels || []);
       } catch (err) {
         if (err instanceof ApiError) {
           setError(err.detail || err.message);

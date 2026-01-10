@@ -37,7 +37,7 @@ export default function JoinCodeDisplay({
 
     try {
       setRegenerating(true);
-      const response = await classroomApi.regenerateJoinCode(classroomId);
+      const response = await classroomApi.regenerateCode(classroomId);
       onCodeRegenerated(response.join_code);
     } catch (err) {
       if (err instanceof ApiError) {

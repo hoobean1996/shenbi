@@ -8,10 +8,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { Users, UserMinus, Loader2, Search, UserCheck, UserX, Clock } from 'lucide-react';
 import {
   classroomApi,
-  ApiMemberResponse,
+  MemberResponse,
   ApiError,
-  MembershipStatus,
 } from '../../../../infrastructure/services/api';
+
+// Local type for membership status (SDK doesn't export this)
+type MembershipStatus = 'active' | 'inactive' | 'removed' | 'left';
 
 interface MemberListProps {
   classroomId: number;
@@ -19,7 +21,7 @@ interface MemberListProps {
 }
 
 export default function MemberList({ classroomId, onMemberCountChange }: MemberListProps) {
-  const [members, setMembers] = useState<ApiMemberResponse[]>([]);
+  const [members, setMembers] = useState<MemberResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,9 +33,9 @@ export default function MemberList({ classroomId, onMemberCountChange }: MemberL
       setLoading(true);
       setError(null);
       const response = await classroomApi.listMembers(classroomId);
-      setMembers(response.members);
+      setMembers(response);
       // Count only active members
-      const activeCount = response.members.filter((m) => m.status === 'active').length;
+      const activeCount = response.filter((m: MemberResponse) => m.status === 'active').length;
       onMemberCountChange?.(activeCount);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -50,8 +52,8 @@ export default function MemberList({ classroomId, onMemberCountChange }: MemberL
     loadMembers();
   }, [loadMembers]);
 
-  const handleRemove = async (member: ApiMemberResponse) => {
-    const name = member.display_name || member.student_name || 'this student';
+  const handleRemove = async (member: MemberResponse) => {
+    const name = member.display_name || 'this student';
     if (!confirm(`Remove ${name} from the classroom?`)) {
       return;
     }
@@ -79,7 +81,7 @@ export default function MemberList({ classroomId, onMemberCountChange }: MemberL
     }
   };
 
-  const getStatusIcon = (status: MembershipStatus) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
         return <UserCheck className="w-4 h-4 text-green-600" />;
@@ -90,7 +92,7 @@ export default function MemberList({ classroomId, onMemberCountChange }: MemberL
     }
   };
 
-  const getStatusLabel = (status: MembershipStatus) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
       case 'active':
         return 'Active';
@@ -111,7 +113,7 @@ export default function MemberList({ classroomId, onMemberCountChange }: MemberL
     // Filter by search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const name = (member.display_name || member.student_name || '').toLowerCase();
+      const name = (member.display_name || '').toLowerCase();
       return name.includes(query);
     }
 
@@ -204,11 +206,8 @@ export default function MemberList({ classroomId, onMemberCountChange }: MemberL
                 <tr key={member.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <div className="font-medium text-gray-800">
-                      {member.display_name || member.student_name || 'Unknown'}
+                      {member.display_name || `Student ${member.student_id}`}
                     </div>
-                    {member.display_name && member.student_name && (
-                      <div className="text-xs text-gray-500">{member.student_name}</div>
-                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">

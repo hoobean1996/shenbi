@@ -24,18 +24,20 @@ import {
   achievementsApi,
   sessionsApi,
   adventureApi,
-  ApiProgressResponse,
-  ApiLevelResponse,
-  ApiAdventureResponse,
-  ApiLevelCreate,
   GameType,
+} from '../services/api';
+import type {
+  ProgressResponse,
+  LevelResponse,
+  AdventureResponse,
+  LevelCreate,
 } from '../services/api';
 import type { CompactLevelData } from '../levels/types';
 
 /**
  * Convert API progress to frontend LevelProgress format
  */
-function convertApiProgressToLevelProgress(apiProgress: ApiProgressResponse): LevelProgress {
+function convertApiProgressToLevelProgress(apiProgress: ProgressResponse): LevelProgress {
   return {
     completed: apiProgress.completed,
     starsCollected: apiProgress.stars,
@@ -50,20 +52,20 @@ function convertApiProgressToLevelProgress(apiProgress: ApiProgressResponse): Le
 /**
  * Convert API level response to CompactLevelData
  */
-function convertApiLevelToCompactData(level: ApiLevelResponse): CompactLevelData {
+function convertApiLevelToCompactData(level: LevelResponse): CompactLevelData {
   return {
     id: level.slug,
     name: level.name,
     description: level.description || undefined,
     gameType: level.game_type as 'maze' | 'turtle' | undefined,
-    grid: level.grid || undefined,
-    availableCommands: level.available_commands || undefined,
-    availableSensors: level.available_sensors || undefined,
-    availableBlocks: level.available_blocks || undefined,
+    grid: level.grid as unknown as string[] | undefined,
+    availableCommands: level.available_commands as unknown as string[] | undefined,
+    availableSensors: level.available_sensors as unknown as string[] | undefined,
+    availableBlocks: level.available_blocks as unknown as string[] | undefined,
     teachingGoal: level.teaching_goal || undefined,
-    hints: level.hints || undefined,
-    winCondition: level.win_condition || undefined,
-    failCondition: level.fail_condition || undefined,
+    hints: level.hints as unknown as string[] | undefined,
+    winCondition: level.win_condition ? JSON.stringify(level.win_condition) : undefined,
+    failCondition: level.fail_condition ? JSON.stringify(level.fail_condition) : undefined,
     expectedCode: level.expected_code || undefined,
   };
 }
@@ -71,19 +73,20 @@ function convertApiLevelToCompactData(level: ApiLevelResponse): CompactLevelData
 /**
  * Convert CompactLevelData to API level create format
  */
-function convertCompactDataToApiLevel(data: CompactLevelData, sortOrder: number): ApiLevelCreate {
+function convertCompactDataToApiLevel(data: CompactLevelData, sortOrder: number): LevelCreate {
   return {
+    slug: data.id || data.name.toLowerCase().replace(/\s+/g, '-'),
     name: data.name,
     description: data.description,
-    game_type: data.gameType as GameType | undefined,
-    grid: data.grid,
+    game_type: data.gameType === 'maze' ? GameType.MAZE : GameType.TURTLE,
+    grid: data.grid as unknown as Record<string, unknown>,
     available_commands: data.availableCommands,
     available_sensors: data.availableSensors,
     available_blocks: data.availableBlocks,
     teaching_goal: data.teachingGoal,
     hints: data.hints,
-    win_condition: data.winCondition,
-    fail_condition: data.failCondition,
+    win_condition: data.winCondition ? JSON.parse(data.winCondition) : undefined,
+    fail_condition: data.failCondition ? JSON.parse(data.failCondition) : undefined,
     expected_code: data.expectedCode,
     sort_order: sortOrder,
   };
@@ -93,12 +96,12 @@ function convertCompactDataToApiLevel(data: CompactLevelData, sortOrder: number)
  * Convert API adventure response to CustomAdventure
  */
 function convertApiAdventureToCustom(
-  adventure: ApiAdventureResponse,
-  levels: ApiLevelResponse[]
+  adventure: AdventureResponse,
+  levels: LevelResponse[]
 ): CustomAdventure {
   return {
     id: String(adventure.id),
-    userId: String(adventure.user_id),
+    userId: String(adventure.app_id), // Use app_id as userId
     name: adventure.name,
     description: adventure.description || undefined,
     icon: adventure.icon || '📚',
@@ -107,10 +110,10 @@ function convertApiAdventureToCustom(
       id: String(l.id),
       data: convertApiLevelToCompactData(l),
       createdAt: new Date(l.created_at).getTime(),
-      updatedAt: new Date(l.updated_at).getTime(),
+      updatedAt: new Date(l.created_at).getTime(), // SDK doesn't have updated_at
     })),
     createdAt: new Date(adventure.created_at).getTime(),
-    updatedAt: new Date(adventure.updated_at).getTime(),
+    updatedAt: new Date(adventure.created_at).getTime(),
   };
 }
 
@@ -130,10 +133,10 @@ export class ApiStorageProvider implements StorageProvider {
     }
 
     const [user, allProgress, settings, achievements] = await Promise.all([
-      profileApi.getProfile(),
-      progressApi.getAllProgress(),
-      settingsApi.getSettings(),
-      achievementsApi.getAchievements(),
+      profileApi.get(),
+      progressApi.getAll(),
+      settingsApi.get(),
+      achievementsApi.list(),
     ]);
 
     // Convert progress to adventure-based structure
@@ -142,14 +145,16 @@ export class ApiStorageProvider implements StorageProvider {
     let completedLevels = 0;
 
     for (const p of allProgress) {
-      if (!adventures[p.adventure_id]) {
-        adventures[p.adventure_id] = {
+      const adventureKey = String(p.adventure_id);
+      const levelKey = String(p.level_id);
+      if (!adventures[adventureKey]) {
+        adventures[adventureKey] = {
           levels: {},
           currentLevelIndex: 0,
           startedAt: p.last_attempt_at ? new Date(p.last_attempt_at).getTime() : Date.now(),
         };
       }
-      adventures[p.adventure_id].levels[p.level_id] = convertApiProgressToLevelProgress(p);
+      adventures[adventureKey].levels[levelKey] = convertApiProgressToLevelProgress(p);
       totalStars += p.stars;
       if (p.completed) completedLevels++;
     }
@@ -162,7 +167,7 @@ export class ApiStorageProvider implements StorageProvider {
       const attemptTime = new Date(p.last_attempt_at).getTime();
       if (!lastPlayedAt || attemptTime > lastPlayedAt) {
         lastPlayedAt = attemptTime;
-        lastPlayedAdventure = p.adventure_id;
+        lastPlayedAdventure = String(p.adventure_id);
       }
     }
 
@@ -173,13 +178,9 @@ export class ApiStorageProvider implements StorageProvider {
         avatar: user.avatar_url || undefined,
         grade: user.grade || undefined,
         age: user.age || undefined,
-        subscriptionTier: user.subscription_tier,
-        subscriptionStartedAt: user.subscription_started_at
-          ? new Date(user.subscription_started_at).getTime()
-          : undefined,
-        subscriptionExpiresAt: user.subscription_expires_at
-          ? new Date(user.subscription_expires_at).getTime()
-          : undefined,
+        subscriptionTier: 'free', // SDK ProfileResponse doesn't have subscription info
+        subscriptionStartedAt: undefined,
+        subscriptionExpiresAt: undefined,
       },
       progress: {
         adventures,
@@ -191,10 +192,10 @@ export class ApiStorageProvider implements StorageProvider {
       settings: {
         soundEnabled: settings.sound_enabled,
         preferredTheme: settings.preferred_theme || undefined,
-        language: settings.language,
-        tourCompleted: settings.tour_completed,
+        language: 'en', // SDK doesn't have language
+        tourCompleted: (settings.tour_completed as unknown as Record<string, boolean>) || {},
       },
-      achievements: achievements.achievements,
+      achievements: achievements.map((a) => a.achievement_id),
       createdAt: new Date(user.created_at).getTime(),
     };
 
@@ -208,11 +209,11 @@ export class ApiStorageProvider implements StorageProvider {
 
   async getAdventureProgress(adventureId: string): Promise<AdventureProgress | null> {
     try {
-      const apiProgress = await progressApi.getAdventureProgress(adventureId);
+      const progress = await progressApi.getByAdventure(parseInt(adventureId, 10));
 
       const levels: Record<string, LevelProgress> = {};
-      for (const p of apiProgress.levels) {
-        levels[p.level_id] = convertApiProgressToLevelProgress(p);
+      for (const p of progress) {
+        levels[String(p.level_id)] = convertApiProgressToLevelProgress(p);
       }
 
       return {
@@ -230,9 +231,9 @@ export class ApiStorageProvider implements StorageProvider {
     levelId: string,
     progress: LevelProgress
   ): Promise<void> {
-    await progressApi.saveProgress({
-      adventure_id: adventureId,
-      level_id: levelId,
+    await progressApi.save({
+      adventure_id: parseInt(adventureId, 10),
+      level_id: parseInt(levelId, 10),
       stars: progress.starsCollected,
       completed: progress.completed,
       code: progress.bestCode,
@@ -248,9 +249,9 @@ export class ApiStorageProvider implements StorageProvider {
     starsCollected: number,
     code?: string
   ): Promise<void> {
-    await progressApi.saveProgress({
-      adventure_id: adventureId,
-      level_id: levelId,
+    await progressApi.save({
+      adventure_id: parseInt(adventureId, 10),
+      level_id: parseInt(levelId, 10),
       stars: starsCollected,
       completed: true,
       code,
@@ -271,24 +272,22 @@ export class ApiStorageProvider implements StorageProvider {
       return this.settingsCache;
     }
 
-    const apiSettings = await settingsApi.getSettings();
+    const apiSettings = await settingsApi.get();
 
     this.settingsCache = {
       soundEnabled: apiSettings.sound_enabled,
       preferredTheme: apiSettings.preferred_theme || undefined,
-      language: apiSettings.language,
-      tourCompleted: apiSettings.tour_completed,
+      language: 'en',
+      tourCompleted: (apiSettings.tour_completed as unknown as Record<string, boolean>) || {},
     };
 
     return this.settingsCache;
   }
 
   async updateSettings(settings: Partial<UserSettings>): Promise<void> {
-    await settingsApi.updateSettings({
+    await settingsApi.update({
       sound_enabled: settings.soundEnabled,
       preferred_theme: settings.preferredTheme,
-      language: settings.language,
-      tour_completed: settings.tourCompleted,
     });
 
     // Invalidate cache
@@ -297,7 +296,7 @@ export class ApiStorageProvider implements StorageProvider {
   }
 
   async getProfile(): Promise<UserProfile> {
-    const user = await profileApi.getProfile();
+    const user = await profileApi.get();
 
     return {
       name: user.display_name || 'Student',
@@ -305,23 +304,18 @@ export class ApiStorageProvider implements StorageProvider {
       grade: user.grade || undefined,
       age: user.age || undefined,
       role: user.role as UserProfile['role'],
-      subscriptionTier: user.subscription_tier,
-      subscriptionStartedAt: user.subscription_started_at
-        ? new Date(user.subscription_started_at).getTime()
-        : undefined,
-      subscriptionExpiresAt: user.subscription_expires_at
-        ? new Date(user.subscription_expires_at).getTime()
-        : undefined,
+      subscriptionTier: 'free',
+      subscriptionStartedAt: undefined,
+      subscriptionExpiresAt: undefined,
     };
   }
 
   async updateProfile(profile: Partial<UserProfile>): Promise<void> {
-    await profileApi.updateProfile({
+    await profileApi.update({
       display_name: profile.name,
       avatar_url: profile.avatar,
       grade: profile.grade,
       age: profile.age,
-      role: profile.role,
     });
 
     // Invalidate cache
@@ -329,12 +323,12 @@ export class ApiStorageProvider implements StorageProvider {
   }
 
   async getAchievements(): Promise<string[]> {
-    const result = await achievementsApi.getAchievements();
-    return result.achievements;
+    const achievements = await achievementsApi.list();
+    return achievements.map((a) => a.achievement_id);
   }
 
   async addAchievement(achievementId: string): Promise<void> {
-    await achievementsApi.addAchievement(achievementId);
+    await achievementsApi.award({ achievement_id: achievementId });
 
     // Invalidate cache
     this.userDataCache = null;
@@ -345,21 +339,18 @@ export class ApiStorageProvider implements StorageProvider {
   // ============================================
 
   async getTeacherContent(): Promise<TeacherContent> {
-    // Returns ALL user-created adventures (user_id > 0) with levels
+    // Returns ALL user-created adventures
     try {
       // Get all adventures
-      const response = await adventureApi.listAdventures();
-
-      // Filter to only user-created adventures (user_id > 0)
-      const userAdventures = response.adventures.filter((a) => a.user_id > 0);
+      const adventures = await adventureApi.list(false); // Include unpublished
 
       // Fetch full level data for each adventure
       const adventuresWithLevels = await Promise.all(
-        userAdventures.map(async (adventure) => {
+        adventures.map(async (adventure) => {
           const levels = await adventureApi.listLevels(adventure.id);
           return {
             id: String(adventure.id),
-            userId: String(adventure.user_id),
+            userId: String(adventure.app_id),
             name: adventure.name,
             description: adventure.description || undefined,
             icon: adventure.icon || '📚',
@@ -368,10 +359,10 @@ export class ApiStorageProvider implements StorageProvider {
               id: String(l.id),
               data: convertApiLevelToCompactData(l),
               createdAt: new Date(l.created_at).getTime(),
-              updatedAt: new Date(l.updated_at).getTime(),
+              updatedAt: new Date(l.created_at).getTime(),
             })),
-            createdAt: Date.now(), // Brief response doesn't have timestamps
-            updatedAt: Date.now(),
+            createdAt: new Date(adventure.created_at).getTime(),
+            updatedAt: new Date(adventure.created_at).getTime(),
           };
         })
       );
@@ -390,32 +381,45 @@ export class ApiStorageProvider implements StorageProvider {
     // Check if adventure exists (id is a number) or is new (id is a string like "new-xxx")
     if (!isNaN(adventureId)) {
       // Update existing adventure metadata
-      await adventureApi.updateAdventure(adventureId, {
+      await adventureApi.update(adventureId, {
         name: adventure.name,
         description: adventure.description,
         icon: adventure.icon,
-        game_type: adventure.gameType as GameType,
+        game_type: adventure.gameType === 'maze' ? GameType.MAZE : GameType.TURTLE,
       });
 
-      // Replace all levels
-      const response = await adventureApi.replaceAllLevels(
-        adventureId,
-        adventure.levels.map((l, i) => convertCompactDataToApiLevel(l.data, i))
-      );
+      // Delete existing levels and recreate them
+      const existingLevels = await adventureApi.listLevels(adventureId);
+      for (const level of existingLevels) {
+        await adventureApi.deleteLevel(adventureId, level.id);
+      }
 
-      // Fetch the full level data
-      const levels = await adventureApi.listLevels(adventureId);
+      // Create new levels
+      for (let i = 0; i < adventure.levels.length; i++) {
+        await adventureApi.createLevel(adventureId, convertCompactDataToApiLevel(adventure.levels[i].data, i));
+      }
 
-      return convertApiAdventureToCustom(response, levels);
+      // Fetch updated adventure
+      const [updatedAdventure, levels] = await Promise.all([
+        adventureApi.get(adventureId),
+        adventureApi.listLevels(adventureId),
+      ]);
+
+      return convertApiAdventureToCustom(updatedAdventure, levels);
     } else {
-      // Create new adventure with levels
-      const response = await adventureApi.createAdventure({
+      // Create new adventure
+      const response = await adventureApi.create({
+        slug: adventure.name.toLowerCase().replace(/\s+/g, '-'),
         name: adventure.name,
         description: adventure.description,
         icon: adventure.icon,
-        game_type: adventure.gameType as GameType,
-        levels: adventure.levels.map((l, i) => convertCompactDataToApiLevel(l.data, i)),
+        game_type: adventure.gameType === 'maze' ? GameType.MAZE : GameType.TURTLE,
       });
+
+      // Create levels
+      for (let i = 0; i < adventure.levels.length; i++) {
+        await adventureApi.createLevel(response.id, convertCompactDataToApiLevel(adventure.levels[i].data, i));
+      }
 
       // Fetch the full level data
       const levels = await adventureApi.listLevels(response.id);
@@ -427,7 +431,7 @@ export class ApiStorageProvider implements StorageProvider {
   async deleteCustomAdventure(adventureId: string): Promise<void> {
     const id = parseInt(adventureId, 10);
     if (!isNaN(id)) {
-      await adventureApi.deleteAdventure(id);
+      await adventureApi.delete(id);
     }
   }
 
@@ -439,7 +443,7 @@ export class ApiStorageProvider implements StorageProvider {
 
     try {
       const [adventure, levels] = await Promise.all([
-        adventureApi.getAdventure(id),
+        adventureApi.get(id),
         adventureApi.listLevels(id),
       ]);
       return convertApiAdventureToCustom(adventure, levels);
@@ -453,19 +457,19 @@ export class ApiStorageProvider implements StorageProvider {
   // ============================================
 
   async getBattleSession(): Promise<BattleSession | null> {
-    const session = await sessionsApi.getBattleSession();
+    const session = await sessionsApi.getBattle();
     if (!session) return null;
 
     return {
       roomCode: session.room_code,
       isHost: session.is_host,
-      playerName: session.player_name,
+      playerName: session.player_name || '',
       createdAt: new Date(session.created_at).getTime(),
     };
   }
 
   async saveBattleSession(session: BattleSession): Promise<void> {
-    await sessionsApi.saveBattleSession({
+    await sessionsApi.createBattle({
       room_code: session.roomCode,
       is_host: session.isHost,
       player_name: session.playerName,
@@ -473,33 +477,32 @@ export class ApiStorageProvider implements StorageProvider {
   }
 
   async clearBattleSession(): Promise<void> {
-    await sessionsApi.clearBattleSession();
+    await sessionsApi.endBattle();
   }
 
   async getClassroomSession(): Promise<ClassroomSession | null> {
-    const session = await sessionsApi.getClassroomSession();
-    if (!session || !session.classroom_id) return null;
+    const session = await sessionsApi.getClassroom();
+    if (!session) return null;
 
     return {
       classroomId: session.classroom_id,
       roomCode: session.room_code,
-      role: session.role,
-      userName: session.user_name,
+      role: session.role as 'teacher' | 'student',
+      userName: '', // SDK doesn't have user_name
       createdAt: new Date(session.created_at).getTime(),
     };
   }
 
   async saveClassroomSession(session: ClassroomSession): Promise<void> {
-    await sessionsApi.saveClassroomSession({
+    await sessionsApi.createClassroom({
       classroom_id: session.classroomId,
       room_code: session.roomCode,
       role: session.role,
-      user_name: session.userName,
     });
   }
 
   async clearClassroomSession(): Promise<void> {
-    await sessionsApi.clearClassroomSession();
+    await sessionsApi.endClassroom();
   }
 
   /**

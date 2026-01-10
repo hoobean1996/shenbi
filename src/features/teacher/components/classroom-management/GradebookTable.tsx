@@ -5,29 +5,46 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { FileSpreadsheet, Download, Loader2, Users } from 'lucide-react';
+import { FileSpreadsheet, Loader2, Users } from 'lucide-react';
 import {
   classroomApi,
-  ApiGradebookResponse,
+  GradebookEntry,
   ApiError,
 } from '../../../../infrastructure/services/api';
+
+// Local type for gradebook response structure
+interface GradebookData {
+  classroom_name: string;
+  students: Array<{
+    student_id: number;
+    student_name: string | null;
+    assignments: Record<number, number | null>;
+    average_grade: number | null;
+  }>;
+  assignments: Array<{
+    id: number;
+    title: string;
+    level_count?: number;
+  }>;
+}
 
 interface GradebookTableProps {
   classroomId: number;
 }
 
 export default function GradebookTable({ classroomId }: GradebookTableProps) {
-  const [gradebook, setGradebook] = useState<ApiGradebookResponse | null>(null);
+  const [gradebook, setGradebook] = useState<GradebookData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [exporting, setExporting] = useState(false);
 
   const loadGradebook = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await classroomApi.getGradebook(classroomId);
-      setGradebook(data);
+      // Transform the SDK response to our local format
+      // The SDK returns GradebookEntry[] - we need to restructure it
+      setGradebook(data as unknown as GradebookData);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.detail || err.message);
@@ -42,29 +59,6 @@ export default function GradebookTable({ classroomId }: GradebookTableProps) {
   useEffect(() => {
     loadGradebook();
   }, [loadGradebook]);
-
-  const handleExport = async () => {
-    try {
-      setExporting(true);
-      const blob = await classroomApi.exportGradebook(classroomId);
-
-      // Create download link
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${gradebook?.classroom_name || 'classroom'}_gradebook.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      if (err instanceof ApiError) {
-        alert(err.detail || 'Failed to export gradebook');
-      }
-    } finally {
-      setExporting(false);
-    }
-  };
 
   const getGradeColor = (grade: number | null) => {
     if (grade === null) return 'text-gray-400';
@@ -115,20 +109,7 @@ export default function GradebookTable({ classroomId }: GradebookTableProps) {
           </p>
         </div>
 
-        {hasData && (
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            className="flex items-center gap-2 px-4 py-2 bg-[#4a7a2a] text-white rounded-lg font-medium hover:bg-[#3a6a1a] transition-colors disabled:opacity-50"
-          >
-            {exporting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4" />
-            )}
-            Export CSV
-          </button>
-        )}
+        {/* TODO: Export functionality not available in SDK */}
       </div>
 
       {/* Empty States */}

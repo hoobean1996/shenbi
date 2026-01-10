@@ -6,11 +6,11 @@
 
 import { useState } from 'react';
 import { X, GraduationCap, Loader2 } from 'lucide-react';
-import { classroomApi, ApiClassroomBrief, ApiError } from '../../../../infrastructure/services/api';
+import { classroomApi, ClassroomResponse, ApiError } from '../../../../infrastructure/services/api';
 
 interface JoinClassroomModalProps {
   onClose: () => void;
-  onJoined: (classroom: ApiClassroomBrief) => void;
+  onJoined: (classroom: ClassroomResponse) => void;
 }
 
 export default function JoinClassroomModal({ onClose, onJoined }: JoinClassroomModalProps) {
@@ -32,11 +32,11 @@ export default function JoinClassroomModal({ onClose, onJoined }: JoinClassroomM
       setLoading(true);
       setError(null);
 
-      await classroomApi.joinClassroom(code, displayName.trim() || undefined);
+      await classroomApi.join({ code });
 
       // Get classroom details to return
-      const classrooms = await classroomApi.getMyClasses();
-      const classroom = classrooms.classrooms.find((c) => c.join_code === code);
+      const classrooms = await classroomApi.listEnrolled();
+      const classroom = classrooms.find((c) => c.join_code === code);
 
       if (classroom) {
         onJoined(classroom);

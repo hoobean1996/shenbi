@@ -20,8 +20,8 @@ import {
 import { useLanguage } from '../../../infrastructure/i18n';
 import {
   classroomApi,
-  ApiClassroomBrief,
-  ApiAssignmentBrief,
+  ClassroomResponse,
+  AssignmentResponse,
   ApiError,
 } from '../../../infrastructure/services/api';
 import JoinClassroomModal from '../../teacher/components/classroom-management/JoinClassroomModal';
@@ -31,7 +31,7 @@ export default function StudentClassroomPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const [classrooms, setClassrooms] = useState<ApiClassroomBrief[]>([]);
+  const [classrooms, setClassrooms] = useState<ClassroomResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -41,8 +41,8 @@ export default function StudentClassroomPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await classroomApi.getMyClasses();
-      setClassrooms(response.classrooms);
+      const response = await classroomApi.listEnrolled();
+      setClassrooms(response);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.detail || err.message);
@@ -58,14 +58,14 @@ export default function StudentClassroomPage() {
     loadClassrooms();
   }, [loadClassrooms]);
 
-  const handleLeave = async (classroom: ApiClassroomBrief) => {
+  const handleLeave = async (classroom: ClassroomResponse) => {
     if (!confirm(t('classroom.leaveClassConfirm'))) {
       return;
     }
 
     try {
       setLeavingId(classroom.id);
-      await classroomApi.leaveClassroom(classroom.id);
+      await classroomApi.leave(classroom.id);
       setClassrooms((prev) => prev.filter((c) => c.id !== classroom.id));
     } catch (err) {
       if (err instanceof ApiError) {
@@ -76,7 +76,7 @@ export default function StudentClassroomPage() {
     }
   };
 
-  const handleJoined = (classroom: ApiClassroomBrief) => {
+  const handleJoined = (classroom: ClassroomResponse) => {
     setClassrooms((prev) => [classroom, ...prev]);
     setShowJoinModal(false);
   };
@@ -154,11 +154,6 @@ export default function StudentClassroomPage() {
                           </span>
                         )}
                       </div>
-                      {classroom.teacher_name && (
-                        <p className="text-sm text-gray-600">
-                          {t('classroom.teacherLabel')} {classroom.teacher_name}
-                        </p>
-                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       {classroom.active_room_code ? (
@@ -216,7 +211,7 @@ export default function StudentClassroomPage() {
 
 // Sub-component to show assignments for a classroom
 function ClassroomAssignments({ classroomId }: { classroomId: number }) {
-  const [assignments, setAssignments] = useState<ApiAssignmentBrief[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -224,7 +219,7 @@ function ClassroomAssignments({ classroomId }: { classroomId: number }) {
       try {
         const response = await classroomApi.listAssignments(classroomId);
         // Only show published assignments to students
-        setAssignments(response.assignments.filter((a) => a.status === 'published'));
+        setAssignments(response.filter((a) => a.status === 'published'));
       } catch (err) {
         logError('Failed to load assignments', err, { classroomId }, 'StudentClassroomPage');
       } finally {
@@ -273,8 +268,6 @@ function ClassroomAssignments({ classroomId }: { classroomId: number }) {
             <div>
               <div className="font-medium text-gray-800">{assignment.title}</div>
               <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
-                {assignment.adventure_name && <span>{assignment.adventure_name}</span>}
-                <span>{assignment.level_count} levels</span>
                 {dueInfo && (
                   <span className={dueInfo.isOverdue ? 'text-red-600' : ''}>
                     <Calendar className="w-3.5 h-3.5 inline mr-1" />
