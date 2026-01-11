@@ -4,19 +4,22 @@
  * Converts visual blocks to Mini Python code.
  * Supports multiple game types: maze, turtle
  *
+ * Uses block definitions from core/blocks for control block code generation.
  * Command code names come from game modules (single source of truth).
  */
 
 import { Block, BlockExpression, GameType, ConditionId, getCommandCodeName } from './types';
+import { getBlockDefinition, type CodeGenContext } from '../../../../core/blocks';
 
 function getConditionCode(conditionId: ConditionId, _gameType: GameType): string {
   // Return the condition ID directly - it's the function name (e.g., 'notAtGoal', 'frontClear')
-  // Condition IDs match the codeName in the game module
   return conditionId;
 }
 
 // Convert BlockExpression to code string
-function expressionToCode(expr: BlockExpression, gameType: GameType): string {
+function expressionToCode(expr: BlockExpression | undefined, gameType: GameType): string {
+  if (!expr) return '0';
+
   switch (expr.type) {
     case 'number':
       return String(expr.value);
@@ -66,255 +69,76 @@ function getBlockConditionCode(
   if (block.condition) {
     return `${getConditionCode(block.condition, gameType)}()`;
   }
-  // No condition available (e.g., music game)
   return 'true';
 }
 
 // Line number to block ID mapping
 export type LineToBlockMap = Map<number, string>;
 
-function generateBlockCodeWithMap(
-  block: Block,
-  indent: number,
-  currentLine: number,
-  lineMap: LineToBlockMap,
-  gameType: GameType
-): { code: string; nextLine: number } {
-  const spaces = '    '.repeat(indent);
-  const lines: string[] = [];
-  let line = currentLine;
+// State for code generation with line mapping
+interface CodeGenState {
+  lines: string[];
+  currentLine: number;
+  lineMap: LineToBlockMap;
+  indent: number;
+  gameType: GameType;
+}
 
-  switch (block.type) {
-    case 'command':
-      if (block.command) {
-        // Get the code name from game module (e.g., 'forward' -> 'forward')
-        const name = getCommandCodeName(block.command, gameType);
-        // Include argument if present (e.g., forward(50), setColor("red"))
-        let args = '';
-        if (block.commandArg && block.commandArg2) {
-          // Two arguments (xy type)
-          args = `${expressionToCode(block.commandArg, gameType)}, ${expressionToCode(block.commandArg2, gameType)}`;
-        } else if (block.commandArg) {
-          // Single argument
-          args = expressionToCode(block.commandArg, gameType);
-        }
-        lines.push(`${spaces}${name}(${args})`);
-        lineMap.set(line, block.id);
-        line++;
-      }
-      break;
+// Generate code for a single block using block definitions
+function generateBlockCode(block: Block, state: CodeGenState): void {
+  const spaces = '    '.repeat(state.indent);
 
-    case 'repeat':
-      lines.push(`${spaces}repeat ${block.repeatCount || 3} times:`);
-      lineMap.set(line, block.id);
-      line++;
-      if (block.children && block.children.length > 0) {
-        for (const child of block.children) {
-          const result = generateBlockCodeWithMap(child, indent + 1, line, lineMap, gameType);
-          lines.push(result.code);
-          line = result.nextLine;
-        }
-      } else {
-        lines.push(`${spaces}    # Add instructions here`);
-        line++;
-      }
-      break;
+  // Try to use block definition from registry
+  const blockDef = getBlockDefinition(block.type);
 
-    case 'while':
-      lines.push(`${spaces}while ${getBlockConditionCode(block, gameType)}:`);
-      lineMap.set(line, block.id);
-      line++;
-      if (block.children && block.children.length > 0) {
-        for (const child of block.children) {
-          const result = generateBlockCodeWithMap(child, indent + 1, line, lineMap, gameType);
-          lines.push(result.code);
-          line = result.nextLine;
+  if (blockDef && block.type !== 'command') {
+    // Create context for block's toCode method
+    const ctx: CodeGenContext = {
+      indent: state.indent,
+      gameType: state.gameType,
+      addLine: (code: string, blockId?: string) => {
+        state.lines.push(`${spaces}${code}`);
+        if (blockId) {
+          state.lineMap.set(state.currentLine, blockId);
         }
-      } else {
-        lines.push(`${spaces}    # Add instructions here`);
-        line++;
-      }
-      break;
-
-    case 'if':
-      lines.push(`${spaces}if ${getBlockConditionCode(block, gameType)}:`);
-      lineMap.set(line, block.id);
-      line++;
-      if (block.children && block.children.length > 0) {
-        for (const child of block.children) {
-          const result = generateBlockCodeWithMap(child, indent + 1, line, lineMap, gameType);
-          lines.push(result.code);
-          line = result.nextLine;
-        }
-      } else {
-        lines.push(`${spaces}    # Add instructions here`);
-        line++;
-      }
-      break;
-
-    case 'ifelse':
-      lines.push(`${spaces}if ${getBlockConditionCode(block, gameType)}:`);
-      lineMap.set(line, block.id);
-      line++;
-      if (block.children && block.children.length > 0) {
-        for (const child of block.children) {
-          const result = generateBlockCodeWithMap(child, indent + 1, line, lineMap, gameType);
-          lines.push(result.code);
-          line = result.nextLine;
-        }
-      } else {
-        lines.push(`${spaces}    # Add instructions here`);
-        line++;
-      }
-      lines.push(`${spaces}else:`);
-      lineMap.set(line, block.id); // else also maps to the ifelse block
-      line++;
-      if (block.elseChildren && block.elseChildren.length > 0) {
-        for (const child of block.elseChildren) {
-          const result = generateBlockCodeWithMap(child, indent + 1, line, lineMap, gameType);
-          lines.push(result.code);
-          line = result.nextLine;
-        }
-      } else {
-        lines.push(`${spaces}    # Add instructions here`);
-        line++;
-      }
-      break;
-
-    case 'for':
-      if (block.variableName && block.rangeStart && block.rangeEnd) {
-        const start = expressionToCode(block.rangeStart, gameType);
-        const end = expressionToCode(block.rangeEnd, gameType);
-        lines.push(`${spaces}for ${block.variableName} in range(${start}, ${end}):`);
-        lineMap.set(line, block.id);
-        line++;
-        if (block.children && block.children.length > 0) {
-          for (const child of block.children) {
-            const result = generateBlockCodeWithMap(child, indent + 1, line, lineMap, gameType);
-            lines.push(result.code);
-            line = result.nextLine;
+        state.currentLine++;
+      },
+      generateChildren: (children: Block[] | undefined) => {
+        if (children && children.length > 0) {
+          const childState = { ...state, indent: state.indent + 1 };
+          for (const child of children) {
+            generateBlockCode(child, childState);
           }
+          state.currentLine = childState.currentLine;
+          state.lines = childState.lines;
         } else {
-          lines.push(`${spaces}    # Add instructions here`);
-          line++;
+          // Empty body placeholder
+          state.lines.push(`${spaces}    # Add instructions here`);
+          state.currentLine++;
         }
-      }
-      break;
+      },
+      expressionToCode: (expr) => expressionToCode(expr, state.gameType),
+      getConditionCode: (b) => getBlockConditionCode(b, state.gameType),
+      getCommandCodeName: (cmdId) => getCommandCodeName(cmdId, state.gameType),
+    };
 
-    case 'forEach':
-      if (block.variableName && block.iterable) {
-        const iterable = expressionToCode(block.iterable, gameType);
-        lines.push(`${spaces}for ${block.variableName} in ${iterable}:`);
-        lineMap.set(line, block.id);
-        line++;
-        if (block.children && block.children.length > 0) {
-          for (const child of block.children) {
-            const result = generateBlockCodeWithMap(child, indent + 1, line, lineMap, gameType);
-            lines.push(result.code);
-            line = result.nextLine;
-          }
-        } else {
-          lines.push(`${spaces}    pass`);
-          line++;
-        }
-      }
-      break;
-
-    case 'break':
-      lines.push(`${spaces}break`);
-      lineMap.set(line, block.id);
-      line++;
-      break;
-
-    case 'continue':
-      lines.push(`${spaces}continue`);
-      lineMap.set(line, block.id);
-      line++;
-      break;
-
-    case 'pass':
-      lines.push(`${spaces}pass`);
-      lineMap.set(line, block.id);
-      line++;
-      break;
-
-    case 'setVariable':
-      if (block.variableName && block.expression) {
-        lines.push(
-          `${spaces}${block.variableName} = ${expressionToCode(block.expression, gameType)}`
-        );
-        lineMap.set(line, block.id);
-        line++;
-      }
-      break;
-
-    case 'print':
-      if (block.expression) {
-        lines.push(`${spaces}print(${expressionToCode(block.expression, gameType)})`);
-        lineMap.set(line, block.id);
-        line++;
-      }
-      break;
-
-    case 'functionDef':
-      if (block.functionName) {
-        const params = block.functionParams?.join(', ') || '';
-        lines.push(`${spaces}def ${block.functionName}(${params}):`);
-        lineMap.set(line, block.id);
-        line++;
-        if (block.children && block.children.length > 0) {
-          for (const child of block.children) {
-            const result = generateBlockCodeWithMap(child, indent + 1, line, lineMap, gameType);
-            lines.push(result.code);
-            line = result.nextLine;
-          }
-        } else {
-          lines.push(`${spaces}    pass`);
-          line++;
-        }
-      }
-      break;
-
-    case 'functionCall':
-      if (block.functionName) {
-        const args =
-          block.functionArgs?.map((arg) => expressionToCode(arg, gameType)).join(', ') || '';
-        lines.push(`${spaces}${block.functionName}(${args})`);
-        lineMap.set(line, block.id);
-        line++;
-      }
-      break;
-
-    case 'listAppend':
-      if (block.listArray && block.listValue) {
-        lines.push(
-          `${spaces}append(${expressionToCode(block.listArray, gameType)}, ${expressionToCode(block.listValue, gameType)})`
-        );
-        lineMap.set(line, block.id);
-        line++;
-      }
-      break;
-
-    case 'listPop':
-      if (block.listArray) {
-        lines.push(`${spaces}pop(${expressionToCode(block.listArray, gameType)})`);
-        lineMap.set(line, block.id);
-        line++;
-      }
-      break;
-
-    case 'listInsert':
-      if (block.listArray && block.listIndex && block.listValue) {
-        lines.push(
-          `${spaces}insert(${expressionToCode(block.listArray, gameType)}, ${expressionToCode(block.listIndex, gameType)}, ${expressionToCode(block.listValue, gameType)})`
-        );
-        lineMap.set(line, block.id);
-        line++;
-      }
-      break;
+    blockDef.toCode(block, ctx);
+    return;
   }
 
-  return { code: lines.join('\n'), nextLine: line };
+  // Handle command blocks (game-specific, not in registry)
+  if (block.type === 'command' && block.command) {
+    const name = getCommandCodeName(block.command, state.gameType);
+    let args = '';
+    if (block.commandArg && block.commandArg2) {
+      args = `${expressionToCode(block.commandArg, state.gameType)}, ${expressionToCode(block.commandArg2, state.gameType)}`;
+    } else if (block.commandArg) {
+      args = expressionToCode(block.commandArg, state.gameType);
+    }
+    state.lines.push(`${spaces}${name}(${args})`);
+    state.lineMap.set(state.currentLine, block.id);
+    state.currentLine++;
+  }
 }
 
 export function generateCode(blocks: Block[], gameType: GameType = 'maze'): string {
@@ -322,9 +146,19 @@ export function generateCode(blocks: Block[], gameType: GameType = 'maze'): stri
     return '# Drag blocks here from the left';
   }
 
-  return blocks
-    .map((block) => generateBlockCodeWithMap(block, 0, 1, new Map(), gameType).code)
-    .join('\n');
+  const state: CodeGenState = {
+    lines: [],
+    currentLine: 1,
+    lineMap: new Map(),
+    indent: 0,
+    gameType,
+  };
+
+  for (const block of blocks) {
+    generateBlockCode(block, state);
+  }
+
+  return state.lines.join('\n');
 }
 
 export function generateCodeWithLineMap(
@@ -335,15 +169,17 @@ export function generateCodeWithLineMap(
     return { code: '# Drag blocks here from the left', lineMap: new Map() };
   }
 
-  const lineMap: LineToBlockMap = new Map();
-  const codeLines: string[] = [];
-  let currentLine = 1;
+  const state: CodeGenState = {
+    lines: [],
+    currentLine: 1,
+    lineMap: new Map(),
+    indent: 0,
+    gameType,
+  };
 
   for (const block of blocks) {
-    const result = generateBlockCodeWithMap(block, 0, currentLine, lineMap, gameType);
-    codeLines.push(result.code);
-    currentLine = result.nextLine;
+    generateBlockCode(block, state);
   }
 
-  return { code: codeLines.join('\n'), lineMap };
+  return { code: state.lines.join('\n'), lineMap: state.lineMap };
 }
