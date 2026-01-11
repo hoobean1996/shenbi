@@ -179,8 +179,13 @@ export function convertApiLevelToDefinition(
     hints: hints || undefined,
     gameType: apiLevel.game_type as GameType,
     expectedCode: apiLevel.expected_code || undefined,
-    winCondition: apiLevel.win_condition ? JSON.stringify(apiLevel.win_condition) : undefined,
-    failCondition: apiLevel.fail_condition ? JSON.stringify(apiLevel.fail_condition) : undefined,
+    // win_condition/fail_condition should be strings - don't double-stringify
+    winCondition: typeof apiLevel.win_condition === 'string'
+      ? apiLevel.win_condition
+      : apiLevel.win_condition ? JSON.stringify(apiLevel.win_condition) : undefined,
+    failCondition: typeof apiLevel.fail_condition === 'string'
+      ? apiLevel.fail_condition
+      : apiLevel.fail_condition ? JSON.stringify(apiLevel.fail_condition) : undefined,
     requiredTier: apiLevel.required_tier,
   };
 }

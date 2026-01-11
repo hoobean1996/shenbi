@@ -65,8 +65,13 @@ function convertApiLevelToCompactData(level: LevelResponse): CompactLevelData {
     availableBlocks: level.available_blocks as unknown as string[] | undefined,
     teachingGoal: level.teaching_goal || undefined,
     hints: level.hints as unknown as string[] | undefined,
-    winCondition: level.win_condition ? JSON.stringify(level.win_condition) : undefined,
-    failCondition: level.fail_condition ? JSON.stringify(level.fail_condition) : undefined,
+    // win_condition/fail_condition should be strings - don't double-stringify
+    winCondition: typeof level.win_condition === 'string'
+      ? level.win_condition
+      : level.win_condition ? JSON.stringify(level.win_condition) : undefined,
+    failCondition: typeof level.fail_condition === 'string'
+      ? level.fail_condition
+      : level.fail_condition ? JSON.stringify(level.fail_condition) : undefined,
     expectedCode: level.expected_code || undefined,
   };
 }
