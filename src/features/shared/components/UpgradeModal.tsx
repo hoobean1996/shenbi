@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { Crown, X, Star, Sparkles, Zap, Loader2 } from 'lucide-react';
+import { Crown, X, Star, Sparkles, Zap, Loader2, Check } from 'lucide-react';
 import { useLanguage } from '../../../infrastructure/i18n';
 import { stripeApi } from '../../../infrastructure/services/api';
 import { error as logError } from '../../../infrastructure/logging';
@@ -15,9 +15,12 @@ interface UpgradeModalProps {
   onClose: () => void;
 }
 
+type BillingInterval = 'monthly' | 'yearly';
+
 export function UpgradeModal({ onClose }: UpgradeModalProps) {
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<BillingInterval>('yearly');
 
   const features = [
     { icon: Star, text: t('subscription.feature1') },
@@ -25,11 +28,24 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
     { icon: Zap, text: t('subscription.feature3') },
   ];
 
+  const plans = {
+    monthly: {
+      price: '$9.90',
+      period: t('subscription.perMonth'),
+      savings: null,
+    },
+    yearly: {
+      price: '$99',
+      period: t('subscription.perYear'),
+      savings: t('subscription.saveTwoMonths'),
+    },
+  };
+
   const handleUpgrade = async () => {
     setIsLoading(true);
     try {
       // Create Stripe Checkout session and redirect
-      const { checkout_url } = await stripeApi.createCheckoutSession();
+      const { checkout_url } = await stripeApi.createCheckoutSession(undefined, selectedPlan);
       window.location.href = checkout_url;
     } catch (error) {
       logError('Failed to create checkout session', error, undefined, 'UpgradeModal');
@@ -40,7 +56,7 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
-      <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-[bounceIn_0.3s_ease-out] relative">
+      <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-[bounceIn_0.3s_ease-out] relative">
         {/* Close button */}
         {!isLoading && (
           <button
@@ -65,6 +81,52 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
 
         {/* Subtitle */}
         <p className="text-gray-600 text-center mb-6">{t('subscription.upgradeSubtitle')}</p>
+
+        {/* Plan selection */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          {/* Monthly option */}
+          <button
+            onClick={() => setSelectedPlan('monthly')}
+            disabled={isLoading}
+            className={`relative p-4 rounded-xl border-2 transition-all ${
+              selectedPlan === 'monthly'
+                ? 'border-amber-400 bg-amber-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            {selectedPlan === 'monthly' && (
+              <div className="absolute -top-2 -right-2 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center">
+                <Check className="w-3 h-3 text-white" />
+              </div>
+            )}
+            <div className="text-lg font-bold text-gray-800">{plans.monthly.price}</div>
+            <div className="text-xs text-gray-500">{plans.monthly.period}</div>
+          </button>
+
+          {/* Yearly option */}
+          <button
+            onClick={() => setSelectedPlan('yearly')}
+            disabled={isLoading}
+            className={`relative p-4 rounded-xl border-2 transition-all ${
+              selectedPlan === 'yearly'
+                ? 'border-amber-400 bg-amber-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            {selectedPlan === 'yearly' && (
+              <div className="absolute -top-2 -right-2 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center">
+                <Check className="w-3 h-3 text-white" />
+              </div>
+            )}
+            {plans.yearly.savings && (
+              <div className="absolute -top-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full">
+                {plans.yearly.savings}
+              </div>
+            )}
+            <div className="text-lg font-bold text-gray-800">{plans.yearly.price}</div>
+            <div className="text-xs text-gray-500">{plans.yearly.period}</div>
+          </button>
+        </div>
 
         {/* Features list */}
         <div className="space-y-3 mb-6">

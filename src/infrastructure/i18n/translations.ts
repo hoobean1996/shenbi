@@ -552,6 +552,9 @@ export const translations = {
       freeTier: 'Free',
       subscribedOn: 'Subscribed on',
       expiresOn: 'Expires on',
+      perMonth: '/month',
+      perYear: '/year',
+      saveTwoMonths: 'Save 2 months',
     },
 
     // Adventure Studio
@@ -1167,6 +1170,9 @@ export const translations = {
       freeTier: '免费版',
       subscribedOn: '订阅日期',
       expiresOn: '到期时间',
+      perMonth: '/月',
+      perYear: '/年',
+      saveTwoMonths: '省2个月',
     },
 
     // Adventure Studio

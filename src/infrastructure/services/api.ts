@@ -393,19 +393,38 @@ export const stripeApi = {
   getCurrentSubscription: () =>
     wrapSdkCall(() => getLemonClient().subscriptions.getCurrent()),
 
-  createCheckoutSession: async (): Promise<{ checkout_url: string }> => {
-    // Get the first non-default (premium) plan
-    const plans = await wrapSdkCall(() => getLemonClient().subscriptions.listPlans());
-    const premiumPlan = plans.find(p => !p.is_default && p.is_active);
+  /**
+   * Create checkout session for a specific plan
+   * @param planId - Optional plan ID. If not provided, uses the first monthly premium plan.
+   * @param billingInterval - Optional billing interval filter ('monthly' | 'yearly')
+   */
+  createCheckoutSession: async (planId?: number, billingInterval?: 'monthly' | 'yearly'): Promise<{ checkout_url: string }> => {
+    let selectedPlanId = planId;
 
-    if (!premiumPlan) {
-      throw new ApiError('No premium plan available', 404);
+    if (!selectedPlanId) {
+      // Get plans and find the matching one
+      const plans = await wrapSdkCall(() => getLemonClient().subscriptions.listPlans());
+      const premiumPlans = plans.filter(p => !p.is_default && p.is_active);
+
+      let selectedPlan;
+      if (billingInterval) {
+        selectedPlan = premiumPlans.find(p => p.billing_interval === billingInterval);
+      }
+      if (!selectedPlan) {
+        // Default to monthly if no interval specified or not found
+        selectedPlan = premiumPlans.find(p => p.billing_interval === 'monthly') || premiumPlans[0];
+      }
+
+      if (!selectedPlan) {
+        throw new ApiError('No premium plan available', 404);
+      }
+      selectedPlanId = selectedPlan.id;
     }
 
     const currentUrl = window.location.origin;
     const result = await wrapSdkCall(() =>
       getLemonClient().subscriptions.createCheckout(
-        premiumPlan.id,
+        selectedPlanId,
         `${currentUrl}/upgrade/success`,
         `${currentUrl}/upgrade/cancel`
       )
