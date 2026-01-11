@@ -22,6 +22,8 @@ import { warn } from '../logging';
  */
 export interface ParsedAdventure {
   id: string;
+  /** Numeric ID from the API (for progress tracking) */
+  numericId?: number;
   name: string;
   description?: string;
   longDescription?: string;
@@ -166,6 +168,8 @@ export function convertApiLevelToDefinition(
 
   return {
     id: apiLevel.slug,
+    numericId: apiLevel.id,
+    adventureNumericId: apiLevel.adventure_id,
     name,
     description: description || undefined,
     width,
@@ -204,6 +208,7 @@ export function convertApiAdventureToParsed(
 
   return {
     id: apiAdventure.slug,
+    numericId: apiAdventure.id,
     name,
     description: description || undefined,
     longDescription: undefined, // SDK doesn't have long_description

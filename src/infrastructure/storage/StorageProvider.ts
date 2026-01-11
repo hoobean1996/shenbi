@@ -30,7 +30,9 @@ export interface StorageProvider {
     adventureId: string,
     levelId: string,
     starsCollected: number,
-    code?: string
+    code?: string,
+    adventureNumericId?: number,
+    levelNumericId?: number
   ): Promise<void>;
   updateCurrentLevel(adventureId: string, levelIndex: number): Promise<void>;
 

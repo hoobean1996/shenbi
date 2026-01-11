@@ -184,7 +184,14 @@ export default function LevelPage() {
 
       // Save progress
       if (adventure && level) {
-        await markLevelComplete(adventure.id, level.id, stars);
+        await markLevelComplete(
+          adventure.id,
+          level.id,
+          stars,
+          undefined, // code
+          adventure.numericId,
+          level.numericId
+        );
 
         // Check for new badges after progress is saved
         const freshUserData = await getStorage().getUserData();
@@ -287,7 +294,7 @@ export default function LevelPage() {
               <span className="text-gray-600 text-xs">
                 ({levelIndex + 1}/{levels.length})
               </span>
-              {isLevelCompleted(adventure.id, level.id) && (
+              {isLevelCompleted(adventure.id, level.id, adventure.numericId, level.numericId) && (
                 <Check className="w-4 h-4 text-[#4a7a2a]" />
               )}
             </div>

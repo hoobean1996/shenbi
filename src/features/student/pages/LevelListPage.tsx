@@ -75,7 +75,9 @@ export default function LevelListPage() {
     );
   }
 
-  const completedCount = levels.filter((l) => isLevelCompleted(adventure.id, l.id)).length;
+  const completedCount = levels.filter((l) =>
+    isLevelCompleted(adventure.id, l.id, adventure.numericId, l.numericId)
+  ).length;
 
   return (
     <div className="min-h-full bg-white">
@@ -136,9 +138,16 @@ export default function LevelListPage() {
         {/* Level List */}
         <div className="space-y-3">
           {levels.map((level, index) => {
-            const isCompleted = isLevelCompleted(adventure.id, level.id);
+            const isCompleted = isLevelCompleted(
+              adventure.id,
+              level.id,
+              adventure.numericId,
+              level.numericId
+            );
+            const prevLevel = index > 0 ? levels[index - 1] : null;
             const isProgressLocked =
-              index > 0 && !isLevelCompleted(adventure.id, levels[index - 1].id);
+              prevLevel !== null &&
+              !isLevelCompleted(adventure.id, prevLevel.id, adventure.numericId, prevLevel.numericId);
             const isPremiumLevel = level.requiredTier === 'premium';
             const isPremiumLocked = isPremiumLevel && userTier !== 'premium';
             const isLocked = isProgressLocked || isPremiumLocked;

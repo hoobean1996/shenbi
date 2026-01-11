@@ -261,11 +261,22 @@ export class ApiStorageProvider implements StorageProvider {
     adventureId: string,
     levelId: string,
     starsCollected: number,
-    code?: string
+    code?: string,
+    adventureNumericId?: number,
+    levelNumericId?: number
   ): Promise<void> {
+    // Use numeric IDs if provided, otherwise fall back to parsing string IDs
+    const advId = adventureNumericId ?? parseInt(adventureId, 10);
+    const lvlId = levelNumericId ?? parseInt(levelId, 10);
+
+    if (isNaN(advId) || isNaN(lvlId)) {
+      console.warn('Invalid adventure/level ID for progress save:', { adventureId, levelId });
+      return;
+    }
+
     await progressApi.save({
-      adventure_id: parseInt(adventureId, 10),
-      level_id: parseInt(levelId, 10),
+      adventure_id: advId,
+      level_id: lvlId,
       stars: starsCollected,
       completed: true,
       code,

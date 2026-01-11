@@ -58,10 +58,27 @@ export function useUserProgress() {
 
   // Mark a level as complete
   const markLevelComplete = useCallback(
-    async (adventureId: string, levelId: string, starsCollected: number, code?: string) => {
-      // Update local state immediately
+    async (
+      adventureId: string,
+      levelId: string,
+      starsCollected: number,
+      code?: string,
+      adventureNumericId?: number,
+      levelNumericId?: number
+    ) => {
+      // Update local state immediately using both slug and numeric ID keys
+      // This ensures lookups work with either key type
       setUserData((prev) => {
         const newData = { ...prev };
+        const progressData = {
+          completed: true,
+          starsCollected,
+          bestCode: code,
+          attempts: 1,
+          completedAt: Date.now(),
+        };
+
+        // Store with slug key
         if (!newData.progress.adventures[adventureId]) {
           newData.progress.adventures[adventureId] = {
             levels: {},
@@ -69,19 +86,35 @@ export function useUserProgress() {
             startedAt: Date.now(),
           };
         }
-        newData.progress.adventures[adventureId].levels[levelId] = {
-          completed: true,
-          starsCollected,
-          bestCode: code,
-          attempts: 1,
-          completedAt: Date.now(),
-        };
+        newData.progress.adventures[adventureId].levels[levelId] = progressData;
+
+        // Also store with numeric ID key if available (for API consistency)
+        if (adventureNumericId !== undefined && levelNumericId !== undefined) {
+          const numericAdvKey = String(adventureNumericId);
+          const numericLvlKey = String(levelNumericId);
+          if (!newData.progress.adventures[numericAdvKey]) {
+            newData.progress.adventures[numericAdvKey] = {
+              levels: {},
+              currentLevelIndex: 0,
+              startedAt: Date.now(),
+            };
+          }
+          newData.progress.adventures[numericAdvKey].levels[numericLvlKey] = progressData;
+        }
+
         return newData;
       });
 
       // Persist to API
       try {
-        await getStorage().markLevelComplete(adventureId, levelId, starsCollected, code);
+        await getStorage().markLevelComplete(
+          adventureId,
+          levelId,
+          starsCollected,
+          code,
+          adventureNumericId,
+          levelNumericId
+        );
         await refresh();
       } catch (err) {
         warn('Failed to save level completion', { error: err }, 'useStorage');
@@ -105,9 +138,29 @@ export function useUserProgress() {
 
   // Check if a level is completed
   const isLevelCompleted = useCallback(
-    (adventureId: string, levelId: string): boolean => {
+    (
+      adventureId: string,
+      levelId: string,
+      adventureNumericId?: number,
+      levelNumericId?: number
+    ): boolean => {
       if (!userData?.progress?.adventures) return false;
-      return userData.progress.adventures[adventureId]?.levels[levelId]?.completed || false;
+
+      // Check with slug key first
+      if (userData.progress.adventures[adventureId]?.levels[levelId]?.completed) {
+        return true;
+      }
+
+      // Also check with numeric ID key if provided
+      if (adventureNumericId !== undefined && levelNumericId !== undefined) {
+        const numericAdvKey = String(adventureNumericId);
+        const numericLvlKey = String(levelNumericId);
+        if (userData.progress.adventures[numericAdvKey]?.levels[numericLvlKey]?.completed) {
+          return true;
+        }
+      }
+
+      return false;
     },
     [userData]
   );

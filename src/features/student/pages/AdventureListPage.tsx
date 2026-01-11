@@ -47,7 +47,7 @@ export default function AdventureListPage() {
         <div className="space-y-4">
           {adventures.map((adventure) => {
             const completedCount = adventure.levels.filter((l) =>
-              isLevelCompleted(adventure.id, l.id)
+              isLevelCompleted(adventure.id, l.id, adventure.numericId, l.numericId)
             ).length;
             const totalLevels = adventure.levels.length;
 

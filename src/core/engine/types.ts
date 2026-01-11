@@ -53,6 +53,10 @@ export type BlockCategory =
 
 export interface LevelDefinition {
   id: string;
+  /** Numeric ID from the API (for progress tracking) */
+  numericId?: number;
+  /** Adventure's numeric ID (for progress tracking) */
+  adventureNumericId?: number;
   name: string;
   description?: string;
   width?: number;
