@@ -24,8 +24,6 @@ const COMMAND_MAP: Record<string, CommandId> = {
   // Unified movement commands
   move: 'move',
   turn: 'turn',
-  移动: 'move',
-  转向: 'turn',
   // Legacy maze/turtle commands (for backwards compatibility)
   forward: 'move', // Will be converted with "forward" arg
   backward: 'move', // Will be converted with "backward" arg
@@ -33,14 +31,8 @@ const COMMAND_MAP: Record<string, CommandId> = {
   turnRight: 'turn', // Will be converted with "right" arg
   left: 'turn',
   right: 'turn',
-  前进: 'move',
-  后退: 'move',
-  左转: 'turn',
-  右转: 'turn',
   // Turtle-specific
   setColor: 'setColor',
-  设置颜色: 'setColor',
-  颜色: 'setColor',
 };
 
 // Map legacy command names to their implicit direction argument
@@ -51,10 +43,6 @@ const LEGACY_DIRECTION_MAP: Record<string, string> = {
   turnRight: 'right',
   left: 'left',
   right: 'right',
-  前进: 'forward',
-  后退: 'backward',
-  左转: 'left',
-  右转: 'right',
 };
 
 // ============ MAZE CONDITIONS ============
@@ -131,7 +119,7 @@ function astToBlockExpression(
       };
     case 'CallExpression':
       // Check if it's len() function
-      if (expr.callee === 'len' || expr.callee === '长度') {
+      if (expr.callee === 'len') {
         if (expr.arguments.length > 0) {
           return {
             type: 'arrayLength',
@@ -140,11 +128,11 @@ function astToBlockExpression(
         }
       }
       // Check if it's random() function
-      if (expr.callee === 'random' || expr.callee === '随机') {
+      if (expr.callee === 'random') {
         return { type: 'random' };
       }
       // Check if it's randint() function
-      if (expr.callee === 'randint' || expr.callee === '随机整数') {
+      if (expr.callee === 'randint') {
         if (expr.arguments.length >= 2) {
           return {
             type: 'randint',
@@ -254,7 +242,7 @@ function statementToBlock(
         }
 
         // Check for append
-        if (callee === 'append' || callee === '添加') {
+        if (callee === 'append') {
           return {
             id: generateBlockId(),
             type: 'listAppend',
@@ -270,7 +258,7 @@ function statementToBlock(
         }
 
         // Check for pop
-        if (callee === 'pop' || callee === '弹出') {
+        if (callee === 'pop') {
           return {
             id: generateBlockId(),
             type: 'listPop',
@@ -282,7 +270,7 @@ function statementToBlock(
         }
 
         // Check for insert
-        if (callee === 'insert' || callee === '插入') {
+        if (callee === 'insert') {
           return {
             id: generateBlockId(),
             type: 'listInsert',
