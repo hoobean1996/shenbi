@@ -4,8 +4,9 @@
   "description": "挑战：画一颗美丽的五角星！",
   "gameType": "turtle",
   "availableCommands": [
-    "move",
-    "turn",
+    "forward",
+    "turnLeft",
+    "turnRight",
     "setColor"
   ],
   "availableSensors": [],

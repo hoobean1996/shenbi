@@ -4,8 +4,9 @@
   "description": "帮助小海龟学会转弯！",
   "gameType": "turtle",
   "availableCommands": [
-    "move",
-    "turn"
+    "forward",
+    "turnLeft",
+    "turnRight"
   ],
   "availableSensors": [],
   "availableBlocks": [

@@ -4,7 +4,7 @@
   "description": "帮助小海龟画出它的第一条直线！",
   "gameType": "turtle",
   "availableCommands": [
-    "move"
+    "forward"
   ],
   "availableSensors": [],
   "availableBlocks": [

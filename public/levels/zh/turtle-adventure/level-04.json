@@ -4,8 +4,9 @@
   "description": "挑战：画一个完整的正方形！",
   "gameType": "turtle",
   "availableCommands": [
-    "move",
-    "turn"
+    "forward",
+    "turnLeft",
+    "turnRight"
   ],
   "availableSensors": [],
   "availableBlocks": [

@@ -4,8 +4,9 @@
   "description": "用循环画出神奇的螺旋！",
   "gameType": "turtle",
   "availableCommands": [
-    "move",
-    "turn",
+    "forward",
+    "turnLeft",
+    "turnRight",
     "setColor"
   ],
   "availableSensors": [],

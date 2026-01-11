@@ -4,8 +4,9 @@
   "description": "挑战：画一个等边三角形！",
   "gameType": "turtle",
   "availableCommands": [
-    "move",
-    "turn"
+    "forward",
+    "turnLeft",
+    "turnRight"
   ],
   "availableSensors": [],
   "availableBlocks": [

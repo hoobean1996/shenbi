@@ -4,8 +4,9 @@
   "description": "掌握两个方向的转弯！",
   "gameType": "turtle",
   "availableCommands": [
-    "move",
-    "turn"
+    "forward",
+    "turnLeft",
+    "turnRight"
   ],
   "availableSensors": [],
   "availableBlocks": [

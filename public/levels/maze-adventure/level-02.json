@@ -11,8 +11,9 @@
     "#####"
   ],
   "availableCommands": [
-    "move",
-    "turn"
+    "forward",
+    "turnLeft",
+    "turnRight"
   ],
   "availableSensors": [
     "atGoal"

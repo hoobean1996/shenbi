@@ -5,8 +5,9 @@
   "description": "Use both turns to draw a staircase pattern!",
   "gameType": "turtle",
   "availableCommands": [
-    "move",
-    "turn"
+    "forward",
+    "turnLeft",
+    "turnRight"
   ],
   "availableSensors": [],
   "availableBlocks": [

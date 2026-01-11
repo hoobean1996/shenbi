@@ -17,8 +17,9 @@
     "############"
   ],
   "availableCommands": [
-    "move",
-    "turn"
+    "forward",
+    "turnLeft",
+    "turnRight"
   ],
   "availableSensors": [
     "frontBlocked",

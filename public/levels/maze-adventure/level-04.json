@@ -8,7 +8,7 @@
     "###########"
   ],
   "availableCommands": [
-    "move"
+    "forward"
   ],
   "availableSensors": [
     "atGoal"

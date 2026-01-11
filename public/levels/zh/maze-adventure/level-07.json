@@ -13,8 +13,9 @@
     "########"
   ],
   "availableCommands": [
-    "move",
-    "turn",
+    "forward",
+    "turnLeft",
+    "turnRight",
     "collect"
   ],
   "availableSensors": [

@@ -5,8 +5,9 @@
   "gameType": "turtle",
   "requiredTier": "premium",
   "availableCommands": [
-    "move",
-    "turn"
+    "forward",
+    "turnLeft",
+    "turnRight"
   ],
   "availableSensors": [],
   "availableBlocks": [
