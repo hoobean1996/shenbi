@@ -70,8 +70,8 @@ export function MazeAdventure({
     return { win: false, fail: false };
   }, []);
 
-  // VM ref for condition evaluation (will be set after execution hook is created)
-  const vmRef = useRef<VMInterface | null>(null);
+  // Execution ref for accessing VM in callbacks (set after hook is created)
+  const executionRef = useRef<{ vmRef: React.MutableRefObject<VMInterface | null> } | null>(null);
 
   // Delay before showing result modal (must be longer than animation duration of 300ms)
   const RESULT_DELAY = 500;
@@ -85,7 +85,9 @@ export function MazeAdventure({
       const mazeWorld = mazeWorldRef.current;
       if (!mazeWorld) return;
 
-      const { win, fail } = checkConditions(vmRef.current);
+      // Get VM from execution ref (not synced via useEffect, so always current)
+      const vm = executionRef.current?.vmRef.current ?? null;
+      const { win, fail } = checkConditions(vm);
 
       if (win) {
         isCompleteRef.current = true;
@@ -149,10 +151,8 @@ export function MazeAdventure({
     onCodeChange,
   });
 
-  // Sync vmRef with execution's vmRef
-  useEffect(() => {
-    vmRef.current = execution.vmRef.current;
-  });
+  // Store execution ref for accessing VM in callbacks
+  executionRef.current = execution;
 
   // Initialize maze world
   useEffect(() => {
