@@ -2,15 +2,14 @@
  * Adventure Context
  *
  * Provides shared adventure data loading across adventure pages.
- * Loads data from backend API.
+ * Loads data from local TypeScript level files.
  */
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ParsedAdventure, loadAdventuresFromApi } from '../../../infrastructure/levels';
+import { ParsedAdventure, loadLocalAdventures } from '../../../infrastructure/levels';
 import { getStorage } from '../../../infrastructure/storage';
 import { parseLevel } from '../../../infrastructure/levels/loader';
-import { useLanguage } from '../../../infrastructure/i18n';
 import { error as logError } from '../../../infrastructure/logging';
 
 interface AdventureContextValue {
@@ -23,7 +22,6 @@ interface AdventureContextValue {
 const AdventureContext = createContext<AdventureContextValue | null>(null);
 
 export function AdventureProvider({ children }: { children: ReactNode }) {
-  const { language } = useLanguage();
   const [searchParams] = useSearchParams();
 
   const [adventures, setAdventures] = useState<ParsedAdventure[]>([]);
@@ -31,7 +29,7 @@ export function AdventureProvider({ children }: { children: ReactNode }) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isCustomAdventure, setIsCustomAdventure] = useState(false);
 
-  // Load adventures from API or custom content
+  // Load adventures from local TypeScript files or custom content
   useEffect(() => {
     async function loadLevels() {
       try {
@@ -62,9 +60,9 @@ export function AdventureProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Load from API
-        const { adventures: apiAdventures } = await loadAdventuresFromApi(language);
-        setAdventures(apiAdventures);
+        // Load from local TypeScript level files
+        const { adventures: localAdventures } = loadLocalAdventures();
+        setAdventures(localAdventures);
         setIsCustomAdventure(false);
       } catch (err) {
         logError('Failed to load adventures', err, undefined, 'AdventureContext');
@@ -74,7 +72,7 @@ export function AdventureProvider({ children }: { children: ReactNode }) {
       }
     }
     loadLevels();
-  }, [language, searchParams]);
+  }, [searchParams]);
 
   return (
     <AdventureContext.Provider

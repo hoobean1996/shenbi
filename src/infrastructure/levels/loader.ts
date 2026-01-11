@@ -16,21 +16,8 @@ import { adventureApi, StdlibFunction } from '../services/api';
 import type { AdventureResponse, LevelResponse } from '../services/api';
 import { warn } from '../logging';
 
-// Local custom commands by level slug (fallback when API doesn't have them)
-// This allows defining custom commands in code while backend support is added
-const LOCAL_CUSTOM_COMMANDS: Record<string, CustomCommandDefinition[]> = {
-  'maze-05': [
-    {
-      id: 'walkSide',
-      label: 'Walk Side',
-      icon: '📐',
-      color: '#8B5CF6',
-      codeName: 'walkSide',
-      argType: 'none',
-      code: 'forward()\nforward()\nturnRight()',
-    },
-  ],
-};
+// Import local TypeScript levels
+import { mazeLevels, type MazeLevelData } from '../../core/game/maze/levels';
 
 /**
  * Parsed Adventure with full level definitions
@@ -212,10 +199,9 @@ export function convertApiLevelToDefinition(
           ? JSON.stringify(apiLevel.fail_condition)
           : undefined,
     requiredTier: apiLevel.required_tier,
-    // Custom commands: prefer API data, fall back to local definitions
-    customCommands:
-      (apiLevel as unknown as { custom_commands?: CustomCommandDefinition[] }).custom_commands ||
-      LOCAL_CUSTOM_COMMANDS[apiLevel.slug],
+    // Custom commands from API (if any)
+    customCommands: (apiLevel as unknown as { custom_commands?: CustomCommandDefinition[] })
+      .custom_commands,
   };
 }
 
@@ -252,6 +238,7 @@ export function convertApiAdventureToParsed(
 
 /**
  * Load all adventures from the backend API
+ * @deprecated Use loadLocalAdventures instead - all levels are now in local TypeScript files
  */
 export async function loadAdventuresFromApi(language?: Language): Promise<{
   adventures: ParsedAdventure[];
@@ -277,4 +264,77 @@ export async function loadAdventuresFromApi(language?: Language): Promise<{
   }
 
   return { adventures };
+}
+
+// ============================================
+// Local TypeScript Level Loading
+// ============================================
+
+/**
+ * Convert local MazeLevelData to LevelDefinition
+ */
+function convertMazeLevelToDefinition(level: MazeLevelData): LevelDefinition {
+  const grid = level.grid;
+  const height = grid.length;
+  const width = Math.max(...grid.map((row) => row.length));
+
+  const entities: EntityPlacement[] = [];
+
+  for (let y = 0; y < grid.length; y++) {
+    const row = grid[y];
+    for (let x = 0; x < row.length; x++) {
+      const char = row[x];
+      if (char === ' ' || char === '.') continue;
+
+      const symbolDef = DEFAULT_MAZE_SYMBOLS[char];
+      if (symbolDef) {
+        entities.push({
+          type: symbolDef.type,
+          position: { x, y },
+          state: symbolDef.state,
+        });
+      }
+    }
+  }
+
+  return {
+    id: level.id,
+    name: level.name,
+    description: level.description,
+    width,
+    height,
+    grid,
+    entities,
+    availableCommands: level.availableCommands,
+    availableSensors: level.availableSensors,
+    availableBlocks: level.availableBlocks as BlockCategory[],
+    teachingGoal: level.teachingGoal,
+    hints: level.hints,
+    gameType: 'maze',
+    winCondition: level.winCondition,
+    failCondition: level.failCondition,
+    requiredTier: level.requiredTier,
+    customCommands: level.customCommands,
+  };
+}
+
+/**
+ * Load all adventures from local TypeScript level files
+ * This is the primary way to load levels - no API needed
+ */
+export function loadLocalAdventures(): { adventures: ParsedAdventure[] } {
+  // Create maze adventure from local levels
+  const mazeAdventure: ParsedAdventure = {
+    id: 'robot-maze',
+    name: 'Robot Maze Adventure',
+    description: 'Help the robot navigate through mazes!',
+    icon: '🤖',
+    gameType: 'maze',
+    complexity: 'beginner',
+    levels: mazeLevels.map(convertMazeLevelToDefinition),
+  };
+
+  return {
+    adventures: [mazeAdventure],
+  };
 }
