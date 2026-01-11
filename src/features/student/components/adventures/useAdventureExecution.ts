@@ -91,7 +91,7 @@ export function useAdventureExecution({
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [highlightedBlockId, setHighlightedBlockId] = useState<string | null>(null);
   const [variables, setVariables] = useState<Record<string, Value>>({});
-  const [executionSpeed, setExecutionSpeed] = useState(200);
+  const [executionSpeed, setExecutionSpeed] = useState(500); // Default to 2x speed
 
   // Refs
   const vmRef = useRef<VMInterface | null>(null);
