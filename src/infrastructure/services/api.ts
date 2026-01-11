@@ -384,18 +384,41 @@ export const liveSessionApi = {
 };
 
 /**
- * Stripe API (placeholder - needs backend integration)
+ * Stripe/Subscription API
  */
 export const stripeApi = {
+  listPlans: () =>
+    wrapSdkCall(() => getLemonClient().subscriptions.listPlans()),
+
+  getCurrentSubscription: () =>
+    wrapSdkCall(() => getLemonClient().subscriptions.getCurrent()),
+
   createCheckoutSession: async (): Promise<{ checkout_url: string }> => {
-    throw new ApiError('Stripe integration not implemented', 501);
+    // Get the first non-default (premium) plan
+    const plans = await wrapSdkCall(() => getLemonClient().subscriptions.listPlans());
+    const premiumPlan = plans.find(p => !p.is_default && p.is_active);
+
+    if (!premiumPlan) {
+      throw new ApiError('No premium plan available', 404);
+    }
+
+    const currentUrl = window.location.origin;
+    const result = await wrapSdkCall(() =>
+      getLemonClient().subscriptions.createCheckout(
+        premiumPlan.id,
+        `${currentUrl}/upgrade/success`,
+        `${currentUrl}/upgrade/cancel`
+      )
+    );
+
+    return { checkout_url: result.checkout_url };
   },
 
-  verifyCheckout: async (_sessionId: string): Promise<{ success: boolean; subscription_tier: string }> => {
-    throw new ApiError('Stripe integration not implemented', 501);
-  },
-
-  resetToFree: async (): Promise<{ success: boolean; subscription_tier: string }> => {
-    throw new ApiError('Stripe integration not implemented', 501);
+  createPortalSession: async (): Promise<{ portal_url: string }> => {
+    const currentUrl = window.location.origin;
+    const result = await wrapSdkCall(() =>
+      getLemonClient().subscriptions.createPortal(`${currentUrl}/profile`)
+    );
+    return { portal_url: result.portal_url };
   },
 };
