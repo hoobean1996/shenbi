@@ -16,11 +16,13 @@ import {
   VARIABLE_BLOCKS,
   FUNCTION_BLOCKS,
   LIST_BLOCKS,
+  BLOCK_COLORS,
   ConditionId,
   GameType,
   getCommandBlocks,
   getConditions,
 } from './types';
+import type { CustomCommandDefinition } from '../../../../core/engine/types';
 import { SoundManager } from '../../../../infrastructure/sounds/SoundManager';
 import { useLanguage } from '../../../../infrastructure/i18n';
 
@@ -32,6 +34,7 @@ interface BlockItemProps {
   isNested?: boolean;
   highlightedBlockId?: string | null;
   gameType?: GameType;
+  customCommands?: CustomCommandDefinition[];
 }
 
 const ITEM_TYPE = 'BLOCK';
@@ -547,10 +550,37 @@ function ConditionEditor({ condition, conditionExpr, onChange, conditions }: Con
   );
 }
 
-function getBlockDef(block: Block, gameType: GameType = 'maze'): BlockDefinition | undefined {
+function getBlockDef(
+  block: Block,
+  gameType: GameType = 'maze',
+  customCommands?: CustomCommandDefinition[]
+): BlockDefinition | undefined {
   if (block.type === 'command') {
+    // Check built-in commands first
     const commandBlocks = getCommandBlocks(gameType);
-    return commandBlocks.find((b) => b.command === block.command);
+    const builtIn = commandBlocks.find((b) => b.command === block.command);
+    if (builtIn) return builtIn;
+
+    // Check custom commands
+    if (customCommands) {
+      const customCmd = customCommands.find((c) => c.id === block.command);
+      if (customCmd) {
+        return {
+          type: 'command',
+          command: customCmd.id,
+          label: customCmd.label,
+          icon: customCmd.icon,
+          color: customCmd.color || BLOCK_COLORS.action,
+          argType: customCmd.argType || 'none',
+          defaultArg: customCmd.defaultArg
+            ? customCmd.argType === 'number'
+              ? { type: 'number', value: customCmd.defaultArg as number }
+              : { type: 'string', value: customCmd.defaultArg as string }
+            : undefined,
+        };
+      }
+    }
+    return undefined;
   }
   const controlDef = CONTROL_BLOCKS.find((b) => b.type === block.type);
   if (controlDef) return controlDef;
@@ -569,8 +599,9 @@ export function BlockItem({
   isNested,
   highlightedBlockId,
   gameType = 'maze',
+  customCommands,
 }: BlockItemProps) {
-  const def = getBlockDef(block, gameType);
+  const def = getBlockDef(block, gameType, customCommands);
   const conditions = getConditions(gameType);
   const isHighlighted = block.id === highlightedBlockId;
   const blockLabel = def?.label || '';
@@ -856,6 +887,7 @@ export function BlockItem({
             color={def?.color || '#999'}
             highlightedBlockId={highlightedBlockId}
             gameType={gameType}
+            customCommands={customCommands}
           />
         </div>
       )}
@@ -884,6 +916,7 @@ export function BlockItem({
               color={def?.color || '#999'}
               highlightedBlockId={highlightedBlockId}
               gameType={gameType}
+              customCommands={customCommands}
             />
           </div>
         </>
@@ -902,6 +935,7 @@ interface DropZoneProps {
   color: string;
   highlightedBlockId?: string | null;
   gameType?: GameType;
+  customCommands?: CustomCommandDefinition[];
 }
 
 function DropZone({
@@ -913,6 +947,7 @@ function DropZone({
   color: _color,
   highlightedBlockId,
   gameType = 'maze',
+  customCommands,
 }: DropZoneProps) {
   const { t } = useLanguage();
   const [{ isOver }, drop] = useDrop({
@@ -948,6 +983,7 @@ function DropZone({
               isNested
               highlightedBlockId={highlightedBlockId}
               gameType={gameType}
+              customCommands={customCommands}
             />
           ))}
         </div>

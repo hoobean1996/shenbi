@@ -78,6 +78,7 @@ export function BlockEditor({
               highlightedBlockId={highlightedBlockId}
               gameType={gameType}
               disabled={disabled}
+              customCommands={customCommands}
             />
           </div>
         </div>

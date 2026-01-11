@@ -11,6 +11,7 @@ import { Block, cloneBlock, GameType } from './types';
 import { BlockItem } from './BlockItem';
 import { SoundManager } from '../../../../infrastructure/sounds/SoundManager';
 import { useLanguage } from '../../../../infrastructure/i18n';
+import type { CustomCommandDefinition } from '../../../../core/engine/types';
 
 const ITEM_TYPE = 'BLOCK';
 const SCROLL_ZONE_SIZE = 60; // pixels from edge to trigger scroll
@@ -22,6 +23,7 @@ interface BlockWorkspaceProps {
   highlightedBlockId?: string | null;
   gameType?: GameType;
   disabled?: boolean;
+  customCommands?: CustomCommandDefinition[];
 }
 
 export function BlockWorkspace({
@@ -30,6 +32,7 @@ export function BlockWorkspace({
   highlightedBlockId,
   gameType = 'maze',
   disabled = false,
+  customCommands,
 }: BlockWorkspaceProps) {
   const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -199,6 +202,7 @@ export function BlockWorkspace({
               onAddChild={handleAddChild}
               highlightedBlockId={highlightedBlockId}
               gameType={gameType}
+              customCommands={customCommands}
             />
           ))}
           {/* Extra drop zone at bottom for easier dropping */}
