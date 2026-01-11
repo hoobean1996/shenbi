@@ -21,6 +21,10 @@ import {
   Crown,
   Paintbrush,
   Users,
+  Building2,
+  GraduationCap,
+  BarChart3,
+  Mail,
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -47,6 +51,9 @@ export default function LandingPage() {
             </a>
             <a href="#pricing" className="text-gray-600 hover:text-[#4a7a2a] transition-colors hidden sm:block">
               Pricing
+            </a>
+            <a href="#business" className="text-gray-600 hover:text-[#4a7a2a] transition-colors hidden sm:block">
+              Business
             </a>
             <Link
               to="/"
@@ -345,6 +352,71 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Business Partnership Section */}
+      <section id="business" className="py-20 px-4 bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#e8f5e0] rounded-full text-[#4a7a2a] text-sm mb-4">
+              <Building2 className="w-4 h-4" />
+              For Business
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+              Partner With Us
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Bring coding education to your students. Perfect for coding schools,
+              enrichment centers, and primary schools.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
+              <div className="w-12 h-12 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-4">
+                <GraduationCap className="w-6 h-6 text-[#4a7a2a]" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Coding Schools</h3>
+              <p className="text-gray-600 text-sm">
+                Use Shenbi as your teaching platform. Structured curriculum with 50+ levels.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
+              <div className="w-12 h-12 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-4">
+                <BarChart3 className="w-6 h-6 text-[#4a7a2a]" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Teacher Dashboard</h3>
+              <p className="text-gray-600 text-sm">
+                Track student progress, assign levels, and manage your classrooms easily.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
+              <div className="w-12 h-12 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-4">
+                <Users className="w-6 h-6 text-[#4a7a2a]" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Volume Licensing</h3>
+              <p className="text-gray-600 text-sm">
+                Special pricing for schools and organizations. Scale to hundreds of students.
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <a
+              href="mailto:business@gigaboo.sg"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-[#4a7a2a] text-white rounded-2xl font-bold text-lg hover:bg-[#3a6a1a] transition-all shadow-lg hover:shadow-xl hover:scale-105"
+            >
+              <Mail className="w-5 h-5" />
+              Contact Us
+              <ChevronRight className="w-5 h-5" />
+            </a>
+            <p className="mt-4 text-gray-500 text-sm">
+              business@gigaboo.sg
+            </p>
           </div>
         </div>
       </section>
