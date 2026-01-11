@@ -51,9 +51,7 @@ function setHistoryData(data: NotebookHistoryData): void {
 
 export function getAllNotebooks(): Notebook[] {
   const data = getStorageData();
-  return Object.values(data.notebooks).sort(
-    (a, b) => b.metadata.updatedAt - a.metadata.updatedAt
-  );
+  return Object.values(data.notebooks).sort((a, b) => b.metadata.updatedAt - a.metadata.updatedAt);
 }
 
 export function getNotebook(id: string): Notebook | null {

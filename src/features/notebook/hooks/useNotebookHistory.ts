@@ -96,10 +96,13 @@ export function useNotebookHistory(initialNotebook: Notebook) {
   }, []);
 
   // Update without recording history (for things like cursor position)
-  const updateWithoutHistory = useCallback((updater: (prev: Notebook) => Notebook) => {
-    skipHistoryRef.current = true;
-    updateNotebook(updater);
-  }, [updateNotebook]);
+  const updateWithoutHistory = useCallback(
+    (updater: (prev: Notebook) => Notebook) => {
+      skipHistoryRef.current = true;
+      updateNotebook(updater);
+    },
+    [updateNotebook]
+  );
 
   return {
     notebook: history.present,

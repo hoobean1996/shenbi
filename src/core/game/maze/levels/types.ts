@@ -68,9 +68,7 @@ export function getCommandsForLevel(
   level: MazeLevelData,
   allCommands: CommandDefinition[]
 ): CommandDefinition[] {
-  return allCommands.filter((cmd) =>
-    level.availableCommands.includes(cmd.id as MazeCommandId)
-  );
+  return allCommands.filter((cmd) => level.availableCommands.includes(cmd.id as MazeCommandId));
 }
 
 /** Helper to get sensor definitions for a level */
@@ -78,7 +76,5 @@ export function getSensorsForLevel(
   level: MazeLevelData,
   allConditions: ConditionDefinition[]
 ): ConditionDefinition[] {
-  return allConditions.filter((cond) =>
-    level.availableSensors.includes(cond.id as MazeSensorId)
-  );
+  return allConditions.filter((cond) => level.availableSensors.includes(cond.id as MazeSensorId));
 }

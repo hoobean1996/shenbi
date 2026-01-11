@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useLiveSession, StudentInfo, LiveStudentProgress } from '../../../core/classroom';
+import { useLiveSession, StudentInfo } from '../../../core/classroom';
 import { TeacherLobby } from '../components/TeacherLobby';
 import { TeacherDashboard } from '../components/TeacherDashboard';
 import { LevelDefinition } from '../../../core/engine';
@@ -16,7 +16,7 @@ import { loadAdventuresFromApi } from '../../../infrastructure/levels';
 import { useLanguage } from '../../../infrastructure/i18n';
 import { ConnectionError } from '../../shared/components/ConnectionError';
 import { Loader2, Star, Home, RotateCcw } from 'lucide-react';
-import { info, error as logError } from '../../../infrastructure/logging';
+import { error as logError } from '../../../infrastructure/logging';
 
 export default function TeacherClassroomPage() {
   const navigate = useNavigate();

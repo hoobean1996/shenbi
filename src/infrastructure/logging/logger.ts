@@ -131,7 +131,8 @@ class Logger {
 
     // Always log to console in development
     if (import.meta.env.DEV) {
-      const consoleFn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.info;
+      const consoleFn =
+        level === 'error' ? console.error : level === 'warn' ? console.warn : console.info;
       consoleFn(`[${component || 'app'}]`, message, context || '');
     }
 

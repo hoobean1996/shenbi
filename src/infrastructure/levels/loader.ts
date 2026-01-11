@@ -7,14 +7,8 @@ import {
   GameType,
 } from './types';
 import type { Language } from '../i18n';
-import {
-  adventureApi,
-  StdlibFunction,
-} from '../services/api';
-import type {
-  AdventureResponse,
-  LevelResponse,
-} from '../services/api';
+import { adventureApi, StdlibFunction } from '../services/api';
+import type { AdventureResponse, LevelResponse } from '../services/api';
 import { warn } from '../logging';
 
 /**
@@ -184,12 +178,18 @@ export function convertApiLevelToDefinition(
     gameType: apiLevel.game_type as GameType,
     expectedCode: apiLevel.expected_code || undefined,
     // win_condition/fail_condition should be strings - don't double-stringify
-    winCondition: typeof apiLevel.win_condition === 'string'
-      ? apiLevel.win_condition
-      : apiLevel.win_condition ? JSON.stringify(apiLevel.win_condition) : undefined,
-    failCondition: typeof apiLevel.fail_condition === 'string'
-      ? apiLevel.fail_condition
-      : apiLevel.fail_condition ? JSON.stringify(apiLevel.fail_condition) : undefined,
+    winCondition:
+      typeof apiLevel.win_condition === 'string'
+        ? apiLevel.win_condition
+        : apiLevel.win_condition
+          ? JSON.stringify(apiLevel.win_condition)
+          : undefined,
+    failCondition:
+      typeof apiLevel.fail_condition === 'string'
+        ? apiLevel.fail_condition
+        : apiLevel.fail_condition
+          ? JSON.stringify(apiLevel.fail_condition)
+          : undefined,
     requiredTier: apiLevel.required_tier,
   };
 }

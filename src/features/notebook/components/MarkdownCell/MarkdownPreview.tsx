@@ -38,13 +38,9 @@ export function MarkdownPreview({ content, onDoubleClick }: MarkdownPreviewProps
           ),
           thead: ({ children }) => <thead className="bg-gray-100">{children}</thead>,
           th: ({ children }) => (
-            <th className="border border-gray-300 px-3 py-2 text-left font-semibold">
-              {children}
-            </th>
+            <th className="border border-gray-300 px-3 py-2 text-left font-semibold">{children}</th>
           ),
-          td: ({ children }) => (
-            <td className="border border-gray-300 px-3 py-2">{children}</td>
-          ),
+          td: ({ children }) => <td className="border border-gray-300 px-3 py-2">{children}</td>,
 
           // Images
           img: ({ src, alt }) => (
@@ -97,9 +93,7 @@ export function MarkdownPreview({ content, onDoubleClick }: MarkdownPreviewProps
 
           // Headings with distinct styling
           h1: ({ children }) => (
-            <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2 border-b pb-1">
-              {children}
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2 border-b pb-1">{children}</h1>
           ),
           h2: ({ children }) => (
             <h2 className="text-xl font-bold text-gray-800 mt-3 mb-2">{children}</h2>

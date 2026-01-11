@@ -179,9 +179,10 @@ function gameCommandToBlockDef(cmd: MazeCommandDef | TurtleCommandDef): BlockDef
   return def;
 }
 
-function gameConditionToUICondition(
-  cond: MazeConditionDef | TurtleConditionDef
-): { id: ConditionId; label: string } {
+function gameConditionToUICondition(cond: MazeConditionDef | TurtleConditionDef): {
+  id: ConditionId;
+  label: string;
+} {
   return {
     id: cond.id as ConditionId,
     label: cond.label,

@@ -17,5 +17,6 @@ export const level03: TurtleLevelData = {
     'Alternate: forward, turn right, forward, turn left...',
     'Make a staircase pattern with 4 lines!',
   ],
-  expectedCode: 'forward(2)\nturnRight(90)\nforward(2)\nturnLeft(90)\nforward(2)\nturnRight(90)\nforward(2)',
+  expectedCode:
+    'forward(2)\nturnRight(90)\nforward(2)\nturnLeft(90)\nforward(2)\nturnRight(90)\nforward(2)',
 };

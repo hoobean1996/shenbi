@@ -6,11 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { FileSpreadsheet, Loader2, Users } from 'lucide-react';
-import {
-  classroomApi,
-  GradebookEntry,
-  ApiError,
-} from '../../../../infrastructure/services/api';
+import { classroomApi, ApiError } from '../../../../infrastructure/services/api';
 
 // Local type for gradebook response structure
 interface GradebookData {

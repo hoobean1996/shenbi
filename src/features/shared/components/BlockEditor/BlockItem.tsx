@@ -420,12 +420,7 @@ interface ConditionEditorProps {
   conditions: { id: ConditionId; label: string }[];
 }
 
-function ConditionEditor({
-  condition,
-  conditionExpr,
-  onChange,
-  conditions,
-}: ConditionEditorProps) {
+function ConditionEditor({ condition, conditionExpr, onChange, conditions }: ConditionEditorProps) {
   // Determine if using expression or sensor
   const conditionType: ConditionType = conditionExpr ? 'expression' : 'sensor';
   const defaultCondition = conditions[0]?.id || 'frontClear';

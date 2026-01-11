@@ -4,15 +4,7 @@ export const level03: MazeLevelData = {
   id: 'maze-03',
   name: 'Left and Right',
   description: 'Navigate through the zigzag path using both turns!',
-  grid: [
-    '#######',
-    '#>..*.#',
-    '####.##',
-    '#..*..#',
-    '#.#####',
-    '#.*..G#',
-    '#######',
-  ],
+  grid: ['#######', '#>..*.#', '####.##', '#..*..#', '#.#####', '#.*..G#', '#######'],
   availableCommands: ['forward', 'turnLeft', 'turnRight'],
   availableSensors: ['atGoal'],
   availableBlocks: ['command'],
@@ -22,6 +14,6 @@ export const level03: MazeLevelData = {
   hints: [
     'Turn Left and Turn Right let you face any direction',
     'Plan your path before you start coding',
-    'The path zigzags - you\'ll need multiple turns',
+    "The path zigzags - you'll need multiple turns",
   ],
 };

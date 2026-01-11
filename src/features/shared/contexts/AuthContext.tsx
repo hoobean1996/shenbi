@@ -15,11 +15,12 @@ const REFRESH_TOKEN_KEY = 'shenbi_refresh_token';
 const USER_KEY = 'shenbi_user';
 
 // API configuration
-const LEMONADE_API_KEY = import.meta.env.VITE_LEMONADE_API_KEY as string || '';
-const LEMONADE_BASE_URL = import.meta.env.VITE_LEMONADE_BASE_URL as string || 'https://api.gigaboo.sg';
+const LEMONADE_API_KEY = (import.meta.env.VITE_LEMONADE_API_KEY as string) || '';
+const LEMONADE_BASE_URL =
+  (import.meta.env.VITE_LEMONADE_BASE_URL as string) || 'https://api.gigaboo.sg';
 
 // Google OAuth Client ID
-export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string || '';
+export const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string) || '';
 
 // Create a singleton lemon client
 const lemonClient = new LemonadeClient({
@@ -130,17 +131,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /**
    * Login with Google ID token
    */
-  const loginWithGoogle = useCallback(async (idToken: string): Promise<void> => {
-    try {
-      const tokens = await lemonClient.auth.loginWithGoogle({ id_token: idToken });
-      handleAuthSuccess(tokens);
-    } catch (error) {
-      if (error instanceof ApiError) {
-        throw new Error(error.message || 'Failed to login with Google');
+  const loginWithGoogle = useCallback(
+    async (idToken: string): Promise<void> => {
+      try {
+        const tokens = await lemonClient.auth.loginWithGoogle({ id_token: idToken });
+        handleAuthSuccess(tokens);
+      } catch (error) {
+        if (error instanceof ApiError) {
+          throw new Error(error.message || 'Failed to login with Google');
+        }
+        throw error;
       }
-      throw error;
-    }
-  }, [handleAuthSuccess]);
+    },
+    [handleAuthSuccess]
+  );
 
   /**
    * Logout and clear all auth data

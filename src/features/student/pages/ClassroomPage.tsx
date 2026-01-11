@@ -40,7 +40,7 @@ export default function ClassroomPage() {
   } = useLiveSession({
     userName: studentName,
     role: 'student',
-    onError: (err) => {
+    onError: (_err) => {
       // Navigate to /classroom on error if we were trying to join via URL
       if (urlRoomCode) {
         navigate('/classroom', { replace: true });

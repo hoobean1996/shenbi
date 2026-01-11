@@ -58,7 +58,7 @@ export default function BattlePage() {
     iWon,
   } = useBattle({
     playerName,
-    onError: (err) => {
+    onError: (_err) => {
       // Navigate to /battle on error if we were trying to join via URL
       if (urlRoomCode) {
         navigate('/battle', { replace: true });
@@ -84,7 +84,9 @@ export default function BattlePage() {
   const [isLargeScreen, setIsLargeScreen] = useState(false);
 
   // Derive status for UI (map new status to what UI expects)
-  const getUIStatus = (status: BattleStatus): 'lobby' | 'waiting' | 'ready' | 'playing' | 'finished' => {
+  const getUIStatus = (
+    status: BattleStatus
+  ): 'lobby' | 'waiting' | 'ready' | 'playing' | 'finished' => {
     switch (status) {
       case 'idle':
       case 'creating':

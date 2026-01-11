@@ -190,7 +190,11 @@ export function useUserProgress() {
         await getStorage().updateCurrentLevel(adventureId, levelIndex);
         await refresh();
       } catch (err) {
-        warn('Failed to update current level', { error: err, adventureId, levelIndex }, 'useStorage');
+        warn(
+          'Failed to update current level',
+          { error: err, adventureId, levelIndex },
+          'useStorage'
+        );
       }
     },
     [refresh]

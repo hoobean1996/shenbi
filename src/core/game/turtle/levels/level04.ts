@@ -15,7 +15,8 @@ export const level04: TurtleLevelData = {
   hints: [
     'A square has 4 equal sides',
     'After each side, turn right 90 degrees',
-    'If done correctly, you\'ll end up where you started!',
+    "If done correctly, you'll end up where you started!",
   ],
-  expectedCode: 'forward(3)\nturnRight(90)\nforward(3)\nturnRight(90)\nforward(3)\nturnRight(90)\nforward(3)',
+  expectedCode:
+    'forward(3)\nturnRight(90)\nforward(3)\nturnRight(90)\nforward(3)\nturnRight(90)\nforward(3)',
 };

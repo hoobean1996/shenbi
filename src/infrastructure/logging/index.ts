@@ -11,13 +11,4 @@
  *   error('Failed to load level', err, { levelId: 5 }, 'GamePage');
  */
 
-export {
-  logger,
-  debug,
-  info,
-  warn,
-  error,
-  setAuthToken,
-  setEnabled,
-  flush,
-} from './logger';
+export { logger, debug, info, warn, error, setAuthToken, setEnabled, flush } from './logger';

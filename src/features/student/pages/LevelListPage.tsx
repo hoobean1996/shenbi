@@ -147,7 +147,12 @@ export default function LevelListPage() {
             const prevLevel = index > 0 ? levels[index - 1] : null;
             const isProgressLocked =
               prevLevel !== null &&
-              !isLevelCompleted(adventure.id, prevLevel.id, adventure.numericId, prevLevel.numericId);
+              !isLevelCompleted(
+                adventure.id,
+                prevLevel.id,
+                adventure.numericId,
+                prevLevel.numericId
+              );
             const isPremiumLevel = level.requiredTier === 'premium';
             const isPremiumLocked = isPremiumLevel && userTier !== 'premium';
             const isLocked = isProgressLocked || isPremiumLocked;

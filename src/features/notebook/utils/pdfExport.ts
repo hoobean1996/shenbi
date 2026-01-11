@@ -144,7 +144,8 @@ function renderCode(state: PDFState, content: string): void {
     const codeLine = lines[i] || ' ';
     // Truncate long lines
     const maxChars = 80;
-    const displayLine = codeLine.length > maxChars ? codeLine.substring(0, maxChars) + '...' : codeLine;
+    const displayLine =
+      codeLine.length > maxChars ? codeLine.substring(0, maxChars) + '...' : codeLine;
     state.pdf.text(displayLine, MARGIN + 12, state.y);
 
     state.y += CODE_LINE_HEIGHT;

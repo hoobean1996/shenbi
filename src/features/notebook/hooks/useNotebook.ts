@@ -144,9 +144,7 @@ export function useNotebook(options: UseNotebookOptions = {}) {
       updateWithoutHistory((prev) => ({
         ...prev,
         cells: prev.cells.map((cell) =>
-          cell.id === cellId && cell.type === 'markdown'
-            ? { ...cell, isEditing }
-            : cell
+          cell.id === cellId && cell.type === 'markdown' ? { ...cell, isEditing } : cell
         ),
       }));
     },
@@ -177,10 +175,13 @@ export function useNotebook(options: UseNotebookOptions = {}) {
         ...prev,
         cells: prev.cells.map((c) =>
           c.id === cellId
-            ? updateCell(c as CodeCell, {
-                executionState: 'running',
-                outputs: [],
-              } as Partial<CodeCell>)
+            ? updateCell(
+                c as CodeCell,
+                {
+                  executionState: 'running',
+                  outputs: [],
+                } as Partial<CodeCell>
+              )
             : c
         ),
       }));
@@ -193,11 +194,14 @@ export function useNotebook(options: UseNotebookOptions = {}) {
           ...prev,
           cells: prev.cells.map((c) =>
             c.id === cellId
-              ? updateCell(c as CodeCell, {
-                  executionState: result.success ? 'success' : 'error',
-                  executionCount: executionCount + 1,
-                  outputs: result.outputs,
-                } as Partial<CodeCell>)
+              ? updateCell(
+                  c as CodeCell,
+                  {
+                    executionState: result.success ? 'success' : 'error',
+                    executionCount: executionCount + 1,
+                    outputs: result.outputs,
+                  } as Partial<CodeCell>
+                )
               : c
           ),
         }));
@@ -206,9 +210,12 @@ export function useNotebook(options: UseNotebookOptions = {}) {
           ...prev,
           cells: prev.cells.map((c) =>
             c.id === cellId
-              ? updateCell(c as CodeCell, {
-                  executionState: 'error',
-                } as Partial<CodeCell>)
+              ? updateCell(
+                  c as CodeCell,
+                  {
+                    executionState: 'error',
+                  } as Partial<CodeCell>
+                )
               : c
           ),
         }));

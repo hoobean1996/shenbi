@@ -66,12 +66,18 @@ function convertApiLevelToCompactData(level: LevelResponse): CompactLevelData {
     teachingGoal: level.teaching_goal || undefined,
     hints: level.hints as unknown as string[] | undefined,
     // win_condition/fail_condition should be strings - don't double-stringify
-    winCondition: typeof level.win_condition === 'string'
-      ? level.win_condition
-      : level.win_condition ? JSON.stringify(level.win_condition) : undefined,
-    failCondition: typeof level.fail_condition === 'string'
-      ? level.fail_condition
-      : level.fail_condition ? JSON.stringify(level.fail_condition) : undefined,
+    winCondition:
+      typeof level.win_condition === 'string'
+        ? level.win_condition
+        : level.win_condition
+          ? JSON.stringify(level.win_condition)
+          : undefined,
+    failCondition:
+      typeof level.fail_condition === 'string'
+        ? level.fail_condition
+        : level.fail_condition
+          ? JSON.stringify(level.fail_condition)
+          : undefined,
     expectedCode: level.expected_code || undefined,
   };
 }
@@ -179,7 +185,8 @@ export class ApiStorageProvider implements StorageProvider {
     }
 
     // Determine subscription tier from subscription status
-    const isPremium = subscription && (subscription.status === 'active' || subscription.status === 'trialing');
+    const isPremium =
+      subscription && (subscription.status === 'active' || subscription.status === 'trialing');
 
     this.userDataCache = {
       userId: String(user.id),
@@ -340,7 +347,8 @@ export class ApiStorageProvider implements StorageProvider {
       stripeApi.getCurrentSubscription().catch(() => null),
     ]);
 
-    const isPremium = subscription && (subscription.status === 'active' || subscription.status === 'trialing');
+    const isPremium =
+      subscription && (subscription.status === 'active' || subscription.status === 'trialing');
 
     return {
       name: user.display_name || 'Student',
@@ -444,7 +452,10 @@ export class ApiStorageProvider implements StorageProvider {
 
       // Create new levels
       for (let i = 0; i < adventure.levels.length; i++) {
-        await adventureApi.createLevel(adventureId, convertCompactDataToApiLevel(adventure.levels[i].data, i));
+        await adventureApi.createLevel(
+          adventureId,
+          convertCompactDataToApiLevel(adventure.levels[i].data, i)
+        );
       }
 
       // Fetch updated adventure
@@ -466,7 +477,10 @@ export class ApiStorageProvider implements StorageProvider {
 
       // Create levels
       for (let i = 0; i < adventure.levels.length; i++) {
-        await adventureApi.createLevel(response.id, convertCompactDataToApiLevel(adventure.levels[i].data, i));
+        await adventureApi.createLevel(
+          response.id,
+          convertCompactDataToApiLevel(adventure.levels[i].data, i)
+        );
       }
 
       // Fetch the full level data

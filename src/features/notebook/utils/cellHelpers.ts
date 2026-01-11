@@ -105,8 +105,12 @@ repeat 4 times:
       updatedAt: now,
     },
     cells: [
-      createMarkdownCell('# Welcome to MiniJupyter\n\nThis is your interactive notebook for learning programming!\n\nDouble-click this cell to edit it.'),
-      createMarkdownCell('## Drawing with Turtle\n\nThe code below draws a square. Click **Run** to see it in action!'),
+      createMarkdownCell(
+        '# Welcome to MiniJupyter\n\nThis is your interactive notebook for learning programming!\n\nDouble-click this cell to edit it.'
+      ),
+      createMarkdownCell(
+        '## Drawing with Turtle\n\nThe code below draws a square. Click **Run** to see it in action!'
+      ),
       createCodeCell(squareCode, 'turtle'),
     ],
     version: 1,

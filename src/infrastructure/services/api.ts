@@ -8,10 +8,7 @@
 import { getLemonClient } from '../../features/shared/contexts/AuthContext';
 
 // Re-export SDK types for use throughout the app
-export {
-  GameType,
-  AssignmentStatus,
-} from '@lemonade/sdk';
+export { GameType, AssignmentStatus } from '@lemonade/sdk';
 
 export type {
   // Adventure types
@@ -115,11 +112,7 @@ async function wrapSdkCall<T>(fn: () => Promise<T>): Promise<T> {
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'status' in error) {
       const e = error as { status: number; message?: string; body?: { detail?: string } };
-      throw new ApiError(
-        e.message || 'API request failed',
-        e.status,
-        e.body?.detail
-      );
+      throw new ApiError(e.message || 'API request failed', e.status, e.body?.detail);
     }
     throw error;
   }
@@ -138,8 +131,10 @@ export const adventureApi = {
   create: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiAdventures']['create']>[0]) =>
     wrapSdkCall(() => getLemonClient().shenbiAdventures.create(data)),
 
-  update: (adventureId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiAdventures']['update']>[1]) =>
-    wrapSdkCall(() => getLemonClient().shenbiAdventures.update(adventureId, data)),
+  update: (
+    adventureId: number,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiAdventures']['update']>[1]
+  ) => wrapSdkCall(() => getLemonClient().shenbiAdventures.update(adventureId, data)),
 
   delete: (adventureId: number) =>
     wrapSdkCall(() => getLemonClient().shenbiAdventures.delete(adventureId)),
@@ -147,11 +142,16 @@ export const adventureApi = {
   listLevels: (adventureId: number) =>
     wrapSdkCall(() => getLemonClient().shenbiAdventures.listLevels(adventureId)),
 
-  createLevel: (adventureId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiAdventures']['createLevel']>[1]) =>
-    wrapSdkCall(() => getLemonClient().shenbiAdventures.createLevel(adventureId, data)),
+  createLevel: (
+    adventureId: number,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiAdventures']['createLevel']>[1]
+  ) => wrapSdkCall(() => getLemonClient().shenbiAdventures.createLevel(adventureId, data)),
 
-  updateLevel: (adventureId: number, levelId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiAdventures']['updateLevel']>[2]) =>
-    wrapSdkCall(() => getLemonClient().shenbiAdventures.updateLevel(adventureId, levelId, data)),
+  updateLevel: (
+    adventureId: number,
+    levelId: number,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiAdventures']['updateLevel']>[2]
+  ) => wrapSdkCall(() => getLemonClient().shenbiAdventures.updateLevel(adventureId, levelId, data)),
 
   deleteLevel: (adventureId: number, levelId: number) =>
     wrapSdkCall(() => getLemonClient().shenbiAdventures.deleteLevel(adventureId, levelId)),
@@ -161,22 +161,19 @@ export const adventureApi = {
  * Profile API
  */
 export const profileApi = {
-  get: () =>
-    wrapSdkCall(() => getLemonClient().shenbiProfile.get()),
+  get: () => wrapSdkCall(() => getLemonClient().shenbiProfile.get()),
 
   update: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiProfile']['update']>[0]) =>
     wrapSdkCall(() => getLemonClient().shenbiProfile.update(data)),
 
-  getStats: () =>
-    wrapSdkCall(() => getLemonClient().shenbiProfile.getStats()),
+  getStats: () => wrapSdkCall(() => getLemonClient().shenbiProfile.getStats()),
 };
 
 /**
  * Progress API
  */
 export const progressApi = {
-  getAll: () =>
-    wrapSdkCall(() => getLemonClient().shenbiProgress.getAll()),
+  getAll: () => wrapSdkCall(() => getLemonClient().shenbiProgress.getAll()),
 
   getByAdventure: (adventureId: number) =>
     wrapSdkCall(() => getLemonClient().shenbiProgress.getByAdventure(adventureId)),
@@ -192,8 +189,7 @@ export const progressApi = {
  * Settings API
  */
 export const settingsApi = {
-  get: () =>
-    wrapSdkCall(() => getLemonClient().shenbiSettings.get()),
+  get: () => wrapSdkCall(() => getLemonClient().shenbiSettings.get()),
 
   update: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiSettings']['update']>[0]) =>
     wrapSdkCall(() => getLemonClient().shenbiSettings.update(data)),
@@ -206,8 +202,7 @@ export const settingsApi = {
  * Achievements API
  */
 export const achievementsApi = {
-  list: () =>
-    wrapSdkCall(() => getLemonClient().shenbiAchievements.list()),
+  list: () => wrapSdkCall(() => getLemonClient().shenbiAchievements.list()),
 
   award: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiAchievements']['award']>[0]) =>
     wrapSdkCall(() => getLemonClient().shenbiAchievements.award(data)),
@@ -220,23 +215,21 @@ export const achievementsApi = {
  * Sessions API
  */
 export const sessionsApi = {
-  getBattle: () =>
-    wrapSdkCall(() => getLemonClient().shenbiSessions.getBattle()),
+  getBattle: () => wrapSdkCall(() => getLemonClient().shenbiSessions.getBattle()),
 
-  createBattle: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiSessions']['createBattle']>[0]) =>
-    wrapSdkCall(() => getLemonClient().shenbiSessions.createBattle(data)),
+  createBattle: (
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiSessions']['createBattle']>[0]
+  ) => wrapSdkCall(() => getLemonClient().shenbiSessions.createBattle(data)),
 
-  endBattle: () =>
-    wrapSdkCall(() => getLemonClient().shenbiSessions.endBattle()),
+  endBattle: () => wrapSdkCall(() => getLemonClient().shenbiSessions.endBattle()),
 
-  getClassroom: () =>
-    wrapSdkCall(() => getLemonClient().shenbiSessions.getClassroom()),
+  getClassroom: () => wrapSdkCall(() => getLemonClient().shenbiSessions.getClassroom()),
 
-  createClassroom: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiSessions']['createClassroom']>[0]) =>
-    wrapSdkCall(() => getLemonClient().shenbiSessions.createClassroom(data)),
+  createClassroom: (
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiSessions']['createClassroom']>[0]
+  ) => wrapSdkCall(() => getLemonClient().shenbiSessions.createClassroom(data)),
 
-  endClassroom: () =>
-    wrapSdkCall(() => getLemonClient().shenbiSessions.endClassroom()),
+  endClassroom: () => wrapSdkCall(() => getLemonClient().shenbiSessions.endClassroom()),
 };
 
 /**
@@ -246,17 +239,17 @@ export const classroomApi = {
   create: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiClassrooms']['create']>[0]) =>
     wrapSdkCall(() => getLemonClient().shenbiClassrooms.create(data)),
 
-  listOwned: () =>
-    wrapSdkCall(() => getLemonClient().shenbiClassrooms.listOwned()),
+  listOwned: () => wrapSdkCall(() => getLemonClient().shenbiClassrooms.listOwned()),
 
-  listEnrolled: () =>
-    wrapSdkCall(() => getLemonClient().shenbiClassrooms.listEnrolled()),
+  listEnrolled: () => wrapSdkCall(() => getLemonClient().shenbiClassrooms.listEnrolled()),
 
   get: (classroomId: number) =>
     wrapSdkCall(() => getLemonClient().shenbiClassrooms.get(classroomId)),
 
-  update: (classroomId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiClassrooms']['update']>[1]) =>
-    wrapSdkCall(() => getLemonClient().shenbiClassrooms.update(classroomId, data)),
+  update: (
+    classroomId: number,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiClassrooms']['update']>[1]
+  ) => wrapSdkCall(() => getLemonClient().shenbiClassrooms.update(classroomId, data)),
 
   delete: (classroomId: number) =>
     wrapSdkCall(() => getLemonClient().shenbiClassrooms.delete(classroomId)),
@@ -277,8 +270,10 @@ export const classroomApi = {
     wrapSdkCall(() => getLemonClient().shenbiClassrooms.removeMember(classroomId, studentId)),
 
   // Assignments
-  createAssignment: (classroomId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiClassrooms']['createAssignment']>[1]) =>
-    wrapSdkCall(() => getLemonClient().shenbiClassrooms.createAssignment(classroomId, data)),
+  createAssignment: (
+    classroomId: number,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiClassrooms']['createAssignment']>[1]
+  ) => wrapSdkCall(() => getLemonClient().shenbiClassrooms.createAssignment(classroomId, data)),
 
   listAssignments: (classroomId: number, includeAll = false) =>
     wrapSdkCall(() => getLemonClient().shenbiClassrooms.listAssignments(classroomId, includeAll)),
@@ -286,21 +281,43 @@ export const classroomApi = {
   getAssignment: (classroomId: number, assignmentId: number) =>
     wrapSdkCall(() => getLemonClient().shenbiClassrooms.getAssignment(classroomId, assignmentId)),
 
-  updateAssignment: (classroomId: number, assignmentId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiClassrooms']['updateAssignment']>[2]) =>
-    wrapSdkCall(() => getLemonClient().shenbiClassrooms.updateAssignment(classroomId, assignmentId, data)),
+  updateAssignment: (
+    classroomId: number,
+    assignmentId: number,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiClassrooms']['updateAssignment']>[2]
+  ) =>
+    wrapSdkCall(() =>
+      getLemonClient().shenbiClassrooms.updateAssignment(classroomId, assignmentId, data)
+    ),
 
   deleteAssignment: (classroomId: number, assignmentId: number) =>
-    wrapSdkCall(() => getLemonClient().shenbiClassrooms.deleteAssignment(classroomId, assignmentId)),
+    wrapSdkCall(() =>
+      getLemonClient().shenbiClassrooms.deleteAssignment(classroomId, assignmentId)
+    ),
 
   publishAssignment: (classroomId: number, assignmentId: number) =>
-    wrapSdkCall(() => getLemonClient().shenbiClassrooms.publishAssignment(classroomId, assignmentId)),
+    wrapSdkCall(() =>
+      getLemonClient().shenbiClassrooms.publishAssignment(classroomId, assignmentId)
+    ),
 
   // Submissions & Grading
   listSubmissions: (classroomId: number, assignmentId: number) =>
     wrapSdkCall(() => getLemonClient().shenbiClassrooms.listSubmissions(classroomId, assignmentId)),
 
-  gradeSubmission: (classroomId: number, assignmentId: number, submissionId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiClassrooms']['gradeSubmission']>[3]) =>
-    wrapSdkCall(() => getLemonClient().shenbiClassrooms.gradeSubmission(classroomId, assignmentId, submissionId, data)),
+  gradeSubmission: (
+    classroomId: number,
+    assignmentId: number,
+    submissionId: number,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiClassrooms']['gradeSubmission']>[3]
+  ) =>
+    wrapSdkCall(() =>
+      getLemonClient().shenbiClassrooms.gradeSubmission(
+        classroomId,
+        assignmentId,
+        submissionId,
+        data
+      )
+    ),
 
   getGradebook: (classroomId: number) =>
     wrapSdkCall(() => getLemonClient().shenbiClassrooms.getGradebook(classroomId)),
@@ -319,20 +336,22 @@ export const battleApi = {
     wrapSdkCall(() => getLemonClient().shenbiBattles.join(data)),
 
   /** Get current battle state. Poll every 500-1000ms. */
-  get: (roomCode: string) =>
-    wrapSdkCall(() => getLemonClient().shenbiBattles.get(roomCode)),
+  get: (roomCode: string) => wrapSdkCall(() => getLemonClient().shenbiBattles.get(roomCode)),
 
   /** Start the battle (host only). Sets the level and begins the game. */
-  start: (roomCode: string, data: Parameters<ReturnType<typeof getLemonClient>['shenbiBattles']['start']>[1]) =>
-    wrapSdkCall(() => getLemonClient().shenbiBattles.start(roomCode, data)),
+  start: (
+    roomCode: string,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiBattles']['start']>[1]
+  ) => wrapSdkCall(() => getLemonClient().shenbiBattles.start(roomCode, data)),
 
   /** Mark player as completed. First to complete wins. */
-  complete: (roomCode: string, data: Parameters<ReturnType<typeof getLemonClient>['shenbiBattles']['complete']>[1]) =>
-    wrapSdkCall(() => getLemonClient().shenbiBattles.complete(roomCode, data)),
+  complete: (
+    roomCode: string,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiBattles']['complete']>[1]
+  ) => wrapSdkCall(() => getLemonClient().shenbiBattles.complete(roomCode, data)),
 
   /** Leave the battle room. */
-  leave: (roomCode: string) =>
-    wrapSdkCall(() => getLemonClient().shenbiBattles.leave(roomCode)),
+  leave: (roomCode: string) => wrapSdkCall(() => getLemonClient().shenbiBattles.leave(roomCode)),
 };
 
 /**
@@ -345,8 +364,10 @@ export const liveSessionApi = {
     wrapSdkCall(() => getLemonClient().shenbiLiveSessions.start(classroomId)),
 
   /** Set the level for the session (teacher only). */
-  setLevel: (classroomId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['setLevel']>[1]) =>
-    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.setLevel(classroomId, data)),
+  setLevel: (
+    classroomId: number,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['setLevel']>[1]
+  ) => wrapSdkCall(() => getLemonClient().shenbiLiveSessions.setLevel(classroomId, data)),
 
   /** Start the game for all students (teacher only). */
   startPlaying: (classroomId: number) =>
@@ -362,16 +383,21 @@ export const liveSessionApi = {
 
   // Student actions
   /** Join a live session as a student. */
-  join: (classroomId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['join']>[1]) =>
-    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.join(classroomId, data)),
+  join: (
+    classroomId: number,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['join']>[1]
+  ) => wrapSdkCall(() => getLemonClient().shenbiLiveSessions.join(classroomId, data)),
 
   /** Join a live session by room code (student). */
-  joinByCode: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['joinByCode']>[0]) =>
-    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.joinByCode(data)),
+  joinByCode: (
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['joinByCode']>[0]
+  ) => wrapSdkCall(() => getLemonClient().shenbiLiveSessions.joinByCode(data)),
 
   /** Update student's progress during the game. */
-  updateProgress: (classroomId: number, data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['updateProgress']>[1]) =>
-    wrapSdkCall(() => getLemonClient().shenbiLiveSessions.updateProgress(classroomId, data)),
+  updateProgress: (
+    classroomId: number,
+    data: Parameters<ReturnType<typeof getLemonClient>['shenbiLiveSessions']['updateProgress']>[1]
+  ) => wrapSdkCall(() => getLemonClient().shenbiLiveSessions.updateProgress(classroomId, data)),
 
   /** Leave the live session (student). */
   leave: (classroomId: number) =>
@@ -387,32 +413,34 @@ export const liveSessionApi = {
  * Stripe/Subscription API
  */
 export const stripeApi = {
-  listPlans: () =>
-    wrapSdkCall(() => getLemonClient().subscriptions.listPlans()),
+  listPlans: () => wrapSdkCall(() => getLemonClient().subscriptions.listPlans()),
 
-  getCurrentSubscription: () =>
-    wrapSdkCall(() => getLemonClient().subscriptions.getCurrent()),
+  getCurrentSubscription: () => wrapSdkCall(() => getLemonClient().subscriptions.getCurrent()),
 
   /**
    * Create checkout session for a specific plan
    * @param planId - Optional plan ID. If not provided, uses the first monthly premium plan.
    * @param billingInterval - Optional billing interval filter ('monthly' | 'yearly')
    */
-  createCheckoutSession: async (planId?: number, billingInterval?: 'monthly' | 'yearly'): Promise<{ checkout_url: string }> => {
+  createCheckoutSession: async (
+    planId?: number,
+    billingInterval?: 'monthly' | 'yearly'
+  ): Promise<{ checkout_url: string }> => {
     let selectedPlanId = planId;
 
     if (!selectedPlanId) {
       // Get plans and find the matching one
       const plans = await wrapSdkCall(() => getLemonClient().subscriptions.listPlans());
-      const premiumPlans = plans.filter(p => !p.is_default && p.is_active);
+      const premiumPlans = plans.filter((p) => !p.is_default && p.is_active);
 
       let selectedPlan;
       if (billingInterval) {
-        selectedPlan = premiumPlans.find(p => p.billing_interval === billingInterval);
+        selectedPlan = premiumPlans.find((p) => p.billing_interval === billingInterval);
       }
       if (!selectedPlan) {
         // Default to monthly if no interval specified or not found
-        selectedPlan = premiumPlans.find(p => p.billing_interval === 'monthly') || premiumPlans[0];
+        selectedPlan =
+          premiumPlans.find((p) => p.billing_interval === 'monthly') || premiumPlans[0];
       }
 
       if (!selectedPlan) {

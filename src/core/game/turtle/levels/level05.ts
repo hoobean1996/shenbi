@@ -13,7 +13,7 @@ export const level05: TurtleLevelData = {
   failCondition: 'stepCount() > 20',
   teachingGoal: 'Use Repeat loops to simplify repetitive code',
   hints: [
-    'The pattern \'forward + turn\' repeats 4 times',
+    "The pattern 'forward + turn' repeats 4 times",
     'Put both commands inside a Repeat 4 block',
     '4 lines of code become just 2!',
   ],

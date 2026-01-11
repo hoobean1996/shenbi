@@ -17,11 +17,7 @@ import {
   History,
 } from 'lucide-react';
 import { useLanguage } from '../../../infrastructure/i18n';
-import {
-  classroomApi,
-  ClassroomResponse,
-  ApiError,
-} from '../../../infrastructure/services/api';
+import { classroomApi, ClassroomResponse, ApiError } from '../../../infrastructure/services/api';
 import MemberList from '../components/classroom-management/MemberList';
 import AssignmentList from '../components/classroom-management/AssignmentList';
 import GradebookTable from '../components/classroom-management/GradebookTable';
@@ -239,11 +235,7 @@ export default function ClassroomDetailPage() {
             onMemberCountChange={(count) => setClassroom({ ...classroom, member_count: count })}
           />
         )}
-        {activeTab === 'assignments' && (
-          <AssignmentList
-            classroomId={classroom.id}
-          />
-        )}
+        {activeTab === 'assignments' && <AssignmentList classroomId={classroom.id} />}
         {activeTab === 'gradebook' && <GradebookTable classroomId={classroom.id} />}
         {activeTab === 'sessions' && (
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
@@ -255,7 +247,9 @@ export default function ClassroomDetailPage() {
             <div className="text-center py-12 text-gray-500">
               <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
               <p>Session history coming soon</p>
-              <p className="text-sm">Launch a live session to interact with students in real-time</p>
+              <p className="text-sm">
+                Launch a live session to interact with students in real-time
+              </p>
             </div>
           </div>
         )}

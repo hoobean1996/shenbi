@@ -4,11 +4,7 @@ export const level01: MazeLevelData = {
   id: 'maze-01',
   name: 'First Steps',
   description: 'Help the robot move forward to reach the goal!',
-  grid: [
-    '########',
-    '#>...*G#',
-    '########',
-  ],
+  grid: ['########', '#>...*G#', '########'],
   availableCommands: ['forward'],
   availableSensors: ['atGoal'],
   availableBlocks: ['command'],

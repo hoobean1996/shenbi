@@ -7,11 +7,7 @@
 import { useState } from 'react';
 import { X, Settings, Loader2, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import {
-  classroomApi,
-  ClassroomResponse,
-  ApiError,
-} from '../../../../infrastructure/services/api';
+import { classroomApi, ClassroomResponse, ApiError } from '../../../../infrastructure/services/api';
 
 interface ClassroomSettingsModalProps {
   classroom: ClassroomResponse;

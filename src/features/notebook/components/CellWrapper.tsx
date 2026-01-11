@@ -20,11 +20,7 @@ export function CellWrapper({ cellId, index, onMove, children }: CellWrapperProp
   const ref = useRef<HTMLDivElement>(null);
 
   // Drag source
-  const [{ isDragging }, drag, preview] = useDrag<
-    CellDragItem,
-    void,
-    { isDragging: boolean }
-  >({
+  const [{ isDragging }, drag, preview] = useDrag<CellDragItem, void, { isDragging: boolean }>({
     type: CELL_DRAG_TYPE,
     item: () => ({
       id: cellId,

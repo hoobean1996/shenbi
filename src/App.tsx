@@ -116,198 +116,198 @@ function App() {
         <LanguageProvider>
           <SettingsProvider>
             <BrowserRouter>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                {/* Public pages - no auth required */}
-                <Route path="/landing" element={<LandingPage />} />
-                <Route path="/login" element={<LoginPage />} />
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  {/* Public pages - no auth required */}
+                  <Route path="/landing" element={<LandingPage />} />
+                  <Route path="/login" element={<LoginPage />} />
 
-                {/* All app routes - wrapped in AppLayout (requires auth) */}
-                <Route element={<AppLayout />}>
-                  {/* Student routes */}
-                  <Route path="/" element={<RoleBasedHome />} />
-                  <Route path="/playground" element={<PlaygroundPage />} />
-                  <Route path="/battle" element={<BattlePage />} />
-                  <Route path="/battle/:roomCode" element={<BattlePage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/classroom" element={<ClassroomPage />} />
-                  <Route path="/classroom/:roomCode" element={<ClassroomPage />} />
+                  {/* All app routes - wrapped in AppLayout (requires auth) */}
+                  <Route element={<AppLayout />}>
+                    {/* Student routes */}
+                    <Route path="/" element={<RoleBasedHome />} />
+                    <Route path="/playground" element={<PlaygroundPage />} />
+                    <Route path="/battle" element={<BattlePage />} />
+                    <Route path="/battle/:roomCode" element={<BattlePage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/classroom" element={<ClassroomPage />} />
+                    <Route path="/classroom/:roomCode" element={<ClassroomPage />} />
 
-                  {/* Student classroom management */}
-                  <Route path="/my-classes" element={<StudentClassroomPage />} />
+                    {/* Student classroom management */}
+                    <Route path="/my-classes" element={<StudentClassroomPage />} />
 
-                  {/* Notebook routes */}
-                  <Route path="/notebook" element={<NotebookPage />} />
-                  <Route path="/notebook/:id" element={<NotebookPage />} />
+                    {/* Notebook routes */}
+                    <Route path="/notebook" element={<NotebookPage />} />
+                    <Route path="/notebook/:id" element={<NotebookPage />} />
 
-                  {/* Upgrade routes (Stripe redirect pages) */}
-                  <Route path="/upgrade/success" element={<UpgradeSuccessPage />} />
-                  <Route path="/upgrade/cancel" element={<UpgradeCancelPage />} />
+                    {/* Upgrade routes (Stripe redirect pages) */}
+                    <Route path="/upgrade/success" element={<UpgradeSuccessPage />} />
+                    <Route path="/upgrade/cancel" element={<UpgradeCancelPage />} />
 
-                  {/* Adventure routes - wrapped in AdventureProvider */}
-                  <Route
-                    path="/adventure"
-                    element={
-                      <AdventureProvider>
-                        <AdventureListPage />
-                      </AdventureProvider>
-                    }
-                  />
-                  <Route
-                    path="/adventure/:adventureId/levels"
-                    element={
-                      <AdventureProvider>
-                        <LevelListPage />
-                      </AdventureProvider>
-                    }
-                  />
-                  <Route
-                    path="/adventure/:adventureId/levels/:levelId"
-                    element={
-                      <AdventureProvider>
-                        <LevelPage />
-                      </AdventureProvider>
-                    }
-                  />
+                    {/* Adventure routes - wrapped in AdventureProvider */}
+                    <Route
+                      path="/adventure"
+                      element={
+                        <AdventureProvider>
+                          <AdventureListPage />
+                        </AdventureProvider>
+                      }
+                    />
+                    <Route
+                      path="/adventure/:adventureId/levels"
+                      element={
+                        <AdventureProvider>
+                          <LevelListPage />
+                        </AdventureProvider>
+                      }
+                    />
+                    <Route
+                      path="/adventure/:adventureId/levels/:levelId"
+                      element={
+                        <AdventureProvider>
+                          <LevelPage />
+                        </AdventureProvider>
+                      }
+                    />
 
-                  {/* Teacher routes - protected by TeacherRoute */}
-                  <Route path="/t">
-                    <Route
-                      index
-                      element={
-                        <TeacherRoute>
-                          <TeacherHomePage />
-                        </TeacherRoute>
-                      }
-                    />
-                    <Route
-                      path="classroom"
-                      element={
-                        <TeacherRoute>
-                          <TeacherClassroomPage />
-                        </TeacherRoute>
-                      }
-                    />
-                    <Route
-                      path="classroom/:roomCode"
-                      element={
-                        <TeacherRoute>
-                          <TeacherClassroomPage />
-                        </TeacherRoute>
-                      }
-                    />
-                    <Route
-                      path="profile"
-                      element={
-                        <TeacherRoute>
-                          <ProfilePage />
-                        </TeacherRoute>
-                      }
-                    />
-                    <Route
-                      path="settings"
-                      element={
-                        <TeacherRoute>
-                          <SettingsPage />
-                        </TeacherRoute>
-                      }
-                    />
-                    {/* Classroom management routes */}
-                    <Route
-                      path="classes"
-                      element={
-                        <TeacherRoute>
-                          <ClassroomManagementPage />
-                        </TeacherRoute>
-                      }
-                    />
-                    <Route
-                      path="classes/:classroomId"
-                      element={
-                        <TeacherRoute>
-                          <ClassroomDetailPage />
-                        </TeacherRoute>
-                      }
-                    />
-                    <Route
-                      path="classes/:classroomId/assignments/:assignmentId"
-                      element={
-                        <TeacherRoute>
-                          <AssignmentDetailPage />
-                        </TeacherRoute>
-                      }
-                    />
-                    {/* Teacher adventure routes */}
-                    <Route
-                      path="adventure"
-                      element={
-                        <TeacherRoute>
-                          <AdventureProvider>
-                            <AdventureListPage />
-                          </AdventureProvider>
-                        </TeacherRoute>
-                      }
-                    />
-                    <Route
-                      path="adventure/:adventureId/levels"
-                      element={
-                        <TeacherRoute>
-                          <AdventureProvider>
-                            <LevelListPage />
-                          </AdventureProvider>
-                        </TeacherRoute>
-                      }
-                    />
-                    <Route
-                      path="adventure/:adventureId/levels/:levelId"
-                      element={
-                        <TeacherRoute>
-                          <AdventureProvider>
-                            <LevelPage />
-                          </AdventureProvider>
-                        </TeacherRoute>
-                      }
-                    />
-                    {/* Creator routes (Level Editor) */}
-                    <Route path="creator">
+                    {/* Teacher routes - protected by TeacherRoute */}
+                    <Route path="/t">
                       <Route
                         index
                         element={
                           <TeacherRoute>
-                            <CreatorDashboardPage />
+                            <TeacherHomePage />
                           </TeacherRoute>
                         }
                       />
                       <Route
-                        path="adventure/:adventureId?"
+                        path="classroom"
                         element={
                           <TeacherRoute>
-                            <AdventureEditorPage />
+                            <TeacherClassroomPage />
                           </TeacherRoute>
                         }
                       />
                       <Route
-                        path="level/:adventureId/:levelId?"
+                        path="classroom/:roomCode"
                         element={
                           <TeacherRoute>
-                            <LevelEditorPage />
+                            <TeacherClassroomPage />
                           </TeacherRoute>
                         }
                       />
                       <Route
-                        path="preview/:adventureId/:levelIndex"
+                        path="profile"
                         element={
                           <TeacherRoute>
-                            <LevelPreviewPage />
+                            <ProfilePage />
                           </TeacherRoute>
                         }
                       />
+                      <Route
+                        path="settings"
+                        element={
+                          <TeacherRoute>
+                            <SettingsPage />
+                          </TeacherRoute>
+                        }
+                      />
+                      {/* Classroom management routes */}
+                      <Route
+                        path="classes"
+                        element={
+                          <TeacherRoute>
+                            <ClassroomManagementPage />
+                          </TeacherRoute>
+                        }
+                      />
+                      <Route
+                        path="classes/:classroomId"
+                        element={
+                          <TeacherRoute>
+                            <ClassroomDetailPage />
+                          </TeacherRoute>
+                        }
+                      />
+                      <Route
+                        path="classes/:classroomId/assignments/:assignmentId"
+                        element={
+                          <TeacherRoute>
+                            <AssignmentDetailPage />
+                          </TeacherRoute>
+                        }
+                      />
+                      {/* Teacher adventure routes */}
+                      <Route
+                        path="adventure"
+                        element={
+                          <TeacherRoute>
+                            <AdventureProvider>
+                              <AdventureListPage />
+                            </AdventureProvider>
+                          </TeacherRoute>
+                        }
+                      />
+                      <Route
+                        path="adventure/:adventureId/levels"
+                        element={
+                          <TeacherRoute>
+                            <AdventureProvider>
+                              <LevelListPage />
+                            </AdventureProvider>
+                          </TeacherRoute>
+                        }
+                      />
+                      <Route
+                        path="adventure/:adventureId/levels/:levelId"
+                        element={
+                          <TeacherRoute>
+                            <AdventureProvider>
+                              <LevelPage />
+                            </AdventureProvider>
+                          </TeacherRoute>
+                        }
+                      />
+                      {/* Creator routes (Level Editor) */}
+                      <Route path="creator">
+                        <Route
+                          index
+                          element={
+                            <TeacherRoute>
+                              <CreatorDashboardPage />
+                            </TeacherRoute>
+                          }
+                        />
+                        <Route
+                          path="adventure/:adventureId?"
+                          element={
+                            <TeacherRoute>
+                              <AdventureEditorPage />
+                            </TeacherRoute>
+                          }
+                        />
+                        <Route
+                          path="level/:adventureId/:levelId?"
+                          element={
+                            <TeacherRoute>
+                              <LevelEditorPage />
+                            </TeacherRoute>
+                          }
+                        />
+                        <Route
+                          path="preview/:adventureId/:levelIndex"
+                          element={
+                            <TeacherRoute>
+                              <LevelPreviewPage />
+                            </TeacherRoute>
+                          }
+                        />
+                      </Route>
                     </Route>
                   </Route>
-                </Route>
-              </Routes>
-            </Suspense>
+                </Routes>
+              </Suspense>
             </BrowserRouter>
           </SettingsProvider>
         </LanguageProvider>

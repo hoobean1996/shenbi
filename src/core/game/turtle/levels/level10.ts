@@ -17,5 +17,6 @@ export const level10: TurtleLevelData = {
     'Draw a square, then turn 45 degrees, repeat',
     '8 squares with 45 degree rotation = flower!',
   ],
-  expectedCode: 'setColor("red")\nrepeat 8 times:\n    repeat 4 times:\n        forward(3)\n        turnRight(90)\n    turnRight(45)',
+  expectedCode:
+    'setColor("red")\nrepeat 8 times:\n    repeat 4 times:\n        forward(3)\n        turnRight(90)\n    turnRight(45)',
 };

@@ -17,5 +17,6 @@ export const level07: TurtleLevelData = {
     'Colors: red, blue, green, yellow, purple, orange',
     'Each side can be a different color!',
   ],
-  expectedCode: 'setColor("red")\nforward(3)\nturnRight(90)\nsetColor("blue")\nforward(3)\nturnRight(90)\nsetColor("green")\nforward(3)\nturnRight(90)\nsetColor("yellow")\nforward(3)',
+  expectedCode:
+    'setColor("red")\nforward(3)\nturnRight(90)\nsetColor("blue")\nforward(3)\nturnRight(90)\nsetColor("green")\nforward(3)\nturnRight(90)\nsetColor("yellow")\nforward(3)',
 };

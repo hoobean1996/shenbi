@@ -4,11 +4,7 @@ export const level04: MazeLevelData = {
   id: 'maze-04',
   name: 'Repeat Magic',
   description: 'Use the Repeat block to collect all stars in a row!',
-  grid: [
-    '###########',
-    '#>*****.*G#',
-    '###########',
-  ],
+  grid: ['###########', '#>*****.*G#', '###########'],
   availableCommands: ['forward'],
   availableSensors: ['atGoal'],
   availableBlocks: ['command', 'repeat'],

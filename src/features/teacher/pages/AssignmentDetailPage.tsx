@@ -35,9 +35,7 @@ export default function AssignmentDetailPage() {
   const [progress, setProgress] = useState<SubmissionResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingSubmission, setEditingSubmission] = useState<SubmissionResponse | null>(
-    null
-  );
+  const [editingSubmission, setEditingSubmission] = useState<SubmissionResponse | null>(null);
 
   const loadData = useCallback(async () => {
     if (!classroomId || !assignmentId) return;
@@ -255,16 +253,12 @@ export default function AssignmentDetailPage() {
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-0.5">
                           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                          <span className="text-sm">
-                            {student.total_stars}
-                          </span>
+                          <span className="text-sm">{student.total_stars}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`font-medium ${getGradeColor(effectiveGrade)}`}>
-                          {effectiveGrade !== null
-                            ? `${effectiveGrade.toFixed(0)}%`
-                            : '-'}
+                          {effectiveGrade !== null ? `${effectiveGrade.toFixed(0)}%` : '-'}
                         </span>
                         {student.manual_grade !== null && (
                           <span className="text-xs text-purple-600 ml-1">(manual)</span>

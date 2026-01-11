@@ -82,9 +82,7 @@ export function MarkdownEditor({ content, onChange, onBlur, onShiftEnter }: Mark
         placeholder="# Heading&#10;&#10;Write markdown here...&#10;&#10;Press Shift+Enter to preview"
         spellCheck={false}
       />
-      <div className="absolute bottom-2 right-2 text-xs text-gray-400">
-        Shift+Enter to preview
-      </div>
+      <div className="absolute bottom-2 right-2 text-xs text-gray-400">Shift+Enter to preview</div>
     </div>
   );
 }

@@ -14,14 +14,12 @@ import {
   Send,
   Loader2,
   Calendar,
-  BookOpen,
   BarChart3,
 } from 'lucide-react';
 import {
   classroomApi,
   AssignmentResponse,
   ApiError,
-  AssignmentStatus,
 } from '../../../../infrastructure/services/api';
 import AssignmentFormModal from './AssignmentFormModal';
 

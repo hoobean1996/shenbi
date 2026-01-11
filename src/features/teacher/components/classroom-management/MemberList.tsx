@@ -6,11 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Users, UserMinus, Loader2, Search, UserCheck, UserX, Clock } from 'lucide-react';
-import {
-  classroomApi,
-  MemberResponse,
-  ApiError,
-} from '../../../../infrastructure/services/api';
+import { classroomApi, MemberResponse, ApiError } from '../../../../infrastructure/services/api';
 
 // Local type for membership status (SDK doesn't export this)
 type MembershipStatus = 'active' | 'inactive' | 'removed' | 'left';

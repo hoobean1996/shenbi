@@ -3,7 +3,7 @@ import type { MazeLevelData } from './types';
 export const level10: MazeLevelData = {
   id: 'maze-10',
   name: 'Master Challenge',
-  description: 'The ultimate maze! Use everything you\'ve learned!',
+  description: "The ultimate maze! Use everything you've learned!",
   grid: [
     '############',
     '#*.#...#..*#',
@@ -19,7 +19,15 @@ export const level10: MazeLevelData = {
     '############',
   ],
   availableCommands: ['forward', 'turnLeft', 'turnRight'],
-  availableSensors: ['frontBlocked', 'frontClear', 'leftClear', 'rightClear', 'hasStar', 'atGoal', 'notAtGoal'],
+  availableSensors: [
+    'frontBlocked',
+    'frontClear',
+    'leftClear',
+    'rightClear',
+    'hasStar',
+    'atGoal',
+    'notAtGoal',
+  ],
   availableBlocks: ['command', 'repeat', 'if', 'ifelse', 'while'],
   winCondition: 'collectedCount() >= 6 and atGoal()',
   failCondition: 'stepCount() > 80',
@@ -28,6 +36,6 @@ export const level10: MazeLevelData = {
     'This is the ultimate test of your coding skills!',
     'Use While to keep navigating until you reach the goal',
     'Use If-Else to decide: turn left or turn right at walls?',
-    'Don\'t forget to collect stars along the way!',
+    "Don't forget to collect stars along the way!",
   ],
 };

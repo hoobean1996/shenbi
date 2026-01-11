@@ -78,7 +78,12 @@ export default function AssignmentFormModal({
           setDueDate(date.toISOString().slice(0, 16));
         }
       } catch (err) {
-        logError('Failed to load assignment details', err, { assignmentId: assignment?.id }, 'AssignmentFormModal');
+        logError(
+          'Failed to load assignment details',
+          err,
+          { assignmentId: assignment?.id },
+          'AssignmentFormModal'
+        );
       } finally {
         setLoadingDetails(false);
       }

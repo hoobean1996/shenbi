@@ -339,7 +339,11 @@ export default function ProfilePage() {
                           : 'border border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <img src={profile.avatar} alt="Google avatar" className="w-full h-full object-cover" />
+                      <img
+                        src={profile.avatar}
+                        alt="Google avatar"
+                        className="w-full h-full object-cover"
+                      />
                     </button>
                   )}
                   {AVATAR_OPTIONS.map((avatar) => (
@@ -439,9 +443,7 @@ export default function ProfilePage() {
       )}
 
       {/* Upgrade Modal */}
-      {showUpgradeModal && (
-        <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
-      )}
+      {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
     </div>
   );
 }
