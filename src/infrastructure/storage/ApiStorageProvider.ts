@@ -24,6 +24,7 @@ import {
   achievementsApi,
   sessionsApi,
   adventureApi,
+  stripeApi,
   GameType,
 } from '../services/api';
 import type {
@@ -132,11 +133,12 @@ export class ApiStorageProvider implements StorageProvider {
       return this.userDataCache;
     }
 
-    const [user, allProgress, settings, achievements] = await Promise.all([
+    const [user, allProgress, settings, achievements, subscription] = await Promise.all([
       profileApi.get(),
       progressApi.getAll(),
       settingsApi.get(),
       achievementsApi.list(),
+      stripeApi.getCurrentSubscription().catch(() => null),
     ]);
 
     // Convert progress to adventure-based structure
@@ -171,6 +173,9 @@ export class ApiStorageProvider implements StorageProvider {
       }
     }
 
+    // Determine subscription tier from subscription status
+    const isPremium = subscription && (subscription.status === 'active' || subscription.status === 'trialing');
+
     this.userDataCache = {
       userId: String(user.id),
       profile: {
@@ -178,9 +183,13 @@ export class ApiStorageProvider implements StorageProvider {
         avatar: user.avatar_url || undefined,
         grade: user.grade || undefined,
         age: user.age || undefined,
-        subscriptionTier: 'free', // SDK ProfileResponse doesn't have subscription info
-        subscriptionStartedAt: undefined,
-        subscriptionExpiresAt: undefined,
+        subscriptionTier: isPremium ? 'premium' : 'free',
+        subscriptionStartedAt: subscription?.current_period_start
+          ? new Date(subscription.current_period_start).getTime()
+          : undefined,
+        subscriptionExpiresAt: subscription?.current_period_end
+          ? new Date(subscription.current_period_end).getTime()
+          : undefined,
       },
       progress: {
         adventures,
@@ -310,7 +319,12 @@ export class ApiStorageProvider implements StorageProvider {
   }
 
   async getProfile(): Promise<UserProfile> {
-    const user = await profileApi.get();
+    const [user, subscription] = await Promise.all([
+      profileApi.get(),
+      stripeApi.getCurrentSubscription().catch(() => null),
+    ]);
+
+    const isPremium = subscription && (subscription.status === 'active' || subscription.status === 'trialing');
 
     return {
       name: user.display_name || 'Student',
@@ -318,9 +332,13 @@ export class ApiStorageProvider implements StorageProvider {
       grade: user.grade || undefined,
       age: user.age || undefined,
       role: user.role as UserProfile['role'],
-      subscriptionTier: 'free',
-      subscriptionStartedAt: undefined,
-      subscriptionExpiresAt: undefined,
+      subscriptionTier: isPremium ? 'premium' : 'free',
+      subscriptionStartedAt: subscription?.current_period_start
+        ? new Date(subscription.current_period_start).getTime()
+        : undefined,
+      subscriptionExpiresAt: subscription?.current_period_end
+        ? new Date(subscription.current_period_end).getTime()
+        : undefined,
     };
   }
 
