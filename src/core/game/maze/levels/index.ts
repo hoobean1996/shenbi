@@ -16,6 +16,7 @@ export { level07 } from './level07';
 export { level08 } from './level08';
 export { level09 } from './level09';
 export { level10 } from './level10';
+export { level11 } from './level11';
 
 import { level01 } from './level01';
 import { level02 } from './level02';
@@ -27,6 +28,7 @@ import { level07 } from './level07';
 import { level08 } from './level08';
 import { level09 } from './level09';
 import { level10 } from './level10';
+import { level11 } from './level11';
 
 /** All maze levels in order */
 export const mazeLevels = [
@@ -40,4 +42,5 @@ export const mazeLevels = [
   level08,
   level09,
   level10,
+  level11,
 ];

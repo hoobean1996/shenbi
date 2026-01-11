@@ -144,13 +144,20 @@ export function MazeAdventure({
     const mazeWorld = mazeWorldRef.current;
     if (!mazeWorld) return null;
 
-    return new MazeVM({
+    const vm = new MazeVM({
       world: mazeWorld,
       onPrint: (message: string) => {
         console.log('Maze output:', message);
       },
     });
-  }, []);
+
+    // Register custom commands from level if present
+    if (level?.customCommands && level.customCommands.length > 0) {
+      vm.registerCustomCommands(level.customCommands);
+    }
+
+    return vm;
+  }, [level?.customCommands]);
 
   // Use the shared execution hook
   const execution = useAdventureExecution({
@@ -225,6 +232,7 @@ export function MazeAdventure({
         gameType="maze"
         availableCommands={level.availableCommands as CommandId[] | undefined}
         availableBlocks={level.availableBlocks as BlockType[] | undefined}
+        customCommands={level.customCommands}
         editorMode={execution.editorMode}
         code={execution.code}
         blocks={execution.blocks}

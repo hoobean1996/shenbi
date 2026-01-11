@@ -9,6 +9,7 @@
 import { ReactNode, useState, useRef, useCallback, useEffect } from 'react';
 import { Play, Pause, StepForward, RotateCcw, Code, Blocks, Undo2, Redo2 } from 'lucide-react';
 import { Block, type CommandId, type BlockType } from '../../../shared/components/BlockEditor';
+import type { CustomCommandDefinition } from '../../../../core/engine/types';
 import { ProgramEditor } from '../../../shared/components/ProgramEditor';
 import { ExecutionVisualizer } from '../../../shared/components/ExecutionVisualizer';
 import { useLanguage } from '../../../../infrastructure/i18n';
@@ -26,6 +27,7 @@ interface AdventureLayoutProps {
   gameType: GameType;
   availableCommands?: CommandId[];
   availableBlocks?: BlockType[];
+  customCommands?: CustomCommandDefinition[];
 
   // Editor state
   editorMode: 'code' | 'blocks';
@@ -69,6 +71,7 @@ export function AdventureLayout({
   gameType,
   availableCommands,
   availableBlocks,
+  customCommands,
   editorMode,
   code,
   blocks,
@@ -253,6 +256,7 @@ export function AdventureLayout({
             gameType={gameType}
             availableCommands={availableCommands}
             availableBlocks={availableBlocks}
+            customCommands={customCommands}
             highlightedBlockId={highlightedBlockId}
             disabled={isRunning}
           />

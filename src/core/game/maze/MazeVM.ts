@@ -11,6 +11,7 @@ import { CompiledProgram, Value } from '../../lang/ir';
 import { compile, compileToIR } from '../../lang/index';
 import { MazeWorld } from './MazeWorld';
 import { MAZE_COMMANDS, MAZE_CONDITIONS, MAZE_SENSORS } from './commands';
+import type { CustomCommandDefinition } from '../../engine/types';
 
 export interface MazeVMConfig {
   world: MazeWorld;
@@ -62,6 +63,58 @@ export class MazeVM {
     for (const sensor of MAZE_SENSORS) {
       const handler = (args: Value[]) => sensor.handler(this.world, args);
       this.vm.registerCommand(sensor.codeName, handler);
+    }
+  }
+
+  /**
+   * Register custom commands defined in the level.
+   * Custom commands are "macros" - their code is compiled and executed when called.
+   */
+  registerCustomCommands(commands: CustomCommandDefinition[]): void {
+    for (const cmd of commands) {
+      // Create a handler that compiles and runs the command's code
+      const handler: CommandHandler = (args: Value[]) => {
+        // Create a temporary VM to run the custom command
+        // (We can't use this.vm because it might be in the middle of execution)
+        const tempVM = new VM();
+
+        // Copy all registered commands to the temp VM
+        for (const c of MAZE_COMMANDS) {
+          tempVM.registerCommand(c.codeName, (a: Value[]) => c.handler(this.world, a));
+        }
+        for (const cond of MAZE_CONDITIONS) {
+          tempVM.registerCommand(cond.codeName, () => cond.handler(this.world));
+        }
+        for (const sensor of MAZE_SENSORS) {
+          tempVM.registerCommand(sensor.codeName, (a: Value[]) => sensor.handler(this.world, a));
+        }
+        tempVM.registerCommand('print', (a: Value[]) => {
+          const message = a.map((v) => String(v)).join(' ');
+          if (this.onPrint) this.onPrint(message);
+        });
+
+        // Prepare the code with arg variable if needed
+        let codeToRun = cmd.code;
+        if (cmd.argType !== 'none' && args.length > 0) {
+          // Prepend arg assignment
+          const argValue = args[0];
+          const argCode =
+            typeof argValue === 'string' ? `"${argValue}"` : String(argValue);
+          codeToRun = `arg = ${argCode}\n${codeToRun}`;
+        }
+
+        // Compile and run
+        try {
+          const ast = compile(codeToRun);
+          const program = compileToIR(ast);
+          tempVM.load(program);
+          tempVM.run();
+        } catch (e) {
+          console.error(`Error in custom command ${cmd.codeName}:`, e);
+        }
+      };
+
+      this.vm.registerCommand(cmd.codeName, handler);
     }
   }
 

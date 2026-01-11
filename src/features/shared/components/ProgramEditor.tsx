@@ -6,6 +6,7 @@
  */
 
 import { Block, BlockType, CommandId, GameType } from './BlockEditor/types';
+import type { CustomCommandDefinition } from '../../../core/engine/types';
 import { BlockEditor } from './BlockEditor';
 import { CodeEditor } from './CodeEditor';
 import { useLanguage } from '../../../infrastructure/i18n';
@@ -20,6 +21,7 @@ interface ProgramEditorProps {
   gameType: GameType;
   availableCommands?: CommandId[];
   availableBlocks?: BlockType[];
+  customCommands?: CustomCommandDefinition[];
   highlightedBlockId?: string | null;
   // Code editor props
   code: string;
@@ -40,6 +42,7 @@ export function ProgramEditor({
   gameType,
   availableCommands,
   availableBlocks,
+  customCommands,
   highlightedBlockId,
   code,
   onCodeChange,
@@ -76,6 +79,7 @@ export function ProgramEditor({
       gameType={gameType}
       availableCommands={availableCommands}
       availableBlocks={availableBlocks}
+      customCommands={customCommands}
       highlightedBlockId={highlightedBlockId}
       disabled={disabled}
     />

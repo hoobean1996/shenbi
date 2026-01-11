@@ -6,6 +6,7 @@
  */
 
 import type { CommandDefinition, ConditionDefinition } from '../commands';
+import type { CustomCommandDefinition } from '../../../engine/types';
 
 /** Command IDs available in maze game */
 export type MazeCommandId = 'forward' | 'backward' | 'turnLeft' | 'turnRight' | 'collect';
@@ -61,6 +62,8 @@ export interface MazeLevelData {
   hints: string[];
   /** Required subscription tier (optional) */
   requiredTier?: 'free' | 'premium';
+  /** Custom commands specific to this level (optional) */
+  customCommands?: CustomCommandDefinition[];
 }
 
 /** Helper to get command definitions for a level */

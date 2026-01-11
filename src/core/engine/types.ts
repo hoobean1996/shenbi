@@ -51,6 +51,42 @@ export type BlockCategory =
   | 'functionDef'
   | 'functionCall';
 
+// ============================================
+// Custom Command Definition (level-specific)
+// ============================================
+
+/**
+ * Defines a custom command that can be added to a level.
+ * The command appears in the block palette and executes the provided code.
+ */
+export interface CustomCommandDefinition {
+  /** Unique command ID (must not conflict with built-in commands) */
+  id: string;
+  /** Display label for the block */
+  label: string;
+  /** Emoji icon for the block */
+  icon: string;
+  /** Block color (hex). Defaults to action color if not specified */
+  color?: string;
+  /** Code name to emit (what appears in generated code) */
+  codeName: string;
+  /** Argument type */
+  argType?: 'none' | 'number' | 'string';
+  /** Default argument value */
+  defaultArg?: number | string;
+  /**
+   * MiniPython code to execute when command is called.
+   * Has access to built-in commands: forward(), turnLeft(), collect(), etc.
+   * For commands with args, use `arg` variable to access the argument.
+   *
+   * Examples:
+   * - "forward()\nforward()" - move forward twice
+   * - "repeat 4 times:\n    forward()" - move forward 4 times
+   * - "repeat arg times:\n    turnLeft()" - turn left N times (arg from block)
+   */
+  code: string;
+}
+
 export interface LevelDefinition {
   id: string;
   /** Numeric ID from the API (for progress tracking) */
@@ -78,4 +114,6 @@ export interface LevelDefinition {
   failCondition?: string;
   // Access control
   requiredTier?: string; // "free" or "premium"
+  // Custom commands for this level
+  customCommands?: CustomCommandDefinition[];
 }

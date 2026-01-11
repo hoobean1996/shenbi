@@ -11,6 +11,7 @@ import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { Block, BlockType, CommandId, GameType } from './types';
+import type { CustomCommandDefinition } from '../../../../core/engine/types';
 import { BlockPalette } from './BlockPalette';
 import { BlockWorkspace } from './BlockWorkspace';
 import { DragPreview } from './DragPreview';
@@ -39,6 +40,7 @@ interface BlockEditorProps {
   gameType?: GameType;
   availableCommands?: CommandId[];
   availableBlocks?: BlockType[];
+  customCommands?: CustomCommandDefinition[];
   highlightedBlockId?: string | null;
   disabled?: boolean;
 }
@@ -49,6 +51,7 @@ export function BlockEditor({
   gameType = 'maze',
   availableCommands,
   availableBlocks,
+  customCommands,
   highlightedBlockId,
   disabled = false,
 }: BlockEditorProps) {
@@ -62,6 +65,7 @@ export function BlockEditor({
               gameType={gameType}
               availableCommands={availableCommands}
               availableBlocks={availableBlocks}
+              customCommands={customCommands}
               disabled={disabled}
             />
           </div>

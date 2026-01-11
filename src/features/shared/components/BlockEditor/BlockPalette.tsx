@@ -3,8 +3,10 @@
  *
  * Shows available blocks that can be dragged to the workspace.
  * Filters blocks based on game type and level configuration.
+ * Supports custom commands defined in levels.
  */
 
+import { useMemo } from 'react';
 import { useDrag } from 'react-dnd';
 import {
   BlockDefinition,
@@ -15,9 +17,11 @@ import {
   VARIABLE_BLOCKS,
   FUNCTION_BLOCKS,
   LIST_BLOCKS,
+  BLOCK_COLORS,
   getCommandBlocks,
   createBlock,
 } from './types';
+import type { CustomCommandDefinition } from '../../../../core/engine/types';
 import { SoundManager } from '../../../../infrastructure/sounds/SoundManager';
 import { useTranslation } from '../../../../infrastructure/i18n';
 
@@ -63,13 +67,39 @@ interface BlockPaletteProps {
   gameType?: GameType;
   availableCommands?: CommandId[];
   availableBlocks?: BlockType[];
+  customCommands?: CustomCommandDefinition[];
   disabled?: boolean;
+}
+
+// Convert CustomCommandDefinition to BlockDefinition
+function customCommandToBlockDef(cmd: CustomCommandDefinition): BlockDefinition {
+  const def: BlockDefinition = {
+    type: 'command',
+    command: cmd.id as CommandId,
+    label: cmd.label,
+    color: cmd.color || BLOCK_COLORS.action,
+    icon: cmd.icon,
+  };
+
+  // Handle argument types
+  if (cmd.argType === 'number' && cmd.defaultArg !== undefined) {
+    def.argType = 'number';
+    def.defaultArg = { type: 'number', value: cmd.defaultArg as number };
+  } else if (cmd.argType === 'string' && cmd.defaultArg !== undefined) {
+    def.argType = 'string';
+    def.defaultArg = { type: 'string', value: cmd.defaultArg as string };
+  } else {
+    def.argType = 'none';
+  }
+
+  return def;
 }
 
 export function BlockPalette({
   gameType = 'maze',
   availableCommands,
   availableBlocks,
+  customCommands,
   disabled = false,
 }: BlockPaletteProps) {
   const { t } = useTranslation();
@@ -77,10 +107,20 @@ export function BlockPalette({
   // Get command blocks for the current game type
   const commandBlocks = getCommandBlocks(gameType);
 
+  // Convert custom commands to block definitions
+  const customBlockDefs = useMemo(
+    () => (customCommands ? customCommands.map(customCommandToBlockDef) : []),
+    [customCommands]
+  );
+
   // Filter command blocks based on availableCommands (if specified)
-  const filteredCommandBlocks = availableCommands
-    ? commandBlocks.filter((def) => def.command && availableCommands.includes(def.command))
-    : commandBlocks;
+  // and combine with custom commands
+  const filteredCommandBlocks = useMemo(() => {
+    const builtIn = availableCommands
+      ? commandBlocks.filter((def) => def.command && availableCommands.includes(def.command))
+      : commandBlocks;
+    return [...builtIn, ...customBlockDefs];
+  }, [commandBlocks, availableCommands, customBlockDefs]);
 
   // Filter control blocks based on availableBlocks
   const filteredControlBlocks = availableBlocks
