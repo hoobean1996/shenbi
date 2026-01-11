@@ -89,6 +89,16 @@ export function MazeAdventure({
       const vm = executionRef.current?.vmRef.current ?? null;
       const { win, fail } = checkConditions(vm);
 
+      // Debug logging
+      console.log('[MazeAdventure] handleExecutionComplete:', {
+        hasVm: !!vm,
+        hasEvaluateExpression: !!vm?.evaluateExpression,
+        win,
+        fail,
+        winCondition: levelRef.current?.winCondition,
+        levelName: levelRef.current?.name,
+      });
+
       if (win) {
         isCompleteRef.current = true;
         setTimeout(() => {
