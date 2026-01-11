@@ -14,5 +14,3 @@ export { MazeVM } from './MazeVM';
 export type { MazeVMConfig } from './MazeVM';
 
 export { MazeCanvas } from './MazeCanvas';
-
-export { MAZE_STDLIB } from './stdlib';

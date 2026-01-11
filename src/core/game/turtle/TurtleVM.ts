@@ -9,8 +9,36 @@
 import { VM, VMState, VMStepResult, CommandHandler } from '../../lang/vm';
 import { CompiledProgram, Value } from '../../lang/ir';
 import { compile, compileToIR } from '../../lang/index';
-import { TurtleWorld, SharedTurtleState } from './TurtleWorld';
-import { TURTLE_STDLIB, TURTLE_COLORS } from './stdlib';
+import { TurtleWorld } from './TurtleWorld';
+
+// Color name to hex mappings
+const COLORS: Record<string, string> = {
+  red: '#ef4444',
+  blue: '#3b82f6',
+  green: '#22c55e',
+  yellow: '#eab308',
+  purple: '#a855f7',
+  orange: '#f97316',
+  black: '#000000',
+  white: '#ffffff',
+  // Chinese color names
+  '红': '#ef4444',
+  '红色': '#ef4444',
+  '蓝': '#3b82f6',
+  '蓝色': '#3b82f6',
+  '绿': '#22c55e',
+  '绿色': '#22c55e',
+  '黄': '#eab308',
+  '黄色': '#eab308',
+  '紫': '#a855f7',
+  '紫色': '#a855f7',
+  '橙': '#f97316',
+  '橙色': '#f97316',
+  '黑': '#000000',
+  '黑色': '#000000',
+  '白': '#ffffff',
+  '白色': '#ffffff',
+};
 
 export interface TurtleVMConfig {
   world: TurtleWorld;
@@ -25,7 +53,6 @@ export class TurtleVM {
   private vm: VM;
   private world: TurtleWorld;
   private onPrint?: (message: string) => void;
-  private sharedState: SharedTurtleState | null = null;
 
   constructor(config: TurtleVMConfig) {
     this.vm = new VM();
@@ -105,18 +132,17 @@ export class TurtleVM {
 
     this.vm.registerCommand('setColor', (args: Value[]) => {
       const color = typeof args[0] === 'string' ? args[0] : '#000000';
-      // Map color names to hex values
-      const mappedColor = TURTLE_COLORS[color] || color;
+      const mappedColor = COLORS[color] || color;
       this.world.setColor(mappedColor);
     });
     this.vm.registerCommand('设置颜色', (args: Value[]) => {
       const color = typeof args[0] === 'string' ? args[0] : '#000000';
-      const mappedColor = TURTLE_COLORS[color] || color;
+      const mappedColor = COLORS[color] || color;
       this.world.setColor(mappedColor);
     });
     this.vm.registerCommand('颜色', (args: Value[]) => {
       const color = typeof args[0] === 'string' ? args[0] : '#000000';
-      const mappedColor = TURTLE_COLORS[color] || color;
+      const mappedColor = COLORS[color] || color;
       this.world.setColor(mappedColor);
     });
 
@@ -145,33 +171,22 @@ export class TurtleVM {
   }
 
   /**
-   * Load user code with TURTLE_STDLIB prepended
+   * Load and compile user source code
    */
   loadWithSource(userCode: string): void {
-    const fullCode = TURTLE_STDLIB + '\n' + userCode;
-    const ast = compile(fullCode);
+    const ast = compile(userCode);
     const program = compileToIR(ast);
-
-    this.sharedState = this.world.toSharedState();
     this.vm.load(program);
-    this.vm.setGlobal('world', this.sharedState);
   }
 
   // ============ VM Delegation ============
 
   load(program: CompiledProgram): void {
-    // Set up shared state for stdlib access
-    this.sharedState = this.world.toSharedState();
     this.vm.load(program);
-    this.vm.setGlobal('world', this.sharedState);
   }
 
   reset(): void {
     this.vm.reset();
-    if (this.sharedState) {
-      this.sharedState = this.world.toSharedState();
-      this.vm.setGlobal('world', this.sharedState);
-    }
   }
 
   step(): VMStepResult {
@@ -215,10 +230,9 @@ export class TurtleVM {
   }
 
   // Expression Evaluation (for win/fail conditions)
-  // Prepends stdlib so expressions can use functions like lineCount(), distanceFromStart()
+  // Native commands are already registered, so expressions can use them directly
   evaluateExpression(source: string): Value {
-    // Assign to __result__ because expression statements pop their results
-    const fullSource = TURTLE_STDLIB + '\n__result__ = ' + source;
+    const fullSource = '__result__ = ' + source;
     this.vm.evaluateExpression(fullSource);
     return this.vm.getGlobal('__result__') ?? null;
   }

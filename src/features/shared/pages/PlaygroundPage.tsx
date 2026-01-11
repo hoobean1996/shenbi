@@ -7,8 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Play, RotateCcw, Code, Terminal, Blocks, Maximize2, Minimize2 } from 'lucide-react';
-import { MazeWorld, MazeCanvas, MazeVM, MAZE_STDLIB } from '../../../core/game';
-import { getStdlibLineCount } from '../../../core/game/stdlib-types';
+import { MazeWorld, MazeCanvas, MazeVM } from '../../../core/game';
 import { compileProgram, SyntaxError, RuntimeError, type Value } from '../../../core/lang';
 import { defaultTheme } from '../../../infrastructure/themes';
 import { Block } from '../components/BlockEditor/types';
@@ -450,19 +449,11 @@ export default function PlaygroundPage() {
       // Generate code with line map for block highlighting
       const { code: generatedCode, lineMap } = generateCodeWithLineMap(blocks, 'maze');
 
-      // Prepend stdlib to user code
-      const stdlibLineCount = getStdlibLineCount(MAZE_STDLIB);
-      const fullCode = MAZE_STDLIB + '\n' + generatedCode;
+      // Use line map directly (no stdlib offset needed)
+      lineMapRef.current = lineMap;
 
-      // Adjust line map to account for stdlib offset
-      const adjustedLineMap: LineToBlockMap = new Map();
-      for (const [line, blockId] of lineMap.entries()) {
-        adjustedLineMap.set(line + stdlibLineCount, blockId);
-      }
-      lineMapRef.current = adjustedLineMap;
-
-      // Compile the full code with stdlib
-      const compiled = compileProgram(fullCode);
+      // Compile user code (native commands registered by MazeVM)
+      const compiled = compileProgram(generatedCode);
 
       // Collect print outputs
       const outputs: string[] = [];

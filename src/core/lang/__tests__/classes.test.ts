@@ -12,7 +12,65 @@
 import { describe, it, expect } from 'vitest';
 import { VM } from '../vm';
 import { compile, compileToIR } from '../index';
-import { MAZE_STDLIB, createWorldState } from '../../game/maze/stdlib';
+
+// Helper to create world state from grid strings (for testing)
+type Direction = 'up' | 'down' | 'left' | 'right';
+function createWorldState(gridStrings: string[]) {
+  const height = gridStrings.length;
+  const width = gridStrings[0]?.length ?? 0;
+
+  const charToCell: Record<string, string> = {
+    '#': 'wall',
+    '.': 'empty',
+    '*': 'star',
+    G: 'goal',
+    '>': 'empty',
+    '<': 'empty',
+    '^': 'empty',
+    v: 'empty',
+  };
+
+  const charToDirection: Record<string, Direction> = {
+    '>': 'right',
+    '<': 'left',
+    '^': 'up',
+    v: 'down',
+  };
+
+  let playerX = 0;
+  let playerY = 0;
+  let playerDirection: Direction = 'right';
+
+  const grid: string[][] = [];
+
+  for (let y = 0; y < height; y++) {
+    const row: string[] = [];
+    const line = gridStrings[y];
+
+    for (let x = 0; x < width; x++) {
+      const char = line[x] || '.';
+      const cellType = charToCell[char] ?? 'empty';
+      row.push(cellType);
+
+      if (charToDirection[char]) {
+        playerX = x;
+        playerY = y;
+        playerDirection = charToDirection[char];
+      }
+    }
+    grid.push(row);
+  }
+
+  return {
+    x: playerX,
+    y: playerY,
+    direction: playerDirection,
+    collected: 0,
+    grid,
+    width,
+    height,
+  };
+}
 
 // Run with bytecode VM and return output
 function runVM(code: string): string[] {
@@ -549,7 +607,7 @@ print(world.direction)
       expect(worldState.direction).toBe('down');
     });
 
-    it('uses MAZE_STDLIB with createWorldState helper', () => {
+    it('uses native maze commands with createWorldState helper', () => {
       const userCode = `
 # Navigate through maze
 while not atGoal():
@@ -560,8 +618,7 @@ while not atGoal():
 `;
 
       const prints: string[] = [];
-      const fullCode = MAZE_STDLIB + userCode;
-      const ast = compile(fullCode);
+      const ast = compile(userCode);
       const program = compileToIR(ast);
       const vm = new VM();
       vm.registerCommand('print', (args) => prints.push(String(args[0])));
@@ -584,7 +641,7 @@ while not atGoal():
       expect(worldState.direction).toBe('right');
     });
 
-    it('handles star collection with MAZE_STDLIB', () => {
+    it('handles star collection with native maze commands', () => {
       const userCode = `
 # Collect all stars
 forward()
@@ -595,8 +652,7 @@ print(remainingStars())
 `;
 
       const prints: string[] = [];
-      const fullCode = MAZE_STDLIB + userCode;
-      const ast = compile(fullCode);
+      const ast = compile(userCode);
       const program = compileToIR(ast);
       const vm = new VM();
       vm.registerCommand('print', (args) => prints.push(String(args[0])));
@@ -617,7 +673,7 @@ print(remainingStars())
       expect(worldState.collected).toBe(2);
     });
 
-    it('handles wall collision with MAZE_STDLIB', () => {
+    it('handles wall collision with native maze commands', () => {
       const userCode = `
 # Try to walk into wall
 result = forward()
@@ -626,8 +682,7 @@ print(world.x)
 `;
 
       const prints: string[] = [];
-      const fullCode = MAZE_STDLIB + userCode;
-      const ast = compile(fullCode);
+      const ast = compile(userCode);
       const program = compileToIR(ast);
       const vm = new VM();
       vm.registerCommand('print', (args) => prints.push(String(args[0])));
@@ -648,7 +703,7 @@ print(world.x)
       expect(worldState.x).toBe(1);
     });
 
-    it('uses Chinese commands with MAZE_STDLIB', () => {
+    it('uses Chinese commands with native maze commands', () => {
       const userCode = `
 前进()
 前进()
@@ -660,8 +715,7 @@ print(world.direction)
 `;
 
       const prints: string[] = [];
-      const fullCode = MAZE_STDLIB + userCode;
-      const ast = compile(fullCode);
+      const ast = compile(userCode);
       const program = compileToIR(ast);
       const vm = new VM();
       vm.registerCommand('print', (args) => prints.push(String(args[0])));

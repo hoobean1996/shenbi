@@ -11,7 +11,7 @@
  */
 
 // Maze Game
-export { MazeWorld, MazeVM, MazeCanvas, MAZE_STDLIB } from './maze';
+export { MazeWorld, MazeVM, MazeCanvas } from './maze';
 export type { Direction, CellType, Position, PlayerState, MazeLevel, MazeVMConfig } from './maze';
 
 // Turtle Graphics Game

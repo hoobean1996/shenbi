@@ -9,10 +9,37 @@ import { useState, useCallback, useRef } from 'react';
 import { VM, VMState } from '../../../core/lang/vm';
 import { compile, compileToIR } from '../../../core/lang/index';
 import { Value } from '../../../core/lang/ir';
-import { TurtleWorld, SharedTurtleState } from '../../../core/game/turtle/TurtleWorld';
-import { TURTLE_STDLIB } from '../../../core/game/turtle/stdlib';
+import { TurtleWorld } from '../../../core/game/turtle/TurtleWorld';
 import type { CodeCell, CellOutput, TurtleCanvasState } from '../types';
 import { createTextOutput, createErrorOutput, generateOutputId } from '../utils/cellHelpers';
+
+// Color name to hex mappings (matches TurtleVM)
+const COLORS: Record<string, string> = {
+  red: '#ef4444',
+  blue: '#3b82f6',
+  green: '#22c55e',
+  yellow: '#eab308',
+  purple: '#a855f7',
+  orange: '#f97316',
+  black: '#000000',
+  white: '#ffffff',
+  '红': '#ef4444',
+  '红色': '#ef4444',
+  '蓝': '#3b82f6',
+  '蓝色': '#3b82f6',
+  '绿': '#22c55e',
+  '绿色': '#22c55e',
+  '黄': '#eab308',
+  '黄色': '#eab308',
+  '紫': '#a855f7',
+  '紫色': '#a855f7',
+  '橙': '#f97316',
+  '橙色': '#f97316',
+  '黑': '#000000',
+  '黑色': '#000000',
+  '白': '#ffffff',
+  '白色': '#ffffff',
+};
 
 // ============ Execution Context ============
 
@@ -53,41 +80,100 @@ export function useNotebookExecution() {
         });
 
         // Handle turtle game type
-        let sharedState: SharedTurtleState | null = null;
+        let turtleWorld: TurtleWorld | null = null;
         if (cell.gameType === 'turtle') {
           // Create or reuse turtle world
           if (!turtleWorldRef.current) {
             turtleWorldRef.current = new TurtleWorld();
           }
-          const world = turtleWorldRef.current;
-          sharedState = world.toSharedState();
+          turtleWorld = turtleWorldRef.current;
 
-          // Register turtle native helpers
-          vm.registerSensor('_sin', (args: Value[]) => {
-            const radians = typeof args[0] === 'number' ? args[0] : 0;
-            return Math.sin(radians);
+          // Register turtle movement commands (calling TurtleWorld directly)
+          vm.registerCommand('forward', (args: Value[]) => {
+            const distance = typeof args[0] === 'number' ? args[0] : 1;
+            turtleWorld!.forward(distance);
           });
-          vm.registerSensor('_cos', (args: Value[]) => {
-            const radians = typeof args[0] === 'number' ? args[0] : 0;
-            return Math.cos(radians);
+          vm.registerCommand('前进', (args: Value[]) => {
+            const distance = typeof args[0] === 'number' ? args[0] : 1;
+            turtleWorld!.forward(distance);
           });
-          vm.registerCommand('_drawLine', (args: Value[]) => {
-            if (!sharedState) return;
-            const fromX = typeof args[0] === 'number' ? args[0] : 0;
-            const fromY = typeof args[1] === 'number' ? args[1] : 0;
-            const toX = typeof args[2] === 'number' ? args[2] : 0;
-            const toY = typeof args[3] === 'number' ? args[3] : 0;
-            const color = typeof args[4] === 'string' ? args[4] : '#000000';
-            const width = typeof args[5] === 'number' ? args[5] : 2;
-            sharedState.lines.push({ fromX, fromY, toX, toY, color, width });
+          vm.registerCommand('backward', (args: Value[]) => {
+            const distance = typeof args[0] === 'number' ? args[0] : 1;
+            turtleWorld!.backward(distance);
+          });
+          vm.registerCommand('后退', (args: Value[]) => {
+            const distance = typeof args[0] === 'number' ? args[0] : 1;
+            turtleWorld!.backward(distance);
+          });
+          vm.registerCommand('turnLeft', (args: Value[]) => {
+            const degrees = typeof args[0] === 'number' ? args[0] : 90;
+            turtleWorld!.turnLeft(degrees);
+          });
+          vm.registerCommand('左转', (args: Value[]) => {
+            const degrees = typeof args[0] === 'number' ? args[0] : 90;
+            turtleWorld!.turnLeft(degrees);
+          });
+          vm.registerCommand('left', (args: Value[]) => {
+            const degrees = typeof args[0] === 'number' ? args[0] : 90;
+            turtleWorld!.turnLeft(degrees);
+          });
+          vm.registerCommand('turnRight', (args: Value[]) => {
+            const degrees = typeof args[0] === 'number' ? args[0] : 90;
+            turtleWorld!.turnRight(degrees);
+          });
+          vm.registerCommand('右转', (args: Value[]) => {
+            const degrees = typeof args[0] === 'number' ? args[0] : 90;
+            turtleWorld!.turnRight(degrees);
+          });
+          vm.registerCommand('right', (args: Value[]) => {
+            const degrees = typeof args[0] === 'number' ? args[0] : 90;
+            turtleWorld!.turnRight(degrees);
           });
 
-          // Compile with turtle stdlib
-          const fullCode = TURTLE_STDLIB + '\n' + cell.content;
-          const ast = compile(fullCode);
+          // Pen commands
+          vm.registerCommand('penUp', () => { turtleWorld!.penUp(); });
+          vm.registerCommand('抬笔', () => { turtleWorld!.penUp(); });
+          vm.registerCommand('penDown', () => { turtleWorld!.penDown(); });
+          vm.registerCommand('落笔', () => { turtleWorld!.penDown(); });
+
+          vm.registerCommand('setColor', (args: Value[]) => {
+            const color = typeof args[0] === 'string' ? args[0] : '#000000';
+            const mappedColor = COLORS[color] || color;
+            turtleWorld!.setColor(mappedColor);
+          });
+          vm.registerCommand('设置颜色', (args: Value[]) => {
+            const color = typeof args[0] === 'string' ? args[0] : '#000000';
+            const mappedColor = COLORS[color] || color;
+            turtleWorld!.setColor(mappedColor);
+          });
+          vm.registerCommand('颜色', (args: Value[]) => {
+            const color = typeof args[0] === 'string' ? args[0] : '#000000';
+            const mappedColor = COLORS[color] || color;
+            turtleWorld!.setColor(mappedColor);
+          });
+          vm.registerCommand('setWidth', (args: Value[]) => {
+            const width = typeof args[0] === 'number' ? args[0] : 2;
+            turtleWorld!.setWidth(width);
+          });
+          vm.registerCommand('设置宽度', (args: Value[]) => {
+            const width = typeof args[0] === 'number' ? args[0] : 2;
+            turtleWorld!.setWidth(width);
+          });
+
+          // Sensors
+          vm.registerCommand('isPenDown', () => turtleWorld!.isPenDown());
+          vm.registerCommand('画笔落下', () => turtleWorld!.isPenDown());
+          vm.registerCommand('getX', () => turtleWorld!.getX());
+          vm.registerCommand('获取X', () => turtleWorld!.getX());
+          vm.registerCommand('getY', () => turtleWorld!.getY());
+          vm.registerCommand('获取Y', () => turtleWorld!.getY());
+          vm.registerCommand('getAngle', () => turtleWorld!.getAngle());
+          vm.registerCommand('获取角度', () => turtleWorld!.getAngle());
+
+          // Compile user code directly (no stdlib needed)
+          const ast = compile(cell.content);
           const program = compileToIR(ast);
           vm.load(program);
-          vm.setGlobal('world', sharedState);
         } else {
           // Regular code execution
           const ast = compile(cell.content);
@@ -117,11 +203,9 @@ export function useNotebookExecution() {
         }
 
         // Capture turtle canvas state
-        if (cell.gameType === 'turtle' && sharedState && turtleWorldRef.current) {
-          turtleWorldRef.current.syncFromSharedState(sharedState);
-          const world = turtleWorldRef.current;
-          const turtle = world.getTurtle();
-          const lines = world.getLines();
+        if (cell.gameType === 'turtle' && turtleWorld) {
+          const turtle = turtleWorld.getTurtle();
+          const lines = turtleWorld.getLines();
 
           const canvasState: TurtleCanvasState = {
             lines: lines.map((line) => ({
@@ -136,8 +220,8 @@ export function useNotebookExecution() {
               angle: turtle.angle,
               penDown: turtle.penDown,
             },
-            width: world.getWidth(),
-            height: world.getHeight(),
+            width: turtleWorld.getWidth(),
+            height: turtleWorld.getHeight(),
           };
 
           outputs.push({

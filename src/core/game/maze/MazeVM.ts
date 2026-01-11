@@ -9,8 +9,7 @@
 import { VM, VMState, VMStepResult, CommandHandler } from '../../lang/vm';
 import { CompiledProgram, Value } from '../../lang/ir';
 import { compile, compileToIR } from '../../lang/index';
-import { MazeWorld, SharedMazeState } from './MazeWorld';
-import { MAZE_STDLIB } from './stdlib';
+import { MazeWorld } from './MazeWorld';
 
 export interface MazeVMConfig {
   world: MazeWorld;
@@ -25,7 +24,6 @@ export class MazeVM {
   private vm: VM;
   private world: MazeWorld;
   private onPrint?: (message: string) => void;
-  private sharedState: SharedMazeState | null = null;
 
   constructor(config: MazeVMConfig) {
     this.vm = new VM();
@@ -89,40 +87,22 @@ export class MazeVM {
   }
 
   /**
-   * Load user code with MAZE_STDLIB prepended
+   * Load and compile user source code
    */
   loadWithSource(userCode: string): void {
-    // Combine stdlib with user code
-    const fullCode = MAZE_STDLIB + '\n' + userCode;
-
-    // Compile the combined code
-    const ast = compile(fullCode);
+    const ast = compile(userCode);
     const program = compileToIR(ast);
-
-    // Create shared state from world
-    this.sharedState = this.world.toSharedState();
-
-    // Load program and inject shared state
     this.vm.load(program);
-    this.vm.setGlobal('world', this.sharedState);
   }
 
   // ============ VM Delegation ============
 
   load(program: CompiledProgram): void {
-    // Set up shared state for stdlib access
-    this.sharedState = this.world.toSharedState();
     this.vm.load(program);
-    this.vm.setGlobal('world', this.sharedState);
   }
 
   reset(): void {
     this.vm.reset();
-    // Re-create shared state if using stdlib mode
-    if (this.sharedState) {
-      this.sharedState = this.world.toSharedState();
-      this.vm.setGlobal('world', this.sharedState);
-    }
   }
 
   step(): VMStepResult {
@@ -231,11 +211,10 @@ export class MazeVM {
   }
 
   // Expression Evaluation (for win/fail conditions)
-  // Prepends stdlib so expressions can use functions like collectedCount(), atGoal()
+  // Native commands are already registered, so expressions can use them directly
   evaluateExpression(source: string): Value {
-    // Wrap the expression in stdlib context so it can call stdlib functions
     // Assign to __result__ because expression statements pop their results
-    const fullSource = MAZE_STDLIB + '\n__result__ = ' + source;
+    const fullSource = '__result__ = ' + source;
     this.vm.evaluateExpression(fullSource);
     return this.vm.getGlobal('__result__') ?? null;
   }
