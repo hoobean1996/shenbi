@@ -27,8 +27,7 @@ import { useLanguage } from '../../../infrastructure/i18n';
 import { BadgeGrid } from '../components/badges';
 import { getEarnedBadges } from '../../../core/badges';
 import { ConnectionError } from '../components/ConnectionError';
-import { stripeApi } from '../../../infrastructure/services/api';
-import { error as logError } from '../../../infrastructure/logging';
+import { UpgradeModal } from '../components/UpgradeModal';
 
 const AVATAR_OPTIONS = [
   '🧒',
@@ -64,19 +63,7 @@ export default function ProfilePage() {
     age: '',
     avatar: '',
   });
-  const [upgradeLoading, setUpgradeLoading] = useState(false);
-
-  // Handle upgrade to premium
-  const handleUpgrade = async () => {
-    setUpgradeLoading(true);
-    try {
-      const { checkout_url } = await stripeApi.createCheckoutSession();
-      window.location.href = checkout_url;
-    } catch (err) {
-      logError('Failed to create checkout session', err, undefined, 'ProfilePage');
-      setUpgradeLoading(false);
-    }
-  };
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Loading state
   if (loading) {
@@ -298,18 +285,11 @@ export default function ProfilePage() {
               </div>
               {!isPremium && (
                 <button
-                  onClick={handleUpgrade}
-                  disabled={upgradeLoading}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#4a7a2a] hover:bg-[#3a6a1a] text-white font-medium rounded-xl transition-colors disabled:opacity-50"
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#4a7a2a] hover:bg-[#3a6a1a] text-white font-medium rounded-xl transition-colors"
                 >
-                  {upgradeLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      {t('subscription.upgradeButton')}
-                      <ChevronRight className="w-4 h-4" />
-                    </>
-                  )}
+                  {t('subscription.upgradeButton')}
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -456,6 +436,11 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
       )}
     </div>
   );
