@@ -13,7 +13,18 @@ export const level05: MazeLevelData = {
   teachingGoal: 'Use Repeat with multiple commands inside',
   hints: [
     'The path forms a square shape',
-    'Each side: Forward, Forward, then Turn Right',
+    'Try using "Walk Side" to walk one edge of the square!',
     'Repeat this pattern 4 times for all 4 sides!',
+  ],
+  customCommands: [
+    {
+      id: 'walkSide',
+      label: 'Walk Side',
+      icon: '📐',
+      color: '#8B5CF6',
+      codeName: 'walkSide',
+      argType: 'none',
+      code: 'forward()\nforward()\nturnRight()',
+    },
   ],
 };
