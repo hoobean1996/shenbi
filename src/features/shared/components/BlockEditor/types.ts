@@ -5,6 +5,7 @@
  * Supports multiple game types: maze, turtle
  *
  * Command definitions are imported from game modules (single source of truth).
+ * Control block definitions are imported from core/blocks module.
  */
 
 import {
@@ -19,6 +20,13 @@ import {
   CommandDefinition as TurtleCommandDef,
   ConditionDefinition as TurtleConditionDef,
 } from '../../../../core/game/turtle/commands';
+
+// Import block registry for control blocks
+import {
+  getBlockDefinition,
+  getAllBlockDefinitions,
+  type ControlBlockDefinition,
+} from '../../../../core/blocks';
 
 export type GameType = 'maze' | 'turtle';
 
@@ -190,33 +198,35 @@ function gameConditionToUICondition(cond: MazeConditionDef | TurtleConditionDef)
 }
 
 // ============ SHARED CONTROL BLOCKS ============
-export const CONTROL_BLOCKS: BlockDefinition[] = [
-  { type: 'repeat', label: 'Repeat', color: BLOCK_COLORS.control, icon: '🔁' },
-  { type: 'for', label: 'For', color: BLOCK_COLORS.control, icon: '🔢' },
-  { type: 'forEach', label: 'For Each', color: BLOCK_COLORS.control, icon: '🔄' },
-  { type: 'while', label: 'While', color: BLOCK_COLORS.control, icon: '🔃' },
-  { type: 'if', label: 'If', color: BLOCK_COLORS.control, icon: '❓' },
-  { type: 'ifelse', label: 'If-Else', color: BLOCK_COLORS.control, icon: '🔀' },
-  { type: 'break', label: 'Break', color: BLOCK_COLORS.control, icon: '🛑' },
-  { type: 'continue', label: 'Continue', color: BLOCK_COLORS.control, icon: '⏭️' },
-  { type: 'pass', label: 'Pass', color: BLOCK_COLORS.control, icon: '⏸️' },
-];
+// Generated from the central block registry
 
-export const VARIABLE_BLOCKS: BlockDefinition[] = [
-  { type: 'setVariable', label: 'Set Variable', color: BLOCK_COLORS.data, icon: '📦' },
-  { type: 'print', label: 'Print', color: BLOCK_COLORS.data, icon: '📝' },
-];
+function controlBlockDefToBlockDef(def: ControlBlockDefinition): BlockDefinition {
+  return {
+    type: def.type,
+    label: def.label,
+    color: def.color,
+    icon: def.icon,
+  };
+}
 
-export const LIST_BLOCKS: BlockDefinition[] = [
-  { type: 'listAppend', label: 'Append', color: BLOCK_COLORS.data, icon: '➕' },
-  { type: 'listPop', label: 'Pop', color: BLOCK_COLORS.data, icon: '➖' },
-  { type: 'listInsert', label: 'Insert', color: BLOCK_COLORS.data, icon: '📥' },
-];
+// Get control blocks from registry by category
+export const CONTROL_BLOCKS: BlockDefinition[] = getAllBlockDefinitions()
+  .filter((def) => def.category === 'control')
+  .map(controlBlockDefToBlockDef);
 
-export const FUNCTION_BLOCKS: BlockDefinition[] = [
-  { type: 'functionDef', label: 'Define Function', color: BLOCK_COLORS.function, icon: '🔧' },
-  { type: 'functionCall', label: 'Call Function', color: BLOCK_COLORS.function, icon: '▶️' },
-];
+export const VARIABLE_BLOCKS: BlockDefinition[] = getAllBlockDefinitions()
+  .filter((def) => def.category === 'data')
+  .filter((def) => def.type === 'setVariable' || def.type === 'print')
+  .map(controlBlockDefToBlockDef);
+
+export const LIST_BLOCKS: BlockDefinition[] = getAllBlockDefinitions()
+  .filter((def) => def.category === 'data')
+  .filter((def) => def.type === 'listAppend' || def.type === 'listPop' || def.type === 'listInsert')
+  .map(controlBlockDefToBlockDef);
+
+export const FUNCTION_BLOCKS: BlockDefinition[] = getAllBlockDefinitions()
+  .filter((def) => def.category === 'function')
+  .map(controlBlockDefToBlockDef);
 
 // ============ HELPER FUNCTIONS ============
 
@@ -260,83 +270,22 @@ export function createBlock(def: BlockDefinition): Block {
     type: def.type,
   };
 
+  // For command blocks (game-specific)
   if (def.command) {
     block.command = def.command;
   }
-
-  // Add default argument for command blocks that have parameters
   if (def.defaultArg) {
     block.commandArg = { ...def.defaultArg } as BlockExpression;
   }
-  // Add second default argument for xy type
   if (def.defaultArg2) {
     block.commandArg2 = { ...def.defaultArg2 } as BlockExpression;
   }
 
-  if (def.type === 'repeat') {
-    block.repeatCount = 3;
-    block.children = [];
-  }
-
-  if (def.type === 'while' || def.type === 'if') {
-    block.condition = 'frontClear';
-    block.children = [];
-  }
-
-  if (def.type === 'ifelse') {
-    block.condition = 'frontClear';
-    block.children = [];
-    block.elseChildren = [];
-  }
-
-  if (def.type === 'for') {
-    block.variableName = 'i';
-    block.rangeStart = { type: 'number', value: 0 };
-    block.rangeEnd = { type: 'number', value: 5 };
-    block.children = [];
-  }
-
-  if (def.type === 'forEach') {
-    block.variableName = 'item';
-    block.iterable = { type: 'variable', name: 'arr' };
-    block.children = [];
-  }
-
-  // break, continue, pass don't need any additional properties
-
-  if (def.type === 'setVariable') {
-    block.variableName = 'x';
-    block.expression = { type: 'number', value: 0 };
-  }
-
-  if (def.type === 'print') {
-    block.expression = { type: 'string', value: 'Hello' };
-  }
-
-  if (def.type === 'functionDef') {
-    block.functionName = 'myFunction';
-    block.functionParams = [];
-    block.children = [];
-  }
-
-  if (def.type === 'functionCall') {
-    block.functionName = 'myFunction';
-    block.functionArgs = [];
-  }
-
-  if (def.type === 'listAppend') {
-    block.listArray = { type: 'variable', name: 'arr' };
-    block.listValue = { type: 'number', value: 0 };
-  }
-
-  if (def.type === 'listPop') {
-    block.listArray = { type: 'variable', name: 'arr' };
-  }
-
-  if (def.type === 'listInsert') {
-    block.listArray = { type: 'variable', name: 'arr' };
-    block.listIndex = { type: 'number', value: 0 };
-    block.listValue = { type: 'number', value: 0 };
+  // For control blocks, get defaults from the registry
+  const controlDef = getBlockDefinition(def.type);
+  if (controlDef) {
+    const defaults = controlDef.createDefaults();
+    Object.assign(block, defaults);
   }
 
   return block;
