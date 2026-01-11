@@ -417,8 +417,7 @@ interface ConditionEditorProps {
   condition?: ConditionId;
   conditionExpr?: BlockExpression;
   onChange: (condition?: ConditionId, conditionExpr?: BlockExpression) => void;
-  conditions: { id: ConditionId; label: string; labelEn: string }[];
-  language: 'en' | 'zh';
+  conditions: { id: ConditionId; label: string }[];
 }
 
 function ConditionEditor({
@@ -426,15 +425,10 @@ function ConditionEditor({
   conditionExpr,
   onChange,
   conditions,
-  language,
 }: ConditionEditorProps) {
   // Determine if using expression or sensor
   const conditionType: ConditionType = conditionExpr ? 'expression' : 'sensor';
   const defaultCondition = conditions[0]?.id || 'frontClear';
-
-  // Helper to get condition label based on language
-  const getConditionLabel = (c: { label: string; labelEn: string }) =>
-    language === 'en' ? c.labelEn : c.label;
 
   const handleTypeChange = (newType: ConditionType) => {
     if (newType === 'sensor') {
@@ -477,7 +471,7 @@ function ConditionEditor({
         >
           {conditions.map((c) => (
             <option key={c.id} value={c.id}>
-              {getConditionLabel(c)}
+              {c.label}
             </option>
           ))}
         </select>
@@ -487,8 +481,8 @@ function ConditionEditor({
           className="px-1 py-0.5 text-black rounded text-xs bg-white/80"
           onClick={(e) => e.stopPropagation()}
         >
-          <option value="sensor">{language === 'zh' ? '传感器' : 'Sensor'}</option>
-          <option value="expression">{language === 'zh' ? '比较' : 'Compare'}</option>
+          <option value="sensor">Sensor</option>
+          <option value="expression">Compare</option>
         </select>
       </div>
     );
@@ -531,8 +525,8 @@ function ConditionEditor({
           className="px-1 py-0.5 text-black rounded text-xs bg-white/80"
           onClick={(e) => e.stopPropagation()}
         >
-          <option value="sensor">{language === 'zh' ? '传感器' : 'Sensor'}</option>
-          <option value="expression">{language === 'zh' ? '比较' : 'Compare'}</option>
+          <option value="sensor">Sensor</option>
+          <option value="expression">Compare</option>
         </select>
       </div>
     );
@@ -551,7 +545,7 @@ function ConditionEditor({
     >
       {conditions.map((c) => (
         <option key={c.id} value={c.id}>
-          {getConditionLabel(c)}
+          {c.label}
         </option>
       ))}
     </select>
@@ -581,13 +575,10 @@ export function BlockItem({
   highlightedBlockId,
   gameType = 'maze',
 }: BlockItemProps) {
-  const { language } = useLanguage();
   const def = getBlockDef(block, gameType);
   const conditions = getConditions(gameType);
   const isHighlighted = block.id === highlightedBlockId;
-
-  // Use correct label based on language
-  const blockLabel = def ? (language === 'en' ? def.labelEn : def.label) : '';
+  const blockLabel = def?.label || '';
 
   const hasChildren = ![
     'command',
@@ -667,7 +658,6 @@ export function BlockItem({
               onUpdate({ ...block, condition, conditionExpr })
             }
             conditions={conditions}
-            language={language}
           />
         )}
 
@@ -710,7 +700,7 @@ export function BlockItem({
               className="w-12 px-1 py-0.5 text-center text-gray-800 bg-gray-100 border border-gray-300 rounded text-sm font-mono"
               onClick={(e) => e.stopPropagation()}
             />
-            <span className="text-gray-600 text-sm">{language === 'zh' ? '在' : 'in'}</span>
+            <span className="text-gray-600 text-sm">in</span>
             {block.iterable && (
               <ExpressionEditor
                 expression={block.iterable}
@@ -879,7 +869,7 @@ export function BlockItem({
       {block.type === 'ifelse' && (
         <>
           <div className="px-3 py-1 text-gray-600 font-semibold border-t border-gray-200 bg-gray-50">
-            {language === 'zh' ? '否则' : 'else'}
+            else
           </div>
           <div className="mx-2 mb-2">
             <DropZone

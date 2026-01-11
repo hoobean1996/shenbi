@@ -137,7 +137,6 @@ export interface BlockDefinition {
   type: BlockType;
   command?: CommandId;
   label: string;
-  labelEn: string;
   color: string;
   icon?: string;
   argType?: ArgType; // Type of argument for command blocks
@@ -162,7 +161,6 @@ function gameCommandToBlockDef(cmd: MazeCommandDef | TurtleCommandDef): BlockDef
     type: 'command',
     command: cmd.id as CommandId,
     label: cmd.label,
-    labelEn: cmd.labelEn,
     color: cmd.color,
     icon: cmd.icon,
   };
@@ -183,65 +181,40 @@ function gameCommandToBlockDef(cmd: MazeCommandDef | TurtleCommandDef): BlockDef
 
 function gameConditionToUICondition(
   cond: MazeConditionDef | TurtleConditionDef
-): { id: ConditionId; label: string; labelEn: string } {
+): { id: ConditionId; label: string } {
   return {
     id: cond.id as ConditionId,
     label: cond.label,
-    labelEn: cond.labelEn,
   };
 }
 
 // ============ SHARED CONTROL BLOCKS ============
 export const CONTROL_BLOCKS: BlockDefinition[] = [
-  { type: 'repeat', label: '重复', labelEn: 'Repeat', color: BLOCK_COLORS.control, icon: '🔁' },
-  { type: 'for', label: '循环', labelEn: 'For', color: BLOCK_COLORS.control, icon: '🔢' },
-  { type: 'forEach', label: '遍历', labelEn: 'For Each', color: BLOCK_COLORS.control, icon: '🔄' },
-  { type: 'while', label: '当...时', labelEn: 'While', color: BLOCK_COLORS.control, icon: '🔃' },
-  { type: 'if', label: '如果', labelEn: 'If', color: BLOCK_COLORS.control, icon: '❓' },
-  {
-    type: 'ifelse',
-    label: '如果否则',
-    labelEn: 'If-Else',
-    color: BLOCK_COLORS.control,
-    icon: '🔀',
-  },
-  { type: 'break', label: '跳出', labelEn: 'Break', color: BLOCK_COLORS.control, icon: '🛑' },
-  { type: 'continue', label: '继续', labelEn: 'Continue', color: BLOCK_COLORS.control, icon: '⏭️' },
-  { type: 'pass', label: '跳过', labelEn: 'Pass', color: BLOCK_COLORS.control, icon: '⏸️' },
+  { type: 'repeat', label: 'Repeat', color: BLOCK_COLORS.control, icon: '🔁' },
+  { type: 'for', label: 'For', color: BLOCK_COLORS.control, icon: '🔢' },
+  { type: 'forEach', label: 'For Each', color: BLOCK_COLORS.control, icon: '🔄' },
+  { type: 'while', label: 'While', color: BLOCK_COLORS.control, icon: '🔃' },
+  { type: 'if', label: 'If', color: BLOCK_COLORS.control, icon: '❓' },
+  { type: 'ifelse', label: 'If-Else', color: BLOCK_COLORS.control, icon: '🔀' },
+  { type: 'break', label: 'Break', color: BLOCK_COLORS.control, icon: '🛑' },
+  { type: 'continue', label: 'Continue', color: BLOCK_COLORS.control, icon: '⏭️' },
+  { type: 'pass', label: 'Pass', color: BLOCK_COLORS.control, icon: '⏸️' },
 ];
 
 export const VARIABLE_BLOCKS: BlockDefinition[] = [
-  {
-    type: 'setVariable',
-    label: '设置变量',
-    labelEn: 'Set Variable',
-    color: BLOCK_COLORS.data,
-    icon: '📦',
-  },
-  { type: 'print', label: '打印', labelEn: 'Print', color: BLOCK_COLORS.data, icon: '📝' },
+  { type: 'setVariable', label: 'Set Variable', color: BLOCK_COLORS.data, icon: '📦' },
+  { type: 'print', label: 'Print', color: BLOCK_COLORS.data, icon: '📝' },
 ];
 
 export const LIST_BLOCKS: BlockDefinition[] = [
-  { type: 'listAppend', label: '添加', labelEn: 'Append', color: BLOCK_COLORS.data, icon: '➕' },
-  { type: 'listPop', label: '弹出', labelEn: 'Pop', color: BLOCK_COLORS.data, icon: '➖' },
-  { type: 'listInsert', label: '插入', labelEn: 'Insert', color: BLOCK_COLORS.data, icon: '📥' },
+  { type: 'listAppend', label: 'Append', color: BLOCK_COLORS.data, icon: '➕' },
+  { type: 'listPop', label: 'Pop', color: BLOCK_COLORS.data, icon: '➖' },
+  { type: 'listInsert', label: 'Insert', color: BLOCK_COLORS.data, icon: '📥' },
 ];
 
 export const FUNCTION_BLOCKS: BlockDefinition[] = [
-  {
-    type: 'functionDef',
-    label: '定义函数',
-    labelEn: 'Define Function',
-    color: BLOCK_COLORS.function,
-    icon: '🔧',
-  },
-  {
-    type: 'functionCall',
-    label: '调用函数',
-    labelEn: 'Call Function',
-    color: BLOCK_COLORS.function,
-    icon: '▶️',
-  },
+  { type: 'functionDef', label: 'Define Function', color: BLOCK_COLORS.function, icon: '🔧' },
+  { type: 'functionCall', label: 'Call Function', color: BLOCK_COLORS.function, icon: '▶️' },
 ];
 
 // ============ HELPER FUNCTIONS ============
@@ -257,9 +230,7 @@ export function getCommandBlocks(gameType: GameType): BlockDefinition[] {
 }
 
 /** Get conditions for a game type (from game module) */
-export function getConditions(
-  gameType: GameType
-): { id: ConditionId; label: string; labelEn: string }[] {
+export function getConditions(gameType: GameType): { id: ConditionId; label: string }[] {
   switch (gameType) {
     case 'maze':
       return MAZE_CONDITIONS.map(gameConditionToUICondition);

@@ -29,16 +29,7 @@ interface PaletteBlockProps {
   disabled?: boolean;
 }
 
-interface PaletteBlockInternalProps extends PaletteBlockProps {
-  language: 'en' | 'zh';
-}
-
-function PaletteBlock({
-  definition,
-  dataTour,
-  disabled = false,
-  language,
-}: PaletteBlockInternalProps) {
+function PaletteBlock({ definition, dataTour, disabled = false }: PaletteBlockProps) {
   const [{ isDragging }, drag] = useDrag({
     type: ITEM_TYPE,
     item: () => {
@@ -50,9 +41,6 @@ function PaletteBlock({
       isDragging: monitor.isDragging(),
     }),
   });
-
-  // Use correct label based on language
-  const label = language === 'en' ? definition.labelEn : definition.label;
 
   return (
     <div
@@ -66,7 +54,7 @@ function PaletteBlock({
       style={{ borderLeftWidth: '4px', borderLeftColor: definition.color }}
     >
       <span className="text-lg">{definition.icon}</span>
-      <span className="text-gray-800 font-semibold text-sm">{label}</span>
+      <span className="text-gray-800 font-semibold text-sm">{definition.label}</span>
     </div>
   );
 }
@@ -84,7 +72,7 @@ export function BlockPalette({
   availableBlocks,
   disabled = false,
 }: BlockPaletteProps) {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
 
   // Get command blocks for the current game type
   const commandBlocks = getCommandBlocks(gameType);
@@ -123,11 +111,10 @@ export function BlockPalette({
           <div className="space-y-2">
             {filteredCommandBlocks.map((def, index) => (
               <PaletteBlock
-                key={`${def.command}-${def.labelEn}`}
+                key={`${def.command}-${def.label}`}
                 definition={def}
                 dataTour={index === 0 ? 'first-block' : undefined}
                 disabled={disabled}
-                language={language}
               />
             ))}
           </div>
@@ -140,12 +127,7 @@ export function BlockPalette({
           <h3 className="text-sm font-bold text-gray-600 mb-2">{t('blocks.control')}</h3>
           <div className="space-y-2">
             {filteredControlBlocks.map((def) => (
-              <PaletteBlock
-                key={def.type}
-                definition={def}
-                disabled={disabled}
-                language={language}
-              />
+              <PaletteBlock key={def.type} definition={def} disabled={disabled} />
             ))}
           </div>
         </div>
@@ -157,12 +139,7 @@ export function BlockPalette({
           <h3 className="text-sm font-bold text-gray-600 mb-2">{t('blocks.variables')}</h3>
           <div className="space-y-2">
             {filteredVariableBlocks.map((def) => (
-              <PaletteBlock
-                key={def.type}
-                definition={def}
-                disabled={disabled}
-                language={language}
-              />
+              <PaletteBlock key={def.type} definition={def} disabled={disabled} />
             ))}
           </div>
         </div>
@@ -174,12 +151,7 @@ export function BlockPalette({
           <h3 className="text-sm font-bold text-gray-600 mb-2">{t('blocks.functions')}</h3>
           <div className="space-y-2">
             {filteredFunctionBlocks.map((def) => (
-              <PaletteBlock
-                key={def.type}
-                definition={def}
-                disabled={disabled}
-                language={language}
-              />
+              <PaletteBlock key={def.type} definition={def} disabled={disabled} />
             ))}
           </div>
         </div>
@@ -188,17 +160,10 @@ export function BlockPalette({
       {/* List blocks */}
       {filteredListBlocks.length > 0 && (
         <div>
-          <h3 className="text-sm font-bold text-gray-600 mb-2">
-            {language === 'zh' ? '列表' : 'List'}
-          </h3>
+          <h3 className="text-sm font-bold text-gray-600 mb-2">List</h3>
           <div className="space-y-2">
             {filteredListBlocks.map((def) => (
-              <PaletteBlock
-                key={def.type}
-                definition={def}
-                disabled={disabled}
-                language={language}
-              />
+              <PaletteBlock key={def.type} definition={def} disabled={disabled} />
             ))}
           </div>
         </div>

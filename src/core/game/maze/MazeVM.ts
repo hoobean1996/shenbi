@@ -45,27 +45,23 @@ export class MazeVM {
       }
     };
     this.vm.registerCommand('print', printHandler);
-    this.vm.registerCommand('打印', printHandler);
 
     // Register commands from commands.ts (single source of truth)
     for (const cmd of MAZE_COMMANDS) {
       const handler = (args: Value[]) => cmd.handler(this.world, args);
       this.vm.registerCommand(cmd.codeName, handler);
-      this.vm.registerCommand(cmd.codeNameZh, handler);
     }
 
     // Register conditions as commands (they return boolean)
     for (const cond of MAZE_CONDITIONS) {
       const handler = () => cond.handler(this.world);
       this.vm.registerCommand(cond.codeName, handler);
-      this.vm.registerCommand(cond.codeNameZh, handler);
     }
 
     // Register sensors from commands.ts
     for (const sensor of MAZE_SENSORS) {
       const handler = (args: Value[]) => sensor.handler(this.world, args);
       this.vm.registerCommand(sensor.codeName, handler);
-      this.vm.registerCommand(sensor.codeNameZh, handler);
     }
   }
 
