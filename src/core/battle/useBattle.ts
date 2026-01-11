@@ -353,8 +353,9 @@ export function useBattle({
 
   // Computed values
   const isHost = state.isHost;
+  // isConnected = true only when both players are in the room (ready, playing, or finished)
   const isConnected =
-    state.status !== 'idle' && state.status !== 'creating' && state.status !== 'joining';
+    state.status === 'ready' || state.status === 'playing' || state.status === 'finished';
   const opponentName = isHost ? state.guestName : state.hostName;
 
   // Determine if I won
