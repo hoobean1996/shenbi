@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { Loader2 } from 'lucide-react';
 import { Layout } from './features/shared/components/Layout';
 import { TeacherRoute } from './features/teacher/components/TeacherRoute';
@@ -110,10 +111,11 @@ function RoleBasedHome() {
 
 function App() {
   return (
-    <AuthProvider>
-      <LanguageProvider>
-        <SettingsProvider>
-          <BrowserRouter>
+    <HelmetProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <SettingsProvider>
+            <BrowserRouter>
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public pages - no auth required */}
@@ -306,10 +308,11 @@ function App() {
                 </Route>
               </Routes>
             </Suspense>
-          </BrowserRouter>
-        </SettingsProvider>
-      </LanguageProvider>
-    </AuthProvider>
+            </BrowserRouter>
+          </SettingsProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    </HelmetProvider>
   );
 }
 

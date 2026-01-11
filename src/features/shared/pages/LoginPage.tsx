@@ -7,6 +7,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { Paintbrush, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth, GOOGLE_CLIENT_ID } from '../contexts/AuthContext';
+import { SEO } from '../components/SEO';
 
 function LoginContent() {
   const navigate = useNavigate();
@@ -46,9 +47,15 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#e8f5e0] via-white to-[#f0f9eb]">
-      {/* Header */}
-      <header className="p-4">
+    <>
+      <SEO
+        title="Sign In"
+        description="Sign in to Shenbi to continue your coding adventure. Track your progress, earn badges, and compete with friends."
+        url="/login"
+      />
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#e8f5e0] via-white to-[#f0f9eb]">
+        {/* Header */}
+        <header className="p-4">
         <Link to="/landing" className="inline-flex items-center gap-3">
           <div className="w-10 h-10 bg-[#4a7a2a] rounded-xl flex items-center justify-center">
             <Paintbrush className="w-5 h-5 text-white" />
@@ -123,7 +130,8 @@ function LoginContent() {
           </p>
         </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 }
 

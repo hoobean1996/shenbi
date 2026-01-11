@@ -3,6 +3,7 @@
  */
 
 import { Link } from 'react-router-dom';
+import { SEO } from '../components/SEO';
 import {
   Sparkles,
   ChevronRight,
@@ -24,7 +25,13 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="h-screen overflow-y-auto bg-white">
+    <>
+      <SEO
+        title="Fun Coding for Kids"
+        description="Turn your kids into little programmers with Shenbi. Game-based learning makes coding as fun as playing. 50+ interactive puzzles for ages 5-14."
+        url="/landing"
+      />
+      <div className="h-screen overflow-y-auto bg-white">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -400,6 +407,7 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }
