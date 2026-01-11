@@ -3,7 +3,22 @@
  *
  * Defines the structure of visual programming blocks.
  * Supports multiple game types: maze, turtle
+ *
+ * Command definitions are imported from game modules (single source of truth).
  */
+
+import {
+  MAZE_COMMANDS,
+  MAZE_CONDITIONS,
+  CommandDefinition as MazeCommandDef,
+  ConditionDefinition as MazeConditionDef,
+} from '../../../../core/game/maze/commands';
+import {
+  TURTLE_COMMANDS,
+  TURTLE_CONDITIONS,
+  CommandDefinition as TurtleCommandDef,
+  ConditionDefinition as TurtleConditionDef,
+} from '../../../../core/game/turtle/commands';
 
 export type GameType = 'maze' | 'turtle';
 
@@ -26,30 +41,15 @@ export type BlockType =
   | 'continue' // continue - next iteration
   | 'pass'; // pass - no operation
 
-// Maze commands - unified move/turn with direction parameter
-export type MazeCommandId = 'move' | 'turn';
+// Command IDs from game modules
+export type MazeCommandId = (typeof MAZE_COMMANDS)[number]['id'];
+export type TurtleCommandId = (typeof TURTLE_COMMANDS)[number]['id'];
+export type CommandId = MazeCommandId | TurtleCommandId | string;
 
-// Turtle commands - unified move/turn with direction + optional distance/degrees
-export type TurtleCommandId = 'move' | 'turn' | 'setColor';
-
-// Union of all command IDs
-export type CommandId = MazeCommandId | TurtleCommandId;
-
-// Maze conditions
-export type MazeConditionId =
-  | 'frontBlocked'
-  | 'frontClear'
-  | 'leftClear'
-  | 'rightClear'
-  | 'hasStar'
-  | 'atGoal'
-  | 'notAtGoal';
-
-// Turtle conditions (none - turtle always draws)
-export type TurtleConditionId = never;
-
-// Union of all condition IDs
-export type ConditionId = MazeConditionId | TurtleConditionId;
+// Condition IDs from game modules
+export type MazeConditionId = (typeof MAZE_CONDITIONS)[number]['id'];
+export type TurtleConditionId = (typeof TURTLE_CONDITIONS)[number]['id'];
+export type ConditionId = MazeConditionId | TurtleConditionId | string;
 
 // Operator types for expressions
 export type MathOperator = '+' | '-' | '*' | '/';
@@ -154,80 +154,42 @@ export const BLOCK_COLORS = {
   function: '#10B981', // Green - functions
 } as const;
 
-// ============ MAZE BLOCKS ============
-// Single move/turn blocks with direction selector
-export const MAZE_COMMAND_BLOCKS: BlockDefinition[] = [
-  {
-    type: 'command',
-    command: 'move',
-    label: '移动',
-    labelEn: 'Move',
-    color: BLOCK_COLORS.action,
-    icon: '🚶',
-    argType: 'string',
-    defaultArg: { type: 'string', value: 'forward' },
-  },
-  {
-    type: 'command',
-    command: 'turn',
-    label: '转向',
-    labelEn: 'Turn',
-    color: BLOCK_COLORS.action,
-    icon: '🔄',
-    argType: 'string',
-    defaultArg: { type: 'string', value: 'left' },
-  },
-];
+// ============ GAME COMMAND ADAPTERS ============
+// Convert game CommandDefinition to BlockDefinition
 
-export const MAZE_CONDITIONS: { id: ConditionId; label: string; labelEn: string }[] = [
-  { id: 'frontBlocked', label: '前方有障碍', labelEn: 'Front Blocked' },
-  { id: 'frontClear', label: '前方畅通', labelEn: 'Front Clear' },
-  { id: 'leftClear', label: '左边畅通', labelEn: 'Left Clear' },
-  { id: 'rightClear', label: '右边畅通', labelEn: 'Right Clear' },
-  { id: 'hasStar', label: '有星星', labelEn: 'Has Star' },
-  { id: 'atGoal', label: '到达终点', labelEn: 'At Goal' },
-  { id: 'notAtGoal', label: '未到终点', labelEn: 'Not At Goal' },
-];
+function gameCommandToBlockDef(cmd: MazeCommandDef | TurtleCommandDef): BlockDefinition {
+  const def: BlockDefinition = {
+    type: 'command',
+    command: cmd.id as CommandId,
+    label: cmd.label,
+    labelEn: cmd.labelEn,
+    color: cmd.color,
+    icon: cmd.icon,
+  };
 
-// ============ TURTLE BLOCKS ============
-// Single move/turn blocks with direction + distance/degrees
-export const TURTLE_COMMAND_BLOCKS: BlockDefinition[] = [
-  {
-    type: 'command',
-    command: 'move',
-    label: '移动',
-    labelEn: 'Move',
-    color: BLOCK_COLORS.action,
-    icon: '🚶',
-    argType: 'xy',
-    defaultArg: { type: 'string', value: 'forward' },
-    defaultArg2: { type: 'number', value: 1 },
-  },
-  {
-    type: 'command',
-    command: 'turn',
-    label: '转向',
-    labelEn: 'Turn',
-    color: BLOCK_COLORS.action,
-    icon: '🔄',
-    argType: 'xy',
-    defaultArg: { type: 'string', value: 'left' },
-    defaultArg2: { type: 'number', value: 90 },
-  },
-  {
-    type: 'command',
-    command: 'setColor',
-    label: '设置颜色',
-    labelEn: 'Set Color',
-    color: BLOCK_COLORS.action,
-    icon: '🎨',
-    argType: 'string',
-    defaultArg: { type: 'string', value: 'red' },
-  },
-];
+  // Handle argument types
+  if (cmd.argType === 'number' && cmd.defaultArg !== undefined) {
+    def.argType = 'number';
+    def.defaultArg = { type: 'number', value: cmd.defaultArg as number };
+  } else if (cmd.argType === 'string' && cmd.defaultArg !== undefined) {
+    def.argType = 'string';
+    def.defaultArg = { type: 'string', value: cmd.defaultArg as string };
+  } else {
+    def.argType = 'none';
+  }
 
-// Turtle has no conditions (always draws)
-export const TURTLE_CONDITIONS: { id: ConditionId; label: string; labelEn: string }[] = [];
+  return def;
+}
+
+function gameConditionToUICondition(
+  cond: MazeConditionDef | TurtleConditionDef
+): { id: ConditionId; label: string; labelEn: string } {
+  return {
+    id: cond.id as ConditionId,
+    label: cond.label,
+    labelEn: cond.labelEn,
+  };
+}
 
 // ============ SHARED CONTROL BLOCKS ============
 export const CONTROL_BLOCKS: BlockDefinition[] = [
@@ -283,24 +245,34 @@ export const FUNCTION_BLOCKS: BlockDefinition[] = [
 ];
 
 // ============ HELPER FUNCTIONS ============
+
+/** Get command blocks for a game type (from game module) */
 export function getCommandBlocks(gameType: GameType): BlockDefinition[] {
   switch (gameType) {
     case 'maze':
-      return MAZE_COMMAND_BLOCKS;
+      return MAZE_COMMANDS.map(gameCommandToBlockDef);
     case 'turtle':
-      return TURTLE_COMMAND_BLOCKS;
+      return TURTLE_COMMANDS.map(gameCommandToBlockDef);
   }
 }
 
+/** Get conditions for a game type (from game module) */
 export function getConditions(
   gameType: GameType
 ): { id: ConditionId; label: string; labelEn: string }[] {
   switch (gameType) {
     case 'maze':
-      return MAZE_CONDITIONS;
+      return MAZE_CONDITIONS.map(gameConditionToUICondition);
     case 'turtle':
-      return TURTLE_CONDITIONS;
+      return TURTLE_CONDITIONS.map(gameConditionToUICondition);
   }
+}
+
+/** Get the code name for a command (for code generation) */
+export function getCommandCodeName(commandId: CommandId, gameType: GameType): string {
+  const commands = gameType === 'maze' ? MAZE_COMMANDS : TURTLE_COMMANDS;
+  const cmd = commands.find((c) => c.id === commandId);
+  return cmd?.codeName || commandId;
 }
 
 // Generate unique block IDs

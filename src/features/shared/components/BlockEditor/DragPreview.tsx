@@ -5,15 +5,10 @@
  */
 
 import { usePreview } from 'react-dnd-multi-backend';
-import {
-  Block,
-  MAZE_COMMAND_BLOCKS,
-  TURTLE_COMMAND_BLOCKS,
-  CONTROL_BLOCKS,
-  BlockDefinition,
-} from './types';
+import { Block, CONTROL_BLOCKS, BlockDefinition, getCommandBlocks } from './types';
 
-const ALL_COMMAND_BLOCKS = [...MAZE_COMMAND_BLOCKS, ...TURTLE_COMMAND_BLOCKS];
+// Get all command blocks from both game types
+const ALL_COMMAND_BLOCKS = [...getCommandBlocks('maze'), ...getCommandBlocks('turtle')];
 
 function getBlockDef(block: Block): BlockDefinition | undefined {
   if (block.type === 'command') {

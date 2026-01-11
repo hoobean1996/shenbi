@@ -2,7 +2,7 @@
  * Maze Virtual Machine
  *
  * Wraps the pure MiniPython VM with maze game bindings.
- * Commands and sensors are registered as native commands that call MazeWorld directly.
+ * Commands and sensors are registered from commands.ts (single source of truth).
  * MazeWorld is the single source of truth for game state.
  */
 
@@ -10,6 +10,7 @@ import { VM, VMState, VMStepResult, CommandHandler } from '../../lang/vm';
 import { CompiledProgram, Value } from '../../lang/ir';
 import { compile, compileToIR } from '../../lang/index';
 import { MazeWorld } from './MazeWorld';
+import { MAZE_COMMANDS, MAZE_CONDITIONS, MAZE_SENSORS } from './commands';
 
 export interface MazeVMConfig {
   world: MazeWorld;
@@ -46,44 +47,26 @@ export class MazeVM {
     this.vm.registerCommand('print', printHandler);
     this.vm.registerCommand('打印', printHandler);
 
-    // ============ Movement Commands ============
-    // These call MazeWorld methods directly (single source of truth)
+    // Register commands from commands.ts (single source of truth)
+    for (const cmd of MAZE_COMMANDS) {
+      const handler = (args: Value[]) => cmd.handler(this.world, args);
+      this.vm.registerCommand(cmd.codeName, handler);
+      this.vm.registerCommand(cmd.codeNameZh, handler);
+    }
 
-    this.vm.registerCommand('forward', () => this.world.moveForward());
-    this.vm.registerCommand('前进', () => this.world.moveForward());
+    // Register conditions as commands (they return boolean)
+    for (const cond of MAZE_CONDITIONS) {
+      const handler = () => cond.handler(this.world);
+      this.vm.registerCommand(cond.codeName, handler);
+      this.vm.registerCommand(cond.codeNameZh, handler);
+    }
 
-    this.vm.registerCommand('backward', () => this.world.moveBackward());
-    this.vm.registerCommand('后退', () => this.world.moveBackward());
-
-    this.vm.registerCommand('turnLeft', () => { this.world.turnLeft(); });
-    this.vm.registerCommand('左转', () => { this.world.turnLeft(); });
-
-    this.vm.registerCommand('turnRight', () => { this.world.turnRight(); });
-    this.vm.registerCommand('右转', () => { this.world.turnRight(); });
-
-    this.vm.registerCommand('collect', () => this.world.collect());
-    this.vm.registerCommand('收集', () => this.world.collect());
-
-    // ============ Sensors ============
-    // These also call MazeWorld methods directly
-
-    this.vm.registerCommand('frontBlocked', () => this.world.isFrontBlocked());
-    this.vm.registerCommand('前方有墙', () => this.world.isFrontBlocked());
-
-    this.vm.registerCommand('frontClear', () => this.world.isFrontClear());
-    this.vm.registerCommand('前方无墙', () => this.world.isFrontClear());
-
-    this.vm.registerCommand('atGoal', () => this.world.isAtGoal());
-    this.vm.registerCommand('到达终点', () => this.world.isAtGoal());
-
-    this.vm.registerCommand('hasStar', () => this.world.hasStarHere());
-    this.vm.registerCommand('有星星', () => this.world.hasStarHere());
-
-    this.vm.registerCommand('remainingStars', () => this.world.getRemainingStars());
-    this.vm.registerCommand('剩余星星', () => this.world.getRemainingStars());
-
-    this.vm.registerCommand('collectedCount', () => this.world.getCollectedCount());
-    this.vm.registerCommand('已收集', () => this.world.getCollectedCount());
+    // Register sensors from commands.ts
+    for (const sensor of MAZE_SENSORS) {
+      const handler = (args: Value[]) => sensor.handler(this.world, args);
+      this.vm.registerCommand(sensor.codeName, handler);
+      this.vm.registerCommand(sensor.codeNameZh, handler);
+    }
   }
 
   /**

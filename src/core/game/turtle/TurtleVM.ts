@@ -2,7 +2,7 @@
  * Turtle Virtual Machine
  *
  * Wraps the pure MiniPython VM with turtle graphics bindings.
- * Commands and sensors are registered as native commands that call TurtleWorld directly.
+ * Commands and sensors are registered from commands.ts (single source of truth).
  * TurtleWorld is the single source of truth for game state.
  */
 
@@ -10,35 +10,7 @@ import { VM, VMState, VMStepResult, CommandHandler } from '../../lang/vm';
 import { CompiledProgram, Value } from '../../lang/ir';
 import { compile, compileToIR } from '../../lang/index';
 import { TurtleWorld } from './TurtleWorld';
-
-// Color name to hex mappings
-const COLORS: Record<string, string> = {
-  red: '#ef4444',
-  blue: '#3b82f6',
-  green: '#22c55e',
-  yellow: '#eab308',
-  purple: '#a855f7',
-  orange: '#f97316',
-  black: '#000000',
-  white: '#ffffff',
-  // Chinese color names
-  '红': '#ef4444',
-  '红色': '#ef4444',
-  '蓝': '#3b82f6',
-  '蓝色': '#3b82f6',
-  '绿': '#22c55e',
-  '绿色': '#22c55e',
-  '黄': '#eab308',
-  '黄色': '#eab308',
-  '紫': '#a855f7',
-  '紫色': '#a855f7',
-  '橙': '#f97316',
-  '橙色': '#f97316',
-  '黑': '#000000',
-  '黑色': '#000000',
-  '白': '#ffffff',
-  '白色': '#ffffff',
-};
+import { TURTLE_COMMANDS, TURTLE_CONDITIONS, TURTLE_SENSORS } from './commands';
 
 export interface TurtleVMConfig {
   world: TurtleWorld;
@@ -75,99 +47,26 @@ export class TurtleVM {
     this.vm.registerCommand('print', printHandler);
     this.vm.registerCommand('打印', printHandler);
 
-    // ============ Movement Commands ============
-    // These call TurtleWorld methods directly (single source of truth)
+    // Register commands from commands.ts (single source of truth)
+    for (const cmd of TURTLE_COMMANDS) {
+      const handler = (args: Value[]) => cmd.handler(this.world, args);
+      this.vm.registerCommand(cmd.codeName, handler);
+      this.vm.registerCommand(cmd.codeNameZh, handler);
+    }
 
-    this.vm.registerCommand('forward', (args: Value[]) => {
-      const distance = typeof args[0] === 'number' ? args[0] : 1;
-      this.world.forward(distance);
-    });
-    this.vm.registerCommand('前进', (args: Value[]) => {
-      const distance = typeof args[0] === 'number' ? args[0] : 1;
-      this.world.forward(distance);
-    });
+    // Register conditions as commands (they return boolean)
+    for (const cond of TURTLE_CONDITIONS) {
+      const handler = () => cond.handler(this.world);
+      this.vm.registerCommand(cond.codeName, handler);
+      this.vm.registerCommand(cond.codeNameZh, handler);
+    }
 
-    this.vm.registerCommand('backward', (args: Value[]) => {
-      const distance = typeof args[0] === 'number' ? args[0] : 1;
-      this.world.backward(distance);
-    });
-    this.vm.registerCommand('后退', (args: Value[]) => {
-      const distance = typeof args[0] === 'number' ? args[0] : 1;
-      this.world.backward(distance);
-    });
-
-    this.vm.registerCommand('turnLeft', (args: Value[]) => {
-      const degrees = typeof args[0] === 'number' ? args[0] : 90;
-      this.world.turnLeft(degrees);
-    });
-    this.vm.registerCommand('左转', (args: Value[]) => {
-      const degrees = typeof args[0] === 'number' ? args[0] : 90;
-      this.world.turnLeft(degrees);
-    });
-    this.vm.registerCommand('left', (args: Value[]) => {
-      const degrees = typeof args[0] === 'number' ? args[0] : 90;
-      this.world.turnLeft(degrees);
-    });
-
-    this.vm.registerCommand('turnRight', (args: Value[]) => {
-      const degrees = typeof args[0] === 'number' ? args[0] : 90;
-      this.world.turnRight(degrees);
-    });
-    this.vm.registerCommand('右转', (args: Value[]) => {
-      const degrees = typeof args[0] === 'number' ? args[0] : 90;
-      this.world.turnRight(degrees);
-    });
-    this.vm.registerCommand('right', (args: Value[]) => {
-      const degrees = typeof args[0] === 'number' ? args[0] : 90;
-      this.world.turnRight(degrees);
-    });
-
-    // ============ Pen Commands ============
-
-    this.vm.registerCommand('penUp', () => { this.world.penUp(); });
-    this.vm.registerCommand('抬笔', () => { this.world.penUp(); });
-
-    this.vm.registerCommand('penDown', () => { this.world.penDown(); });
-    this.vm.registerCommand('落笔', () => { this.world.penDown(); });
-
-    this.vm.registerCommand('setColor', (args: Value[]) => {
-      const color = typeof args[0] === 'string' ? args[0] : '#000000';
-      const mappedColor = COLORS[color] || color;
-      this.world.setColor(mappedColor);
-    });
-    this.vm.registerCommand('设置颜色', (args: Value[]) => {
-      const color = typeof args[0] === 'string' ? args[0] : '#000000';
-      const mappedColor = COLORS[color] || color;
-      this.world.setColor(mappedColor);
-    });
-    this.vm.registerCommand('颜色', (args: Value[]) => {
-      const color = typeof args[0] === 'string' ? args[0] : '#000000';
-      const mappedColor = COLORS[color] || color;
-      this.world.setColor(mappedColor);
-    });
-
-    this.vm.registerCommand('setWidth', (args: Value[]) => {
-      const width = typeof args[0] === 'number' ? args[0] : 2;
-      this.world.setWidth(width);
-    });
-    this.vm.registerCommand('设置宽度', (args: Value[]) => {
-      const width = typeof args[0] === 'number' ? args[0] : 2;
-      this.world.setWidth(width);
-    });
-
-    // ============ Sensors ============
-
-    this.vm.registerCommand('isPenDown', () => this.world.isPenDown());
-    this.vm.registerCommand('画笔落下', () => this.world.isPenDown());
-
-    this.vm.registerCommand('getX', () => this.world.getX());
-    this.vm.registerCommand('获取X', () => this.world.getX());
-
-    this.vm.registerCommand('getY', () => this.world.getY());
-    this.vm.registerCommand('获取Y', () => this.world.getY());
-
-    this.vm.registerCommand('getAngle', () => this.world.getAngle());
-    this.vm.registerCommand('获取角度', () => this.world.getAngle());
+    // Register sensors from commands.ts
+    for (const sensor of TURTLE_SENSORS) {
+      const handler = (args: Value[]) => sensor.handler(this.world, args);
+      this.vm.registerCommand(sensor.codeName, handler);
+      this.vm.registerCommand(sensor.codeNameZh, handler);
+    }
   }
 
   /**

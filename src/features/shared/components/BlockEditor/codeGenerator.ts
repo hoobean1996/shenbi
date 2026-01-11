@@ -3,28 +3,15 @@
  *
  * Converts visual blocks to Mini Python code.
  * Supports multiple game types: maze, turtle
+ *
+ * Command code names come from game modules (single source of truth).
  */
 
-import { Block, BlockExpression, GameType, ConditionId } from './types';
-
-// ============ COMMAND NAME MAPS ============
-// All games now use unified move/turn commands
-const COMMAND_NAMES: Record<string, string> = {
-  // Unified commands (all games)
-  move: 'move',
-  turn: 'turn',
-  // Turtle-specific
-  setColor: 'setColor',
-};
-
-function getCommandNames(_gameType: GameType): Record<string, string> {
-  // All games share the same command names now
-  return COMMAND_NAMES;
-}
+import { Block, BlockExpression, GameType, ConditionId, getCommandCodeName } from './types';
 
 function getConditionCode(conditionId: ConditionId, _gameType: GameType): string {
   // Return the condition ID directly - it's the function name (e.g., 'notAtGoal', 'frontClear')
-  // Don't return the label, as that's for display only (e.g., '未到终点', '前方畅通')
+  // Condition IDs match the codeName in the game module
   return conditionId;
 }
 
@@ -96,14 +83,13 @@ function generateBlockCodeWithMap(
   const spaces = '    '.repeat(indent);
   const lines: string[] = [];
   let line = currentLine;
-  const commandNames = getCommandNames(gameType);
 
   switch (block.type) {
     case 'command':
       if (block.command) {
-        const name = commandNames[block.command] || block.command;
-        // Include argument if present (e.g., forward(3), turnRight(90))
-        // Handle xy type with two arguments (e.g., moveTo(x, y))
+        // Get the code name from game module (e.g., 'forward' -> 'forward')
+        const name = getCommandCodeName(block.command, gameType);
+        // Include argument if present (e.g., forward(50), setColor("red"))
         let args = '';
         if (block.commandArg && block.commandArg2) {
           // Two arguments (xy type)
