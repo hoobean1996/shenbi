@@ -37,7 +37,6 @@ export function MazeAdventure({
 
   // Condition evaluation refs
   const stepCountRef = useRef(0);
-  const hasCustomWinConditionRef = useRef(false);
   const levelRef = useRef(level);
   const isCompleteRef = useRef(false);
 
@@ -74,6 +73,9 @@ export function MazeAdventure({
   // VM ref for condition evaluation (will be set after execution hook is created)
   const vmRef = useRef<VMInterface | null>(null);
 
+  // Delay before showing result modal (must be longer than animation duration of 300ms)
+  const RESULT_DELAY = 500;
+
   // Handle execution complete
   const handleExecutionComplete = useCallback(
     (hasError: boolean) => {
@@ -90,25 +92,25 @@ export function MazeAdventure({
         setTimeout(() => {
           SoundManager.play('win');
           onComplete(mazeWorld.getCollectedCount());
-        }, 400);
+        }, RESULT_DELAY);
       } else if (fail) {
         setTimeout(() => {
           SoundManager.play('blocked');
           onFail();
-        }, 400);
+        }, RESULT_DELAY);
       } else if (!levelRef.current?.winCondition) {
         // No win condition - sandbox mode, always succeed
         isCompleteRef.current = true;
         setTimeout(() => {
           SoundManager.play('win');
           onComplete(mazeWorld.getCollectedCount());
-        }, 400);
+        }, RESULT_DELAY);
       } else {
         // Win condition not met
         setTimeout(() => {
           SoundManager.play('blocked');
           onFail();
-        }, 400);
+        }, RESULT_DELAY);
       }
     },
     [checkConditions, onComplete, onFail]
@@ -156,7 +158,6 @@ export function MazeAdventure({
   useEffect(() => {
     if (level && level.grid) {
       isCompleteRef.current = false;
-      hasCustomWinConditionRef.current = !!level.winCondition;
 
       if (!mazeWorldRef.current) {
         mazeWorldRef.current = new MazeWorld();
@@ -171,23 +172,6 @@ export function MazeAdventure({
           }
 
           stepCountRef.current++;
-
-          // Check conditions after each change (for real-time win detection)
-          if (hasCustomWinConditionRef.current && vmRef.current) {
-            const { win, fail } = checkConditions(vmRef.current);
-            if (win && !isCompleteRef.current) {
-              isCompleteRef.current = true;
-              setTimeout(() => {
-                SoundManager.play('win');
-                onComplete(mazeWorldRef.current?.getCollectedCount() ?? 0);
-              }, 400);
-            } else if (fail) {
-              setTimeout(() => {
-                SoundManager.play('blocked');
-                onFail();
-              }, 400);
-            }
-          }
         });
       }
 
@@ -198,7 +182,7 @@ export function MazeAdventure({
       forceUpdate({});
       setIsReady(true);
     }
-  }, [level, checkConditions, onComplete, onFail]);
+  }, [level]);
 
   // Reset when resetKey changes
   useEffect(() => {
