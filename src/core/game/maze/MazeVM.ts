@@ -2,13 +2,14 @@
  * Maze Virtual Machine
  *
  * Wraps the pure MiniPython VM with maze game bindings.
- * Commands are defined in MAZE_STDLIB (MiniPython).
+ * Commands and sensors are registered as native commands that call MazeWorld directly.
+ * MazeWorld is the single source of truth for game state.
  */
 
 import { VM, VMState, VMStepResult, CommandHandler } from '../../lang/vm';
 import { CompiledProgram, Value } from '../../lang/ir';
 import { compile, compileToIR } from '../../lang/index';
-import { MazeWorld, SharedMazeState, Direction } from './MazeWorld';
+import { MazeWorld, SharedMazeState } from './MazeWorld';
 import { MAZE_STDLIB } from './stdlib';
 
 export interface MazeVMConfig {
@@ -18,7 +19,7 @@ export interface MazeVMConfig {
 
 /**
  * MazeVM - MiniPython VM with maze game bindings
- * Commands are defined in MAZE_STDLIB (MiniPython).
+ * Commands call MazeWorld methods directly for single source of truth.
  */
 export class MazeVM {
   private vm: VM;
@@ -47,109 +48,44 @@ export class MazeVM {
     this.vm.registerCommand('print', printHandler);
     this.vm.registerCommand('打印', printHandler);
 
-    // Movement commands - these trigger actions so VM pauses after each
-    this.vm.registerCommand('_forward', () => {
-      if (this.sharedState) {
-        this.sharedState.steps++;
-        const dir = this.sharedState.direction;
-        const offsets: Record<string, [number, number]> = {
-          up: [0, -1],
-          down: [0, 1],
-          left: [-1, 0],
-          right: [1, 0],
-        };
-        const [dx, dy] = offsets[dir];
-        const newX = this.sharedState.x + dx;
-        const newY = this.sharedState.y + dy;
-        // Check bounds and walls
-        if (
-          newX >= 0 &&
-          newX < this.sharedState.width &&
-          newY >= 0 &&
-          newY < this.sharedState.height &&
-          this.sharedState.grid[newY][newX] !== 'wall'
-        ) {
-          this.sharedState.x = newX;
-          this.sharedState.y = newY;
-          // Auto-collect stars
-          if (this.sharedState.grid[newY][newX] === 'star') {
-            this.sharedState.grid[newY][newX] = 'empty';
-            this.sharedState.collected++;
-          }
-        }
-        this.syncState();
-      }
-    });
+    // ============ Movement Commands ============
+    // These call MazeWorld methods directly (single source of truth)
 
-    this.vm.registerCommand('_backward', () => {
-      if (this.sharedState) {
-        this.sharedState.steps++;
-        const dir = this.sharedState.direction;
-        const offsets: Record<string, [number, number]> = {
-          up: [0, -1],
-          down: [0, 1],
-          left: [-1, 0],
-          right: [1, 0],
-        };
-        const [dx, dy] = offsets[dir];
-        const newX = this.sharedState.x - dx;
-        const newY = this.sharedState.y - dy;
-        if (
-          newX >= 0 &&
-          newX < this.sharedState.width &&
-          newY >= 0 &&
-          newY < this.sharedState.height &&
-          this.sharedState.grid[newY][newX] !== 'wall'
-        ) {
-          this.sharedState.x = newX;
-          this.sharedState.y = newY;
-          if (this.sharedState.grid[newY][newX] === 'star') {
-            this.sharedState.grid[newY][newX] = 'empty';
-            this.sharedState.collected++;
-          }
-        }
-        this.syncState();
-      }
-    });
+    this.vm.registerCommand('forward', () => this.world.moveForward());
+    this.vm.registerCommand('前进', () => this.world.moveForward());
 
-    this.vm.registerCommand('_turnLeft', () => {
-      if (this.sharedState) {
-        this.sharedState.steps++;
-        const turns: Record<Direction, Direction> = {
-          up: 'left',
-          left: 'down',
-          down: 'right',
-          right: 'up',
-        };
-        this.sharedState.direction = turns[this.sharedState.direction];
-        this.syncState();
-      }
-    });
+    this.vm.registerCommand('backward', () => this.world.moveBackward());
+    this.vm.registerCommand('后退', () => this.world.moveBackward());
 
-    this.vm.registerCommand('_turnRight', () => {
-      if (this.sharedState) {
-        this.sharedState.steps++;
-        const turns: Record<Direction, Direction> = {
-          up: 'right',
-          right: 'down',
-          down: 'left',
-          left: 'up',
-        };
-        this.sharedState.direction = turns[this.sharedState.direction];
-        this.syncState();
-      }
-    });
+    this.vm.registerCommand('turnLeft', () => { this.world.turnLeft(); });
+    this.vm.registerCommand('左转', () => { this.world.turnLeft(); });
 
-    this.vm.registerCommand('_collect', () => {
-      if (this.sharedState) {
-        const { x, y } = this.sharedState;
-        if (this.sharedState.grid[y][x] === 'star') {
-          this.sharedState.grid[y][x] = 'empty';
-          this.sharedState.collected++;
-        }
-        this.syncState();
-      }
-    });
+    this.vm.registerCommand('turnRight', () => { this.world.turnRight(); });
+    this.vm.registerCommand('右转', () => { this.world.turnRight(); });
+
+    this.vm.registerCommand('collect', () => this.world.collect());
+    this.vm.registerCommand('收集', () => this.world.collect());
+
+    // ============ Sensors ============
+    // These also call MazeWorld methods directly
+
+    this.vm.registerCommand('frontBlocked', () => this.world.isFrontBlocked());
+    this.vm.registerCommand('前方有墙', () => this.world.isFrontBlocked());
+
+    this.vm.registerCommand('frontClear', () => this.world.isFrontClear());
+    this.vm.registerCommand('前方无墙', () => this.world.isFrontClear());
+
+    this.vm.registerCommand('atGoal', () => this.world.isAtGoal());
+    this.vm.registerCommand('到达终点', () => this.world.isAtGoal());
+
+    this.vm.registerCommand('hasStar', () => this.world.hasStarHere());
+    this.vm.registerCommand('有星星', () => this.world.hasStarHere());
+
+    this.vm.registerCommand('remainingStars', () => this.world.getRemainingStars());
+    this.vm.registerCommand('剩余星星', () => this.world.getRemainingStars());
+
+    this.vm.registerCommand('collectedCount', () => this.world.getCollectedCount());
+    this.vm.registerCommand('已收集', () => this.world.getCollectedCount());
   }
 
   /**
@@ -171,15 +107,6 @@ export class MazeVM {
     this.vm.setGlobal('world', this.sharedState);
   }
 
-  /**
-   * Sync shared state back to MazeWorld (when using stdlib mode)
-   */
-  private syncState(): void {
-    if (this.sharedState) {
-      this.world.syncFromSharedState(this.sharedState);
-    }
-  }
-
   // ============ VM Delegation ============
 
   load(program: CompiledProgram): void {
@@ -199,21 +126,15 @@ export class MazeVM {
   }
 
   step(): VMStepResult {
-    const result = this.vm.step();
-    this.syncState();
-    return result;
+    return this.vm.step();
   }
 
   run(): VMStepResult {
-    const result = this.vm.run();
-    this.syncState();
-    return result;
+    return this.vm.run();
   }
 
   runAll(): VMStepResult[] {
-    const results = this.vm.runAll();
-    this.syncState();
-    return results;
+    return this.vm.runAll();
   }
 
   pause(): void {

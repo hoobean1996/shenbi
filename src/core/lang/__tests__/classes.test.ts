@@ -61,75 +61,130 @@ function registerMazeCommands(vm: VM, worldState: MazeWorldState) {
     right: [1, 0],
   };
 
-  const turnLeft: Record<Direction, Direction> = {
+  const turnLeftMap: Record<Direction, Direction> = {
     up: 'left',
     left: 'down',
     down: 'right',
     right: 'up',
   };
 
-  const turnRight: Record<Direction, Direction> = {
+  const turnRightMap: Record<Direction, Direction> = {
     up: 'right',
     right: 'down',
     down: 'left',
     left: 'up',
   };
 
-  vm.registerCommand('_forward', () => {
-    const [dx, dy] = offsets[worldState.direction];
-    const newX = worldState.x + dx;
-    const newY = worldState.y + dy;
-    if (
-      newX >= 0 &&
-      newX < worldState.width &&
-      newY >= 0 &&
-      newY < worldState.height &&
-      worldState.grid[newY][newX] !== 'wall'
-    ) {
-      worldState.x = newX;
-      worldState.y = newY;
-      // Auto-collect stars
-      if (worldState.grid[newY][newX] === 'star') {
-        worldState.grid[newY][newX] = 'empty';
-        worldState.collected++;
-      }
+  // Helper to check if cell is blocked
+  const getCell = (x: number, y: number): string => {
+    if (x < 0 || x >= worldState.width || y < 0 || y >= worldState.height) {
+      return 'wall';
     }
-  });
+    return worldState.grid[y][x];
+  };
 
-  vm.registerCommand('_backward', () => {
-    const [dx, dy] = offsets[worldState.direction];
-    const newX = worldState.x - dx;
-    const newY = worldState.y - dy;
-    if (
-      newX >= 0 &&
-      newX < worldState.width &&
-      newY >= 0 &&
-      newY < worldState.height &&
-      worldState.grid[newY][newX] !== 'wall'
-    ) {
-      worldState.x = newX;
-      worldState.y = newY;
-      if (worldState.grid[newY][newX] === 'star') {
-        worldState.grid[newY][newX] = 'empty';
-        worldState.collected++;
-      }
-    }
-  });
-
-  vm.registerCommand('_turnLeft', () => {
-    worldState.direction = turnLeft[worldState.direction];
-  });
-
-  vm.registerCommand('_turnRight', () => {
-    worldState.direction = turnRight[worldState.direction];
-  });
-
-  vm.registerCommand('_collect', () => {
-    if (worldState.grid[worldState.y][worldState.x] === 'star') {
+  // Auto-collect stars when stepping on them
+  const autoCollect = () => {
+    const cell = getCell(worldState.x, worldState.y);
+    if (cell === 'star') {
       worldState.grid[worldState.y][worldState.x] = 'empty';
       worldState.collected++;
     }
-  });
+  };
+
+  // Movement commands (with return values)
+  const forwardCmd = () => {
+    const [dx, dy] = offsets[worldState.direction];
+    const newX = worldState.x + dx;
+    const newY = worldState.y + dy;
+    if (getCell(newX, newY) === 'wall') {
+      return false;
+    }
+    worldState.x = newX;
+    worldState.y = newY;
+    autoCollect();
+    return true;
+  };
+
+  const backwardCmd = () => {
+    const [dx, dy] = offsets[worldState.direction];
+    const newX = worldState.x - dx;
+    const newY = worldState.y - dy;
+    if (getCell(newX, newY) === 'wall') {
+      return false;
+    }
+    worldState.x = newX;
+    worldState.y = newY;
+    autoCollect();
+    return true;
+  };
+
+  const turnLeftCmd = () => {
+    worldState.direction = turnLeftMap[worldState.direction];
+  };
+
+  const turnRightCmd = () => {
+    worldState.direction = turnRightMap[worldState.direction];
+  };
+
+  const collectCmd = () => {
+    if (worldState.grid[worldState.y][worldState.x] === 'star') {
+      worldState.grid[worldState.y][worldState.x] = 'empty';
+      worldState.collected++;
+      return true;
+    }
+    return false;
+  };
+
+  // Sensors
+  const frontBlockedCmd = () => {
+    const [dx, dy] = offsets[worldState.direction];
+    return getCell(worldState.x + dx, worldState.y + dy) === 'wall';
+  };
+
+  const frontClearCmd = () => !frontBlockedCmd();
+
+  const atGoalCmd = () => getCell(worldState.x, worldState.y) === 'goal';
+
+  const hasStarCmd = () => getCell(worldState.x, worldState.y) === 'star';
+
+  const remainingStarsCmd = () => {
+    let count = 0;
+    for (const row of worldState.grid) {
+      for (const cell of row) {
+        if (cell === 'star') count++;
+      }
+    }
+    return count;
+  };
+
+  const collectedCountCmd = () => worldState.collected;
+
+  // Register commands (English)
+  vm.registerCommand('forward', forwardCmd);
+  vm.registerCommand('backward', backwardCmd);
+  vm.registerCommand('turnLeft', turnLeftCmd);
+  vm.registerCommand('turnRight', turnRightCmd);
+  vm.registerCommand('collect', collectCmd);
+  vm.registerCommand('frontBlocked', frontBlockedCmd);
+  vm.registerCommand('frontClear', frontClearCmd);
+  vm.registerCommand('atGoal', atGoalCmd);
+  vm.registerCommand('hasStar', hasStarCmd);
+  vm.registerCommand('remainingStars', remainingStarsCmd);
+  vm.registerCommand('collectedCount', collectedCountCmd);
+
+  // Register commands (Chinese)
+  vm.registerCommand('前进', forwardCmd);
+  vm.registerCommand('后退', backwardCmd);
+  vm.registerCommand('左转', turnLeftCmd);
+  vm.registerCommand('右转', turnRightCmd);
+  vm.registerCommand('收集', collectCmd);
+  vm.registerCommand('前方有墙', frontBlockedCmd);
+  vm.registerCommand('前方无墙', frontClearCmd);
+  vm.registerCommand('到达终点', atGoalCmd);
+  vm.registerCommand('有星星', hasStarCmd);
+  vm.registerCommand('剩余星星', remainingStarsCmd);
+  vm.registerCommand('已收集', collectedCountCmd);
 }
 
 describe('Classes', () => {
@@ -579,6 +634,9 @@ print(world.x)
 
       // Wall directly in front
       const worldState = createWorldState(['###', '#>#', '###']);
+
+      // Register native maze commands
+      registerMazeCommands(vm, worldState);
 
       vm.load(program);
       vm.setGlobal('world', worldState);

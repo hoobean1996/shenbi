@@ -951,8 +951,9 @@ export class VM {
 
         // Check for command handler
         if (this.commandHandlers.has(name)) {
-          this.commandHandlers.get(name)!(args);
-          this.stack.push(null); // Commands return null
+          const result = this.commandHandlers.get(name)!(args);
+          // Push return value (or null if undefined)
+          this.stack.push(result ?? null);
           this.pc++;
           return {
             ...baseResult,
