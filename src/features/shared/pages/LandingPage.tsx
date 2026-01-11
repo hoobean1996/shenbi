@@ -25,14 +25,15 @@ import {
   GraduationCap,
   BarChart3,
   Mail,
+  Swords,
 } from 'lucide-react';
 
 export default function LandingPage() {
   return (
     <>
       <SEO
-        title="Fun Coding for Kids"
-        description="Turn your kids into little programmers with Shenbi. Game-based learning makes coding as fun as playing. 50+ interactive puzzles for ages 5-14."
+        title="Simpler than Scratch - Coding Games for Kids 4-8"
+        description="Shenbi is simpler than Scratch. Kids ages 4-8 learn coding through 2D grid puzzle games. Write your first code in 10 minutes. No typing required."
         url="/landing"
       />
       <div className="h-screen overflow-y-auto bg-white">
@@ -46,6 +47,9 @@ export default function LandingPage() {
             <span className="font-bold text-xl text-gray-800">Shenbi</span>
           </div>
           <div className="flex items-center gap-4">
+            <a href="#why-shenbi" className="text-gray-600 hover:text-[#4a7a2a] transition-colors hidden sm:block">
+              Why Shenbi
+            </a>
             <a href="#features" className="text-gray-600 hover:text-[#4a7a2a] transition-colors hidden sm:block">
               Features
             </a>
@@ -67,133 +71,308 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 bg-gradient-to-br from-[#e8f5e0] via-white to-[#f0f9eb]">
-        <div className="max-w-6xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full text-[#4a7a2a] text-sm mb-6 shadow-sm border border-[#e8f5e0]">
-            <Sparkles className="w-4 h-4" />
-            The fun way to learn programming
-          </div>
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Text Content */}
+            <div className="text-center lg:text-left">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full text-[#4a7a2a] text-sm mb-6 shadow-sm border border-[#e8f5e0]">
+                <Sparkles className="w-4 h-4" />
+                Ages 4-8 | Learn by playing
+              </div>
 
-          {/* Main Headline */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-800 mb-6 leading-tight">
-            Turn Your Kids Into
-            <br />
-            <span className="text-[#4a7a2a]">Little Programmers</span>
-          </h1>
+              {/* Main Headline */}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-6 leading-tight">
+                Simpler than Scratch
+                <br />
+                <span className="text-[#4a7a2a]">Coding Games</span>
+              </h1>
 
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-            Shenbi makes coding as fun as playing games. Kids solve puzzles, collect stars,
-            and learn real programming concepts through interactive adventures.
-          </p>
+              {/* Supporting Copy */}
+              <p className="text-lg md:text-xl text-gray-600 mb-4">
+                Scratch too complex? Shenbi uses 2D grid puzzle games to help your child write their first code in 10 minutes.
+              </p>
+              <p className="text-gray-500 mb-8">
+                No typing required. No complicated interfaces. Just fun puzzles.
+              </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <Link
-              to="/"
-              className="flex items-center gap-2 px-8 py-4 bg-[#4a7a2a] text-white rounded-2xl font-bold text-lg hover:bg-[#3a6a1a] transition-all shadow-xl hover:shadow-2xl hover:scale-105"
-            >
-              <Play className="w-5 h-5" />
-              Start Learning Free
-              <ChevronRight className="w-5 h-5" />
-            </Link>
-          </div>
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row items-center lg:items-start gap-4 mb-10">
+                <Link
+                  to="/"
+                  className="flex items-center gap-2 px-8 py-4 bg-[#4a7a2a] text-white rounded-2xl font-bold text-lg hover:bg-[#3a6a1a] transition-all shadow-xl hover:shadow-2xl hover:scale-105"
+                >
+                  <Play className="w-5 h-5" />
+                  Start Free
+                  <ChevronRight className="w-5 h-5" />
+                </Link>
+                <a
+                  href="#demo"
+                  className="flex items-center gap-2 px-6 py-4 text-[#4a7a2a] font-medium hover:bg-[#e8f5e0] rounded-2xl transition-all"
+                >
+                  <Play className="w-5 h-5" />
+                  See How It Works
+                </a>
+              </div>
 
-          {/* Stats */}
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[#4a7a2a]">50+</div>
-              <div className="text-gray-600">Interactive Levels</div>
+              {/* Stats */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 md:gap-10">
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl font-bold text-[#4a7a2a]">50+</div>
+                  <div className="text-gray-600 text-sm">Levels</div>
+                </div>
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl font-bold text-[#4a7a2a]">Ages 4-8</div>
+                  <div className="text-gray-600 text-sm">Designed For</div>
+                </div>
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl font-bold text-[#4a7a2a]">1000+</div>
+                  <div className="text-gray-600 text-sm">Kids Learning</div>
+                </div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[#4a7a2a]">Ages 5-14</div>
-              <div className="text-gray-600">Designed For Kids</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[#4a7a2a]">1000+</div>
-              <div className="text-gray-600">Happy Learners</div>
+
+            {/* Right: Product Visual Placeholder */}
+            <div className="relative">
+              <div id="demo" className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-4 aspect-[4/3] flex items-center justify-center">
+                {/* Placeholder for game screenshot/GIF */}
+                <div className="w-full h-full bg-gradient-to-br from-[#f0f9eb] to-[#e8f5e0] rounded-2xl flex flex-col items-center justify-center text-center p-6">
+                  <div className="w-20 h-20 bg-[#4a7a2a] rounded-2xl flex items-center justify-center mb-4">
+                    <Gamepad2 className="w-10 h-10 text-white" />
+                  </div>
+                  <p className="text-[#4a7a2a] font-bold text-lg mb-2">Game Preview</p>
+                  <p className="text-gray-500 text-sm">
+                    Add screenshot or GIF of the 2D grid game here
+                  </p>
+                </div>
+              </div>
+              {/* Decorative elements */}
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-amber-400 rounded-2xl flex items-center justify-center shadow-lg">
+                <Star className="w-10 h-10 text-amber-900" />
+              </div>
+              <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-[#4a7a2a] rounded-xl flex items-center justify-center shadow-lg">
+                <Rocket className="w-8 h-8 text-white" />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+      {/* Comparison Section - Why Shenbi */}
+      <section id="why-shenbi" className="py-20 px-4 bg-gray-50">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-              Why Kids Love Shenbi
+              Why Choose Shenbi?
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Game mechanics + real programming = an engaging learning experience.
+              Designed specifically for younger kids who find Scratch overwhelming.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100 hover:border-[#7dad4c] transition-all">
-              <div className="w-12 h-12 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-4">
-                <Gamepad2 className="w-6 h-6 text-[#4a7a2a]" />
+          {/* Comparison Table */}
+          <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
+            <div className="grid grid-cols-3">
+              {/* Header */}
+              <div className="p-6 bg-gray-50 border-b border-gray-100"></div>
+              <div className="p-6 bg-gray-50 border-b border-gray-100 text-center">
+                <span className="text-gray-600 font-medium">Scratch</span>
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Game-Based Learning</h3>
-              <p className="text-gray-600 text-sm">
-                Solve puzzles by writing code. Learning feels like playing.
+              <div className="p-6 bg-[#e8f5e0] border-b border-[#d0e8c0] text-center">
+                <span className="text-[#4a7a2a] font-bold">Shenbi</span>
+              </div>
+
+              {/* Interface Row */}
+              <div className="p-6 border-b border-gray-100">
+                <span className="font-medium text-gray-800">Interface</span>
+              </div>
+              <div className="p-6 border-b border-gray-100 text-center">
+                <span className="text-gray-500">Complex, many blocks</span>
+              </div>
+              <div className="p-6 border-b border-[#d0e8c0] bg-[#f7fbf4] text-center">
+                <span className="text-[#4a7a2a] font-medium">Simple 2D grid</span>
+              </div>
+
+              {/* Learning Curve Row */}
+              <div className="p-6 border-b border-gray-100">
+                <span className="font-medium text-gray-800">Getting Started</span>
+              </div>
+              <div className="p-6 border-b border-gray-100 text-center">
+                <span className="text-gray-500">Needs guidance</span>
+              </div>
+              <div className="p-6 border-b border-[#d0e8c0] bg-[#f7fbf4] text-center">
+                <span className="text-[#4a7a2a] font-medium">10 min to first code</span>
+              </div>
+
+              {/* Age Row */}
+              <div className="p-6 border-b border-gray-100">
+                <span className="font-medium text-gray-800">Best Age</span>
+              </div>
+              <div className="p-6 border-b border-gray-100 text-center">
+                <span className="text-gray-500">8+ years old</span>
+              </div>
+              <div className="p-6 border-b border-[#d0e8c0] bg-[#f7fbf4] text-center">
+                <span className="text-[#4a7a2a] font-medium">4-8 years old</span>
+              </div>
+
+              {/* Learning Style Row */}
+              <div className="p-6">
+                <span className="font-medium text-gray-800">Learning Style</span>
+              </div>
+              <div className="p-6 text-center">
+                <span className="text-gray-500">Open-ended (can be confusing)</span>
+              </div>
+              <div className="p-6 bg-[#f7fbf4] text-center">
+                <span className="text-[#4a7a2a] font-medium">Guided levels (builds confidence)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Visual Comparison Note */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-500 text-sm">
+              {/* Placeholder for side-by-side screenshots */}
+              Add Scratch vs Shenbi interface comparison screenshots here
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section - Streamlined to 4 core features */}
+      <section id="features" className="py-20 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+              How Kids Learn
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Real programming concepts, wrapped in fun gameplay.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Feature 1: Game-Based Learning */}
+            <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100 hover:border-[#7dad4c] transition-all">
+              <div className="w-14 h-14 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-5">
+                <Gamepad2 className="w-7 h-7 text-[#4a7a2a]" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-3">Learn by Playing</h3>
+              <p className="text-gray-600">
+                Solve puzzle levels and collect stars. Learning feels like playing a game, not sitting in class.
               </p>
             </div>
 
-            <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100 hover:border-[#7dad4c] transition-all">
-              <div className="w-12 h-12 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-4">
-                <Brain className="w-6 h-6 text-[#4a7a2a]" />
+            {/* Feature 2: Real Programming */}
+            <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100 hover:border-[#7dad4c] transition-all">
+              <div className="w-14 h-14 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-5">
+                <Brain className="w-7 h-7 text-[#4a7a2a]" />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Real Programming</h3>
-              <p className="text-gray-600 text-sm">
-                Loops, conditionals, functions - concepts used by real programmers.
+              <h3 className="text-xl font-bold text-gray-800 mb-3">Real Coding Concepts</h3>
+              <p className="text-gray-600">
+                Loops, conditionals, functions — the same concepts real programmers use, taught at a kid's pace.
               </p>
             </div>
 
-            <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100 hover:border-[#7dad4c] transition-all">
-              <div className="w-12 h-12 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-4">
-                <Star className="w-6 h-6 text-[#4a7a2a]" />
+            {/* Feature 3: Instant Feedback */}
+            <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100 hover:border-[#7dad4c] transition-all">
+              <div className="w-14 h-14 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-5">
+                <Zap className="w-7 h-7 text-[#4a7a2a]" />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Earn Stars & Badges</h3>
-              <p className="text-gray-600 text-sm">
-                Collect up to 3 stars per level and unlock achievement badges.
+              <h3 className="text-xl font-bold text-gray-800 mb-3">See Results Instantly</h3>
+              <p className="text-gray-600">
+                Write code, watch it run immediately. Kids know right away if their solution works.
               </p>
             </div>
 
-            <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100 hover:border-[#7dad4c] transition-all">
-              <div className="w-12 h-12 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-4">
-                <Zap className="w-6 h-6 text-[#4a7a2a]" />
+            {/* Feature 4: Battle Mode */}
+            <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100 hover:border-[#7dad4c] transition-all">
+              <div className="w-14 h-14 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-5">
+                <Swords className="w-7 h-7 text-[#4a7a2a]" />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Instant Feedback</h3>
-              <p className="text-gray-600 text-sm">
-                Watch code come alive with smooth animations.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100 hover:border-[#7dad4c] transition-all">
-              <div className="w-12 h-12 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-[#4a7a2a]" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Battle Mode</h3>
-              <p className="text-gray-600 text-sm">
-                Challenge friends to real-time coding battles.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100 hover:border-[#7dad4c] transition-all">
-              <div className="w-12 h-12 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-4">
-                <Heart className="w-6 h-6 text-[#4a7a2a]" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Kid-Friendly</h3>
-              <p className="text-gray-600 text-sm">
-                Large buttons, simple language, friendly characters.
+              <h3 className="text-xl font-bold text-gray-800 mb-3">Challenge Friends</h3>
+              <p className="text-gray-600">
+                Real-time coding battles with friends. Race to solve puzzles and see who codes faster!
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4 bg-gray-50">
+      {/* Testimonials - Updated with pain-point format */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+              What Parents Say
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center gap-1 mb-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
+                ))}
+              </div>
+              <p className="text-gray-700 mb-4">
+                "My daughter tried Scratch but the interface was too complex — she gave up after 5 minutes. With Shenbi, she played for an hour on day one. Now she understands loops!"
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#e8f5e0] rounded-full flex items-center justify-center text-lg">
+                  👩
+                </div>
+                <div>
+                  <div className="font-bold text-gray-800 text-sm">Parent</div>
+                  <div className="text-gray-500 text-xs">Daughter, age 6</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center gap-1 mb-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
+                ))}
+              </div>
+              <p className="text-gray-700 mb-4">
+                "I was worried 5 is too young to learn coding. Shenbi's level design is clever — my son thinks he's just playing a game. He's learned more than I expected."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#e8f5e0] rounded-full flex items-center justify-center text-lg">
+                  👨
+                </div>
+                <div>
+                  <div className="font-bold text-gray-800 text-sm">Parent</div>
+                  <div className="text-gray-500 text-xs">Son, age 5</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center gap-1 mb-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
+                ))}
+              </div>
+              <p className="text-gray-700 mb-4">
+                "Way cheaper than enrichment classes at $200-400/month, and my kid actually wants to practice. That's the difference."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#e8f5e0] rounded-full flex items-center justify-center text-lg">
+                  👩
+                </div>
+                <div>
+                  <div className="font-bold text-gray-800 text-sm">Parent</div>
+                  <div className="text-gray-500 text-xs">Son, age 7</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section - Enhanced messaging */}
+      <section id="pricing" className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
@@ -228,7 +407,7 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center gap-3 text-sm">
                   <Check className="w-5 h-5 text-[#4a7a2a] flex-shrink-0" />
-                  <span className="text-gray-700">Progress tracking</span>
+                  <span className="text-gray-700">No credit card needed</span>
                 </li>
               </ul>
 
@@ -244,13 +423,13 @@ export default function LandingPage() {
             <div className="bg-gradient-to-br from-[#4a7a2a] to-[#3a6a1a] rounded-3xl p-8 text-white relative">
               <div className="absolute top-4 right-4 bg-amber-400 text-amber-900 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                 <Crown className="w-3 h-3" />
-                POPULAR
+                BEST VALUE
               </div>
 
               <div className="text-center mb-6">
                 <h3 className="text-xl font-bold mb-2">Premium</h3>
                 <div className="text-4xl font-bold">$9.99<span className="text-lg font-normal">/mo</span></div>
-                <p className="text-white/70 text-sm">Billed monthly</p>
+                <p className="text-white/70 text-sm">Less than $0.35/day</p>
               </div>
 
               <ul className="space-y-3 mb-8">
@@ -280,78 +459,12 @@ export default function LandingPage() {
               </Link>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Testimonials */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-              Parents Love Us
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-gray-50 rounded-2xl p-6">
-              <div className="flex items-center gap-1 mb-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-gray-700 text-sm mb-4">
-                "My 8-year-old can't stop playing! She's learning loops without even realizing it."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#e8f5e0] rounded-full flex items-center justify-center text-lg">
-                  👩
-                </div>
-                <div>
-                  <div className="font-bold text-gray-800 text-sm">Sarah M.</div>
-                  <div className="text-gray-500 text-xs">Parent</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 rounded-2xl p-6">
-              <div className="flex items-center gap-1 mb-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-gray-700 text-sm mb-4">
-                "The battle mode is genius! My son practices coding with his friends online."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#e8f5e0] rounded-full flex items-center justify-center text-lg">
-                  👨
-                </div>
-                <div>
-                  <div className="font-bold text-gray-800 text-sm">Michael R.</div>
-                  <div className="text-gray-500 text-xs">Parent</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 rounded-2xl p-6">
-              <div className="flex items-center gap-1 mb-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-gray-700 text-sm mb-4">
-                "Best educational app we've found. Worth every penny of premium."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#e8f5e0] rounded-full flex items-center justify-center text-lg">
-                  👩
-                </div>
-                <div>
-                  <div className="font-bold text-gray-800 text-sm">Lisa K.</div>
-                  <div className="text-gray-500 text-xs">Parent</div>
-                </div>
-              </div>
-            </div>
+          {/* Value Comparison */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-500 text-sm">
+              Compare: Enrichment classes cost $200-400/month. Shenbi Premium is just $9.99/month.
+            </p>
           </div>
         </div>
       </section>
@@ -406,6 +519,9 @@ export default function LandingPage() {
           </div>
 
           <div className="text-center">
+            <p className="text-[#4a7a2a] font-medium mb-6">
+              Looking for partners to bring coding to more kids
+            </p>
             <a
               href="mailto:business@gigaboo.sg"
               className="inline-flex items-center gap-2 px-8 py-4 bg-[#4a7a2a] text-white rounded-2xl font-bold text-lg hover:bg-[#3a6a1a] transition-all shadow-lg hover:shadow-xl hover:scale-105"
@@ -449,17 +565,17 @@ export default function LandingPage() {
       <section className="py-20 px-4 bg-gradient-to-br from-[#4a7a2a] to-[#3a6a1a] text-white">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Start Your Child's Coding Journey
+            Ready to Start Your Child's Coding Journey?
           </h2>
           <p className="text-white/80 mb-8">
-            Join thousands of kids learning to code through play.
+            Join 1000+ kids learning to code through play. Free to start.
           </p>
           <Link
             to="/"
             className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[#4a7a2a] rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all shadow-xl hover:scale-105"
           >
             <Rocket className="w-5 h-5" />
-            Start Learning Free
+            Start Free
             <ChevronRight className="w-5 h-5" />
           </Link>
         </div>
@@ -475,7 +591,7 @@ export default function LandingPage() {
             <span className="font-bold">Shenbi</span>
           </div>
           <div className="text-gray-400 text-sm">
-            © 2025 Shenbi. Made with ❤️ for young coders.
+            © 2025 Shenbi. Made with love for young coders.
           </div>
         </div>
       </footer>
