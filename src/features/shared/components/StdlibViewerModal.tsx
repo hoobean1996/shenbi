@@ -7,7 +7,6 @@
 
 import { useState } from 'react';
 import { X, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
-import { useLanguage } from '../../../infrastructure/i18n';
 import type { StdlibFunction } from '../../../infrastructure/services/api';
 import { CodeEditor } from './CodeEditor';
 
@@ -17,16 +16,15 @@ interface StdlibViewerModalProps {
 }
 
 // Category display configuration
-const CATEGORY_CONFIG: Record<string, { label: string; labelZh: string; color: string }> = {
-  movement: { label: 'Movement', labelZh: '移动', color: 'bg-blue-100 text-blue-700' },
-  action: { label: 'Action', labelZh: '动作', color: 'bg-green-100 text-green-700' },
-  sensor: { label: 'Sensor', labelZh: '感知', color: 'bg-purple-100 text-purple-700' },
-  helper: { label: 'Helper', labelZh: '辅助', color: 'bg-gray-100 text-gray-700' },
-  constant: { label: 'Constant', labelZh: '常量', color: 'bg-amber-100 text-amber-700' },
+const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
+  movement: { label: 'Movement', color: 'bg-blue-100 text-blue-700' },
+  action: { label: 'Action', color: 'bg-green-100 text-green-700' },
+  sensor: { label: 'Sensor', color: 'bg-purple-100 text-purple-700' },
+  helper: { label: 'Helper', color: 'bg-gray-100 text-gray-700' },
+  constant: { label: 'Constant', color: 'bg-amber-100 text-amber-700' },
 };
 
 export function StdlibViewerModal({ functions, onClose }: StdlibViewerModalProps) {
-  const { language } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedFunction, setExpandedFunction] = useState<string | null>(null);
 
@@ -42,8 +40,7 @@ export function StdlibViewerModal({ functions, onClose }: StdlibViewerModalProps
   const visibleFunctions = filteredFunctions.filter((f) => f.category !== 'helper');
 
   const getCategoryLabel = (category: string) => {
-    const config = CATEGORY_CONFIG[category];
-    return language === 'zh' ? config?.labelZh : config?.label;
+    return CATEGORY_CONFIG[category]?.label;
   };
 
   const getCategoryColor = (category: string) => {
@@ -52,7 +49,7 @@ export function StdlibViewerModal({ functions, onClose }: StdlibViewerModalProps
 
   const formatParams = (func: StdlibFunction) => {
     if (!func.params || func.params.length === 0) return '()';
-    const paramNames = func.params.map((p) => (language === 'zh' ? p.nameZh : p.name));
+    const paramNames = func.params.map((p) => p.name);
     return `(${paramNames.join(', ')})`;
   };
 
@@ -70,9 +67,7 @@ export function StdlibViewerModal({ functions, onClose }: StdlibViewerModalProps
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-blue-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-800">
-              {language === 'zh' ? '可用函数' : 'Available Functions'}
-            </h2>
+            <h2 className="text-xl font-bold text-gray-800">Available Functions</h2>
           </div>
           <button
             onClick={onClose}
@@ -92,7 +87,7 @@ export function StdlibViewerModal({ functions, onClose }: StdlibViewerModalProps
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {language === 'zh' ? '全部' : 'All'}
+            All
           </button>
           {categories
             .filter((c) => c !== 'helper')
@@ -114,9 +109,7 @@ export function StdlibViewerModal({ functions, onClose }: StdlibViewerModalProps
         {/* Function list */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {visibleFunctions.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              {language === 'zh' ? '暂无可用函数' : 'No functions available'}
-            </div>
+            <div className="text-center text-gray-500 py-8">No functions available</div>
           ) : (
             <div className="space-y-3">
               {visibleFunctions.map((func) => (
@@ -136,7 +129,7 @@ export function StdlibViewerModal({ functions, onClose }: StdlibViewerModalProps
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <code className="text-blue-600 font-mono font-semibold">
-                          {language === 'zh' ? func.nameZh : func.name}
+                          {func.name}
                           {formatParams(func)}
                         </code>
                         {formatReturns(func) && (
@@ -148,9 +141,7 @@ export function StdlibViewerModal({ functions, onClose }: StdlibViewerModalProps
                           {getCategoryLabel(func.category)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1 truncate">
-                        {language === 'zh' ? func.descriptionZh : func.description}
-                      </p>
+                      <p className="text-sm text-gray-600 mt-1 truncate">{func.description}</p>
                     </div>
                   </button>
 
@@ -161,14 +152,12 @@ export function StdlibViewerModal({ functions, onClose }: StdlibViewerModalProps
                       {func.params && func.params.length > 0 && (
                         <div className="mb-3">
                           <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                            {language === 'zh' ? '参数' : 'Parameters'}
+                            Parameters
                           </h4>
                           <div className="space-y-1">
                             {func.params.map((param) => (
                               <div key={param.name} className="flex items-center gap-2 text-sm">
-                                <code className="text-purple-600 font-mono">
-                                  {language === 'zh' ? param.nameZh : param.name}
-                                </code>
+                                <code className="text-purple-600 font-mono">{param.name}</code>
                                 <span className="text-gray-400">:</span>
                                 <span className="text-gray-600">{param.type}</span>
                               </div>
@@ -178,9 +167,7 @@ export function StdlibViewerModal({ functions, onClose }: StdlibViewerModalProps
                       )}
 
                       {/* Code */}
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                        {language === 'zh' ? '代码' : 'Code'}
-                      </h4>
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Code</h4>
                       <div className="rounded-lg overflow-hidden border border-gray-200">
                         <CodeEditor
                           code={func.code}
@@ -203,7 +190,7 @@ export function StdlibViewerModal({ functions, onClose }: StdlibViewerModalProps
             onClick={onClose}
             className="w-full py-3 bg-gradient-to-r from-[#5a8a3a] to-[#7dad4c] text-white font-bold rounded-xl hover:opacity-90 transition-all"
           >
-            {language === 'zh' ? '关闭' : 'Close'}
+            Close
           </button>
         </div>
       </div>

@@ -39,12 +39,12 @@ const RARITY_COLORS: Record<BadgeRarity, { bg: string; border: string; glow: str
 };
 
 export function BadgeCard({ badge, earned, earnedAt, onClick }: BadgeCardProps) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const colors = RARITY_COLORS[badge.rarity];
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleDateString(language === 'zh' ? 'zh-CN' : 'en-US', {
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
     });

@@ -1,19 +1,15 @@
 /**
  * Language Context
  *
- * Provides language state and translation function to all components.
- * Persists language preference to storage API.
- * Falls back to defaults if API is unavailable.
+ * Provides translation function to all components.
+ * Simplified to English only.
  */
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { translations, Language, TranslationKeys } from './translations';
-import { getStorage } from '../storage/StorageProvider';
-import { warn } from '../logging';
+import { createContext, useContext, useCallback, ReactNode } from 'react';
+import { translations, TranslationKeys } from './translations';
 
 interface LanguageContextValue {
-  language: Language;
-  setLanguage: (lang: Language) => void;
+  language: 'en';
   t: TranslationFunction;
 }
 
@@ -53,65 +49,16 @@ function getNestedValue(obj: Record<string, unknown>, path: string): string | un
 }
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [language, setLanguageState] = useState<Language>('en');
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Load language preference on mount
-  useEffect(() => {
-    getStorage()
-      .getSettings()
-      .then((settings) => {
-        if (settings.language) {
-          setLanguageState(settings.language as Language);
-        }
-      })
-      .catch((err) => {
-        warn('Failed to load language settings, using defaults', { error: err }, 'LanguageContext');
-      })
-      .finally(() => {
-        setIsLoaded(true);
-      });
+  // Translation function - always uses English
+  const t: TranslationFunction = useCallback((key: TranslationKey, fallback?: string): string => {
+    const value = getNestedValue(translations.en as Record<string, unknown>, key);
+    return value || fallback || key;
   }, []);
-
-  // Update language and persist to storage
-  const setLanguage = useCallback((lang: Language) => {
-    setLanguageState(lang);
-    // Fire and forget - don't block on API
-    getStorage()
-      .updateSettings({ language: lang })
-      .catch((err) => {
-        warn('Failed to save language setting', { error: err, lang }, 'LanguageContext');
-      });
-  }, []);
-
-  // Translation function
-  const t: TranslationFunction = useCallback(
-    (key: TranslationKey, fallback?: string): string => {
-      const value = getNestedValue(translations[language] as Record<string, unknown>, key);
-      if (value) return value;
-
-      // Fallback to English if key not found in current language
-      if (language !== 'en') {
-        const enValue = getNestedValue(translations.en as Record<string, unknown>, key);
-        if (enValue) return enValue;
-      }
-
-      // Return fallback or key itself
-      return fallback || key;
-    },
-    [language]
-  );
 
   const value: LanguageContextValue = {
-    language,
-    setLanguage,
+    language: 'en',
     t,
   };
-
-  // Don't render until language is loaded to prevent flash
-  if (!isLoaded) {
-    return null;
-  }
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
