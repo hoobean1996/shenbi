@@ -1,4 +1,9 @@
-import { LevelDefinition, EntityPlacement, BlockCategory } from '../../core/engine';
+import {
+  LevelDefinition,
+  EntityPlacement,
+  BlockCategory,
+  CustomCommandDefinition,
+} from '../../core/engine';
 import {
   CompactLevelData,
   LevelSymbols,
@@ -10,6 +15,22 @@ import type { Language } from '../i18n';
 import { adventureApi, StdlibFunction } from '../services/api';
 import type { AdventureResponse, LevelResponse } from '../services/api';
 import { warn } from '../logging';
+
+// Local custom commands by level slug (fallback when API doesn't have them)
+// This allows defining custom commands in code while backend support is added
+const LOCAL_CUSTOM_COMMANDS: Record<string, CustomCommandDefinition[]> = {
+  'maze-05': [
+    {
+      id: 'walkSide',
+      label: 'Walk Side',
+      icon: '📐',
+      color: '#8B5CF6',
+      codeName: 'walkSide',
+      argType: 'none',
+      code: 'forward()\nforward()\nturnRight()',
+    },
+  ],
+};
 
 /**
  * Parsed Adventure with full level definitions
@@ -191,6 +212,10 @@ export function convertApiLevelToDefinition(
           ? JSON.stringify(apiLevel.fail_condition)
           : undefined,
     requiredTier: apiLevel.required_tier,
+    // Custom commands: prefer API data, fall back to local definitions
+    customCommands:
+      (apiLevel as unknown as { custom_commands?: CustomCommandDefinition[] }).custom_commands ||
+      LOCAL_CUSTOM_COMMANDS[apiLevel.slug],
   };
 }
 
