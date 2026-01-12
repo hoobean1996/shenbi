@@ -6,9 +6,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { X, FileText, Loader2, Calendar } from 'lucide-react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import { X, FileText, Loader2 } from 'lucide-react';
 import { classroomApi, AssignmentResponse, ApiError } from '../../../../infrastructure/services/api';
 import { loadLocalAdventures } from '../../../../infrastructure/levels';
 import { error as logError } from '../../../../infrastructure/logging';
@@ -34,7 +32,7 @@ export default function AssignmentFormModal({
   const [description, setDescription] = useState('');
   const [selectedAdventureId, setSelectedAdventureId] = useState<string | null>(null);
   const [selectedLevelIds, setSelectedLevelIds] = useState<string[]>([]);
-  const [dueDate, setDueDate] = useState<Date | null>(null);
+  const [dueDays, setDueDays] = useState<number>(3);
   const [maxPoints, setMaxPoints] = useState(100);
 
   const [loading, setLoading] = useState(false);
@@ -72,7 +70,11 @@ export default function AssignmentFormModal({
         }
         setMaxPoints(details.max_points);
         if (details.due_date) {
-          setDueDate(new Date(details.due_date));
+          const dueDate = new Date(details.due_date);
+          const now = new Date();
+          const diffTime = dueDate.getTime() - now.getTime();
+          const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+          setDueDays(diffDays);
         }
       } catch (err) {
         logError(
@@ -110,11 +112,16 @@ export default function AssignmentFormModal({
       setLoading(true);
       setError(null);
 
+      // Calculate due date from days
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + dueDays);
+      dueDate.setHours(23, 59, 59, 0); // Set to end of day
+
       const data = {
         title: title.trim(),
         description: description.trim() || null,
         level_ids: selectedLevelIds, // Stored as "adventure_slug/level_slug"
-        due_date: dueDate ? dueDate.toISOString() : null,
+        due_date: dueDate.toISOString(),
         max_points: maxPoints,
       };
 
@@ -260,20 +267,16 @@ export default function AssignmentFormModal({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Due Date (optional)
+                    Due in (days)
                   </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10 pointer-events-none" />
-                    <DatePicker
-                      selected={dueDate}
-                      onChange={(date: Date | null) => setDueDate(date)}
-                      showTimeSelect
-                      dateFormat="MMM d, yyyy h:mm aa"
-                      placeholderText="Select date and time"
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#4a7a2a] focus:border-[#4a7a2a] outline-none"
-                      wrapperClassName="w-full"
-                    />
-                  </div>
+                  <input
+                    type="number"
+                    value={dueDays}
+                    onChange={(e) => setDueDays(Math.max(1, parseInt(e.target.value) || 1))}
+                    min={1}
+                    max={365}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#4a7a2a] focus:border-[#4a7a2a] outline-none"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Max Points</label>
