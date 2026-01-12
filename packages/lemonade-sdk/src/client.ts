@@ -438,11 +438,11 @@ export class LemonadeClient {
       save: (data: ProgressCreate) =>
         ShenbiProgressService.saveProgressApiV1ShenbiProgressPost(apiKey, data),
 
-      getByAdventure: (adventureId: number) =>
-        ShenbiProgressService.getAdventureProgressApiV1ShenbiProgressAdventureAdventureIdGet(adventureId, apiKey),
+      getByAdventure: (adventureSlug: string) =>
+        ShenbiProgressService.getAdventureProgressApiV1ShenbiProgressAdventureAdventureSlugGet(adventureSlug, apiKey),
 
-      getByLevel: (adventureId: number, levelId: number) =>
-        ShenbiProgressService.getLevelProgressApiV1ShenbiProgressLevelAdventureIdLevelIdGet(adventureId, levelId, apiKey),
+      getByLevel: (adventureSlug: string, levelSlug: string) =>
+        ShenbiProgressService.getLevelProgressApiV1ShenbiProgressLevelAdventureSlugLevelSlugGet(adventureSlug, levelSlug, apiKey),
     };
   }
 

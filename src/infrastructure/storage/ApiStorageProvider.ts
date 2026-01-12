@@ -158,8 +158,8 @@ export class ApiStorageProvider implements StorageProvider {
     let completedLevels = 0;
 
     for (const p of allProgress) {
-      const adventureKey = String(p.adventure_id);
-      const levelKey = String(p.level_id);
+      const adventureKey = p.adventure_slug;
+      const levelKey = p.level_slug;
       if (!adventures[adventureKey]) {
         adventures[adventureKey] = {
           levels: {},
@@ -180,7 +180,7 @@ export class ApiStorageProvider implements StorageProvider {
       const attemptTime = new Date(p.last_attempt_at).getTime();
       if (!lastPlayedAt || attemptTime > lastPlayedAt) {
         lastPlayedAt = attemptTime;
-        lastPlayedAdventure = String(p.adventure_id);
+        lastPlayedAdventure = p.adventure_slug;
       }
     }
 
@@ -228,13 +228,13 @@ export class ApiStorageProvider implements StorageProvider {
     this.userDataCache = data;
   }
 
-  async getAdventureProgress(adventureId: string): Promise<AdventureProgress | null> {
+  async getAdventureProgress(adventureSlug: string): Promise<AdventureProgress | null> {
     try {
-      const progress = await progressApi.getByAdventure(parseInt(adventureId, 10));
+      const progress = await progressApi.getByAdventure(adventureSlug);
 
       const levels: Record<string, LevelProgress> = {};
       for (const p of progress) {
-        levels[String(p.level_id)] = convertApiProgressToLevelProgress(p);
+        levels[p.level_slug] = convertApiProgressToLevelProgress(p);
       }
 
       return {
@@ -248,13 +248,13 @@ export class ApiStorageProvider implements StorageProvider {
   }
 
   async saveLevelProgress(
-    adventureId: string,
-    levelId: string,
+    adventureSlug: string,
+    levelSlug: string,
     progress: LevelProgress
   ): Promise<void> {
     await progressApi.save({
-      adventure_id: parseInt(adventureId, 10),
-      level_id: parseInt(levelId, 10),
+      adventure_slug: adventureSlug,
+      level_slug: levelSlug,
       stars: progress.starsCollected,
       completed: progress.completed,
       code: progress.bestCode,
@@ -265,25 +265,14 @@ export class ApiStorageProvider implements StorageProvider {
   }
 
   async markLevelComplete(
-    adventureId: string,
-    levelId: string,
+    adventureSlug: string,
+    levelSlug: string,
     starsCollected: number,
-    code?: string,
-    adventureNumericId?: number,
-    levelNumericId?: number
+    code?: string
   ): Promise<void> {
-    // Use numeric IDs if provided, otherwise fall back to parsing string IDs
-    const advId = adventureNumericId ?? parseInt(adventureId, 10);
-    const lvlId = levelNumericId ?? parseInt(levelId, 10);
-
-    if (isNaN(advId) || isNaN(lvlId)) {
-      console.warn('Invalid adventure/level ID for progress save:', { adventureId, levelId });
-      return;
-    }
-
     await progressApi.save({
-      adventure_id: advId,
-      level_id: lvlId,
+      adventure_slug: adventureSlug,
+      level_slug: levelSlug,
       stars: starsCollected,
       completed: true,
       code,

@@ -175,11 +175,11 @@ export const profileApi = {
 export const progressApi = {
   getAll: () => wrapSdkCall(() => getLemonClient().shenbiProgress.getAll()),
 
-  getByAdventure: (adventureId: number) =>
-    wrapSdkCall(() => getLemonClient().shenbiProgress.getByAdventure(adventureId)),
+  getByAdventure: (adventureSlug: string) =>
+    wrapSdkCall(() => getLemonClient().shenbiProgress.getByAdventure(adventureSlug)),
 
-  getByLevel: (adventureId: number, levelId: number) =>
-    wrapSdkCall(() => getLemonClient().shenbiProgress.getByLevel(adventureId, levelId)),
+  getByLevel: (adventureSlug: string, levelSlug: string) =>
+    wrapSdkCall(() => getLemonClient().shenbiProgress.getByLevel(adventureSlug, levelSlug)),
 
   save: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiProgress']['save']>[0]) =>
     wrapSdkCall(() => getLemonClient().shenbiProgress.save(data)),

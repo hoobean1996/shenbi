@@ -24,17 +24,15 @@ export interface StorageProvider {
   saveUserData(data: UserData): Promise<void>;
 
   // Progress shortcuts
-  getAdventureProgress(adventureId: string): Promise<AdventureProgress | null>;
-  saveLevelProgress(adventureId: string, levelId: string, progress: LevelProgress): Promise<void>;
+  getAdventureProgress(adventureSlug: string): Promise<AdventureProgress | null>;
+  saveLevelProgress(adventureSlug: string, levelSlug: string, progress: LevelProgress): Promise<void>;
   markLevelComplete(
-    adventureId: string,
-    levelId: string,
+    adventureSlug: string,
+    levelSlug: string,
     starsCollected: number,
-    code?: string,
-    adventureNumericId?: number,
-    levelNumericId?: number
+    code?: string
   ): Promise<void>;
-  updateCurrentLevel(adventureId: string, levelIndex: number): Promise<void>;
+  updateCurrentLevel(adventureSlug: string, levelIndex: number): Promise<void>;
 
   // Settings shortcuts
   getSettings(): Promise<UserSettings>;

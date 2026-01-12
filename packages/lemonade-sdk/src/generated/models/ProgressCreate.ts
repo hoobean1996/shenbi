@@ -3,10 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type ProgressCreate = {
-    adventure_id: number;
-    level_id: number;
+    adventure_slug: string;
+    level_slug: string;
     stars?: number;
     completed?: boolean;
     code?: (string | null);
 };
-

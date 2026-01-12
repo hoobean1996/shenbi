@@ -5,8 +5,8 @@
 export type ProgressResponse = {
     id: number;
     user_id: number;
-    adventure_id: number;
-    level_id: number;
+    adventure_slug: string;
+    level_slug: string;
     stars: number;
     completed: boolean;
     attempts: number;
@@ -14,4 +14,3 @@ export type ProgressResponse = {
     first_completed_at: (string | null);
     last_attempt_at: (string | null);
 };
-

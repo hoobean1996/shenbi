@@ -57,20 +57,20 @@ export class ShenbiProgressService {
     /**
      * Get Adventure Progress
      * Get progress for a specific adventure.
-     * @param adventureId
+     * @param adventureSlug
      * @param xApiKey
      * @returns ProgressResponse Successful Response
      * @throws ApiError
      */
-    public static getAdventureProgressApiV1ShenbiProgressAdventureAdventureIdGet(
-        adventureId: number,
+    public static getAdventureProgressApiV1ShenbiProgressAdventureAdventureSlugGet(
+        adventureSlug: string,
         xApiKey: string,
     ): CancelablePromise<Array<ProgressResponse>> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/shenbi/progress/adventure/{adventure_id}',
+            url: '/api/v1/shenbi/progress/adventure/{adventure_slug}',
             path: {
-                'adventure_id': adventureId,
+                'adventure_slug': adventureSlug,
             },
             headers: {
                 'X-API-Key': xApiKey,
@@ -83,23 +83,23 @@ export class ShenbiProgressService {
     /**
      * Get Level Progress
      * Get progress for a specific level.
-     * @param adventureId
-     * @param levelId
+     * @param adventureSlug
+     * @param levelSlug
      * @param xApiKey
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static getLevelProgressApiV1ShenbiProgressLevelAdventureIdLevelIdGet(
-        adventureId: number,
-        levelId: number,
+    public static getLevelProgressApiV1ShenbiProgressLevelAdventureSlugLevelSlugGet(
+        adventureSlug: string,
+        levelSlug: string,
         xApiKey: string,
     ): CancelablePromise<(ProgressResponse | null)> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/shenbi/progress/level/{adventure_id}/{level_id}',
+            url: '/api/v1/shenbi/progress/level/{adventure_slug}/{level_slug}',
             path: {
-                'adventure_id': adventureId,
-                'level_id': levelId,
+                'adventure_slug': adventureSlug,
+                'level_slug': levelSlug,
             },
             headers: {
                 'X-API-Key': xApiKey,
