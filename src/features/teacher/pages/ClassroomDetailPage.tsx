@@ -6,16 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Users,
-  FileText,
-  FileSpreadsheet,
-  Settings,
-  Loader2,
-  Play,
-  History,
-} from 'lucide-react';
+import { ArrowLeft, Users, FileText, FileSpreadsheet, Settings, Loader2 } from 'lucide-react';
 import { useLanguage } from '../../../infrastructure/i18n';
 import { classroomApi, ClassroomResponse, ApiError } from '../../../infrastructure/services/api';
 import MemberList from '../components/classroom-management/MemberList';
@@ -24,7 +15,7 @@ import GradebookTable from '../components/classroom-management/GradebookTable';
 import JoinCodeDisplay from '../components/classroom-management/JoinCodeDisplay';
 import ClassroomSettingsModal from '../components/classroom-management/ClassroomSettingsModal';
 
-type TabType = 'members' | 'assignments' | 'gradebook' | 'sessions';
+type TabType = 'members' | 'assignments' | 'gradebook';
 
 export default function ClassroomDetailPage() {
   const { classroomId } = useParams<{ classroomId: string }>();
@@ -77,9 +68,6 @@ export default function ClassroomDetailPage() {
     setClassroom(updated);
     setShowSettings(false);
   };
-
-  // TODO: Session history functionality not available in SDK
-  // Sessions tab will show a placeholder message
 
   // Only show full-page loading on initial load (when no classroom data yet)
   if (loading && !classroom) {
@@ -154,13 +142,6 @@ export default function ClassroomDetailPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate(`/t/classroom?classId=${classroom.id}`)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#4a7a2a] text-white rounded-xl font-medium hover:bg-[#3a6a1a] transition-colors"
-              >
-                <Play className="w-4 h-4" />
-                Launch Live Session
-              </button>
               <JoinCodeDisplay
                 code={classroom.join_code}
                 classroomId={classroom.id}
@@ -212,17 +193,6 @@ export default function ClassroomDetailPage() {
               <FileSpreadsheet className="w-4 h-4" />
               Gradebook
             </button>
-            <button
-              onClick={() => setActiveTab('sessions')}
-              className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm border-b-2 transition-colors ${
-                activeTab === 'sessions'
-                  ? 'border-[#4a7a2a] text-[#4a7a2a]'
-                  : 'border-transparent text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <History className="w-4 h-4" />
-              Sessions
-            </button>
           </div>
         </div>
       </div>
@@ -237,22 +207,6 @@ export default function ClassroomDetailPage() {
         )}
         {activeTab === 'assignments' && <AssignmentList classroomId={classroom.id} />}
         {activeTab === 'gradebook' && <GradebookTable classroomId={classroom.id} />}
-        {activeTab === 'sessions' && (
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="p-4 border-b border-gray-200">
-              <h3 className="font-bold text-gray-800">Live Session History</h3>
-              <p className="text-sm text-gray-600">Past live classroom sessions</p>
-            </div>
-            {/* TODO: Session history not available in SDK */}
-            <div className="text-center py-12 text-gray-500">
-              <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p>Session history coming soon</p>
-              <p className="text-sm">
-                Launch a live session to interact with students in real-time
-              </p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Settings Modal */}

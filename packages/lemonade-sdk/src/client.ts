@@ -36,7 +36,6 @@ import { ShenbiSessionsService } from './generated/services/ShenbiSessionsServic
 import { ShenbiSettingsService } from './generated/services/ShenbiSettingsService';
 import { ShenbiProfileService } from './generated/services/ShenbiProfileService';
 import { ShenbiBattlesService } from './generated/services/ShenbiBattlesService';
-import { ShenbiLiveSessionsService } from './generated/services/ShenbiLiveSessionsService';
 import type { UserCreate, UserLogin, DeviceLogin, GoogleAuthRequest, RefreshTokenRequest, SwitchOrgRequest } from './index';
 import type { OrganizationCreate, OrganizationUpdate, InvitationCreate, InvitationAccept, MemberRoleUpdate } from './index';
 import type { EmailTemplateCreate, EmailTemplateUpdate, SendEmailRequest, EmailPreviewRequest } from './index';
@@ -47,7 +46,6 @@ import type { ClassroomCreate, ClassroomUpdate, JoinClassroomRequest, Assignment
 import type { BattleSessionCreate, ClassroomSessionCreate } from './index';
 import type { SettingsUpdate, ProfileUpdate } from './index';
 import type { BattleCreate, BattleJoin, BattleStart, BattleComplete } from './index';
-import type { LiveSessionJoin, LiveSessionJoinByCode, LiveSessionSetLevel, LiveSessionUpdateProgress } from './index';
 
 export interface LemonadeClientConfig {
   apiKey: string;
@@ -602,95 +600,6 @@ export class LemonadeClient {
        */
       leave: (roomCode: string) =>
         ShenbiBattlesService.leaveBattleApiV1ShenbiBattlesRoomCodeLeavePost(roomCode, apiKey),
-    };
-  }
-
-  // ============================================================================
-  // Shenbi Live Sessions Service (Teacher-led classroom sessions)
-  // ============================================================================
-
-  get shenbiLiveSessions() {
-    const apiKey = this.apiKey;
-    return {
-      // Teacher actions
-      /**
-       * Start a new live session for a classroom (teacher only).
-       * @param classroomId - The classroom ID
-       * @returns Live session with room_code for students
-       */
-      start: (classroomId: number) =>
-        ShenbiLiveSessionsService.startLiveSessionApiV1ShenbiClassroomsClassroomIdLivePost(classroomId, apiKey),
-
-      /**
-       * Set the level for the session (teacher only).
-       * @param classroomId - The classroom ID
-       * @param data - Level configuration
-       */
-      setLevel: (classroomId: number, data: LiveSessionSetLevel) =>
-        ShenbiLiveSessionsService.setLevelApiV1ShenbiClassroomsClassroomIdLiveLevelPut(classroomId, apiKey, data),
-
-      /**
-       * Start the game for all students (teacher only).
-       * @param classroomId - The classroom ID
-       */
-      startPlaying: (classroomId: number) =>
-        ShenbiLiveSessionsService.startPlayingApiV1ShenbiClassroomsClassroomIdLiveStartPost(classroomId, apiKey),
-
-      /**
-       * Reset all student progress (teacher only).
-       * @param classroomId - The classroom ID
-       */
-      reset: (classroomId: number) =>
-        ShenbiLiveSessionsService.resetSessionApiV1ShenbiClassroomsClassroomIdLiveResetPost(classroomId, apiKey),
-
-      /**
-       * End the live session (teacher only).
-       * @param classroomId - The classroom ID
-       * @returns Session summary with student stats
-       */
-      end: (classroomId: number) =>
-        ShenbiLiveSessionsService.endSessionApiV1ShenbiClassroomsClassroomIdLiveEndPost(classroomId, apiKey),
-
-      // Student actions
-      /**
-       * Join a live session as a student.
-       * @param classroomId - The classroom ID
-       * @param data - student_name for display
-       */
-      join: (classroomId: number, data: LiveSessionJoin) =>
-        ShenbiLiveSessionsService.joinLiveSessionApiV1ShenbiClassroomsClassroomIdLiveJoinPost(classroomId, apiKey, data),
-
-      /**
-       * Join a live session by room code (student).
-       * @param data - room_code and student_name
-       * @returns Classroom ID and session info
-       */
-      joinByCode: (data: LiveSessionJoinByCode) =>
-        ShenbiLiveSessionsService.joinByRoomCodeApiV1ShenbiLiveJoinPost(apiKey, data),
-
-      /**
-       * Update student's progress during the game.
-       * @param classroomId - The classroom ID
-       * @param data - stars_collected, completed, code
-       */
-      updateProgress: (classroomId: number, data: LiveSessionUpdateProgress) =>
-        ShenbiLiveSessionsService.updateProgressApiV1ShenbiClassroomsClassroomIdLiveProgressPut(classroomId, apiKey, data),
-
-      /**
-       * Leave the live session (student).
-       * @param classroomId - The classroom ID
-       */
-      leave: (classroomId: number) =>
-        ShenbiLiveSessionsService.leaveSessionApiV1ShenbiClassroomsClassroomIdLiveLeavePost(classroomId, apiKey),
-
-      // Shared
-      /**
-       * Get current session state. Poll every 1-2 seconds.
-       * Teachers see all student details, students see only their progress.
-       * @param classroomId - The classroom ID
-       */
-      get: (classroomId: number) =>
-        ShenbiLiveSessionsService.getLiveSessionApiV1ShenbiClassroomsClassroomIdLiveGet(classroomId, apiKey),
     };
   }
 }

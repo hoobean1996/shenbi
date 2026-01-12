@@ -20,7 +20,6 @@ const AdventureListPage = lazy(() => import('./features/student/pages/AdventureL
 const LevelListPage = lazy(() => import('./features/student/pages/LevelListPage'));
 const LevelPage = lazy(() => import('./features/student/pages/GamePage'));
 const BattlePage = lazy(() => import('./features/student/pages/BattlePage'));
-const ClassroomPage = lazy(() => import('./features/student/pages/ClassroomPage'));
 const SettingsPage = lazy(() => import('./features/shared/pages/SettingsPage'));
 const ProfilePage = lazy(() => import('./features/shared/pages/ProfilePage'));
 const PlaygroundPage = lazy(() => import('./features/shared/pages/PlaygroundPage'));
@@ -33,16 +32,11 @@ const NotebookPage = lazy(() =>
 
 // Lazy load teacher pages
 const TeacherHomePage = lazy(() => import('./features/teacher/pages/TeacherHomePage'));
-const TeacherClassroomPage = lazy(() => import('./features/teacher/pages/TeacherClassroomPage'));
 const ClassroomManagementPage = lazy(
   () => import('./features/teacher/pages/ClassroomManagementPage')
 );
 const ClassroomDetailPage = lazy(() => import('./features/teacher/pages/ClassroomDetailPage'));
 const AssignmentDetailPage = lazy(() => import('./features/teacher/pages/AssignmentDetailPage'));
-const CreatorDashboardPage = lazy(() => import('./features/teacher/pages/CreatorDashboardPage'));
-const AdventureEditorPage = lazy(() => import('./features/teacher/pages/AdventureEditorPage'));
-const LevelEditorPage = lazy(() => import('./features/teacher/pages/LevelEditorPage'));
-const LevelPreviewPage = lazy(() => import('./features/teacher/pages/LevelPreviewPage'));
 
 // Upgrade pages
 const UpgradeSuccessPage = lazy(() => import('./features/shared/pages/UpgradeSuccessPage'));
@@ -131,10 +125,8 @@ function App() {
                     <Route path="/battle/:roomCode" element={<BattlePage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/classroom" element={<ClassroomPage />} />
-                    <Route path="/classroom/:roomCode" element={<ClassroomPage />} />
 
-                    {/* Student classroom management */}
+                    {/* Student classroom management (My Classes) */}
                     <Route path="/my-classes" element={<StudentClassroomPage />} />
 
                     {/* Notebook routes */}
@@ -178,22 +170,6 @@ function App() {
                         element={
                           <TeacherRoute>
                             <TeacherHomePage />
-                          </TeacherRoute>
-                        }
-                      />
-                      <Route
-                        path="classroom"
-                        element={
-                          <TeacherRoute>
-                            <TeacherClassroomPage />
-                          </TeacherRoute>
-                        }
-                      />
-                      <Route
-                        path="classroom/:roomCode"
-                        element={
-                          <TeacherRoute>
-                            <TeacherClassroomPage />
                           </TeacherRoute>
                         }
                       />
@@ -269,41 +245,6 @@ function App() {
                           </TeacherRoute>
                         }
                       />
-                      {/* Creator routes (Level Editor) */}
-                      <Route path="creator">
-                        <Route
-                          index
-                          element={
-                            <TeacherRoute>
-                              <CreatorDashboardPage />
-                            </TeacherRoute>
-                          }
-                        />
-                        <Route
-                          path="adventure/:adventureId?"
-                          element={
-                            <TeacherRoute>
-                              <AdventureEditorPage />
-                            </TeacherRoute>
-                          }
-                        />
-                        <Route
-                          path="level/:adventureId/:levelId?"
-                          element={
-                            <TeacherRoute>
-                              <LevelEditorPage />
-                            </TeacherRoute>
-                          }
-                        />
-                        <Route
-                          path="preview/:adventureId/:levelIndex"
-                          element={
-                            <TeacherRoute>
-                              <LevelPreviewPage />
-                            </TeacherRoute>
-                          }
-                        />
-                      </Route>
                     </Route>
                   </Route>
                 </Routes>

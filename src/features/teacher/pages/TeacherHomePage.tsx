@@ -9,7 +9,7 @@ import {
   CheckCircle,
   Zap,
   Paintbrush,
-  PencilRuler,
+  FileText,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../infrastructure/i18n';
@@ -44,13 +44,6 @@ export default function TeacherHomePage() {
             >
               <Users className="w-5 h-5" />
               My Classes
-            </Link>
-            <Link
-              to="/t/creator"
-              className="flex items-center gap-2 px-8 py-4 bg-amber-500 text-white rounded-2xl font-bold text-lg hover:bg-amber-600 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
-            >
-              <PencilRuler className="w-5 h-5" />
-              {t('teacher.adventureStudio')}
             </Link>
           </div>
 
@@ -114,15 +107,13 @@ export default function TeacherHomePage() {
               <p className="text-gray-600">{t('teacher.classSyncDesc')}</p>
             </div>
 
-            {/* Adventure Studio */}
+            {/* Assignments */}
             <div className="bg-white rounded-3xl p-6 border border-gray-200">
-              <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mb-4">
-                <PencilRuler className="w-6 h-6 text-amber-600" />
+              <div className="w-12 h-12 bg-[#e8f5e0] rounded-2xl flex items-center justify-center mb-4">
+                <FileText className="w-6 h-6 text-[#4a7a2a]" />
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">
-                {t('teacher.adventureStudioFeature')}
-              </h3>
-              <p className="text-gray-600">{t('teacher.adventureStudioDesc')}</p>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Assignments</h3>
+              <p className="text-gray-600">Create and manage homework with automatic grading</p>
             </div>
           </div>
         </div>
@@ -248,9 +239,6 @@ export default function TeacherHomePage() {
               </Link>
               <Link to="/t/classes" className="hover:text-[#4a7a2a] transition-colors">
                 My Classes
-              </Link>
-              <Link to="/t/creator" className="hover:text-[#4a7a2a] transition-colors">
-                {t('teacher.adventureStudio')}
               </Link>
             </div>
           </div>

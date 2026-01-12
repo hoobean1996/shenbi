@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   GraduationCap,
   Plus,
@@ -14,8 +14,6 @@ import {
   Calendar,
   ArrowRight,
   LogOut,
-  Play,
-  Radio,
 } from 'lucide-react';
 import { useLanguage } from '../../../infrastructure/i18n';
 import {
@@ -28,7 +26,6 @@ import JoinClassroomModal from '../../teacher/components/classroom-management/Jo
 import { error as logError } from '../../../infrastructure/logging';
 
 export default function StudentClassroomPage() {
-  const navigate = useNavigate();
   const { t } = useLanguage();
 
   const [classrooms, setClassrooms] = useState<ClassroomResponse[]>([]);
@@ -144,50 +141,20 @@ export default function StudentClassroomPage() {
                 <div className="p-5 border-b border-gray-100">
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-bold text-gray-800">{classroom.name}</h3>
-                        {/* Live Session Indicator */}
-                        {classroom.active_room_code && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold text-red-600 bg-red-100 rounded-full animate-pulse">
-                            <Radio className="w-3 h-3" />
-                            {t('classroom.live')}
-                          </span>
-                        )}
-                      </div>
+                      <h3 className="text-lg font-bold text-gray-800">{classroom.name}</h3>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {classroom.active_room_code ? (
-                        // Auto-join with room code when session is active
-                        <button
-                          onClick={() => navigate(`/classroom/${classroom.active_room_code}`)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors animate-pulse"
-                        >
-                          <Play className="w-4 h-4" />
-                          {t('classroom.joinNow')}
-                        </button>
+                    <button
+                      onClick={() => handleLeave(classroom)}
+                      disabled={leavingId === classroom.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {leavingId === classroom.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        // Manual join when no active session
-                        <button
-                          onClick={() => navigate(`/classroom?classId=${classroom.id}`)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#4a7a2a] text-white rounded-lg hover:bg-[#3a6a1a] transition-colors"
-                        >
-                          <Play className="w-4 h-4" />
-                          {t('classroom.joinLiveSession')}
-                        </button>
+                        <LogOut className="w-4 h-4" />
                       )}
-                      <button
-                        onClick={() => handleLeave(classroom)}
-                        disabled={leavingId === classroom.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        {leavingId === classroom.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <LogOut className="w-4 h-4" />
-                        )}
-                        {t('classroom.leave')}
-                      </button>
-                    </div>
+                      {t('classroom.leave')}
+                    </button>
                   </div>
                 </div>
 

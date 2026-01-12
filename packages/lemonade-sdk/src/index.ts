@@ -90,7 +90,6 @@ export { SubscriptionsService } from './generated/services/SubscriptionsService'
 export { ShenbiAchievementsService } from './generated/services/ShenbiAchievementsService';
 export { ShenbiBattlesService } from './generated/services/ShenbiBattlesService';
 export { ShenbiClassroomsService } from './generated/services/ShenbiClassroomsService';
-export { ShenbiLiveSessionsService } from './generated/services/ShenbiLiveSessionsService';
 export { ShenbiProfileService } from './generated/services/ShenbiProfileService';
 export { ShenbiProgressService } from './generated/services/ShenbiProgressService';
 export { ShenbiSessionsService } from './generated/services/ShenbiSessionsService';
@@ -114,20 +113,6 @@ export type { BattleResponse } from './generated/models/BattleResponse';
 export type { BattleStartResponse } from './generated/models/BattleStartResponse';
 export type { BattleCompleteResponse } from './generated/models/BattleCompleteResponse';
 export type { BattleLeaveResponse } from './generated/models/BattleLeaveResponse';
-// Live Session Models
-export type { LiveSessionJoin } from './generated/models/LiveSessionJoin';
-export type { LiveSessionJoinByCode } from './generated/models/LiveSessionJoinByCode';
-export type { LiveSessionSetLevel } from './generated/models/LiveSessionSetLevel';
-export type { LiveSessionUpdateProgress } from './generated/models/LiveSessionUpdateProgress';
-export type { LiveSessionResponse } from './generated/models/LiveSessionResponse';
-export type { LiveSessionStudentResponse } from './generated/models/LiveSessionStudentResponse';
-export type { LiveSessionStartResponse } from './generated/models/LiveSessionStartResponse';
-export type { LiveSessionSetLevelResponse } from './generated/models/LiveSessionSetLevelResponse';
-export type { LiveSessionResetResponse } from './generated/models/LiveSessionResetResponse';
-export type { LiveSessionEndResponse } from './generated/models/LiveSessionEndResponse';
-export type { LiveSessionLeaveResponse } from './generated/models/LiveSessionLeaveResponse';
-export type { LiveSessionProgressResponse } from './generated/models/LiveSessionProgressResponse';
-export type { JoinByCodeResponse } from './generated/models/JoinByCodeResponse';
 export type { ClassroomCreate } from './generated/models/ClassroomCreate';
 export type { ClassroomResponse } from './generated/models/ClassroomResponse';
 export type { ClassroomSessionCreate } from './generated/models/ClassroomSessionCreate';
