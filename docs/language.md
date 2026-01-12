@@ -6,15 +6,14 @@ A simplified Python subset for children's programming education.
 
 ## Overview
 
-Mini Python is designed for children aged 5-12, focusing on core programming concepts with bilingual support (Chinese & English).
+Mini Python is designed for children aged 5-12, focusing on core programming concepts.
 
 ### Design Principles
 
 1. **Simplicity** - Only essential concepts, no complex syntax
 2. **Visual mapping** - Every construct maps to a visual block
-3. **Chinese-friendly** - Full Chinese keyword support
-4. **Safe execution** - Sandboxed, no dangerous operations
-5. **Progressive** - Concepts unlock by level
+3. **Safe execution** - Sandboxed, no dangerous operations
+4. **Progressive** - Concepts unlock by level
 
 ---
 
@@ -24,15 +23,15 @@ Mini Python is designed for children aged 5-12, focusing on core programming con
 
 ```python
 # Commands run in order
-前进()
-前进()
-左转()
-前进()
+forward()
+forward()
+turnLeft()
+forward()
 ```
 
 **Concepts:** Programs execute top to bottom
 
-**Blocks:** Command blocks (green)
+**Blocks:** Command blocks (blue)
 
 ---
 
@@ -40,14 +39,9 @@ Mini Python is designed for children aged 5-12, focusing on core programming con
 
 ```python
 # Fixed count loops
-重复 4 次:
-    前进()
-    左转()
-
-# English equivalent
 repeat 4 times:
     forward()
-    left()
+    turnLeft()
 ```
 
 **Concepts:** Reducing repetition
@@ -60,18 +54,12 @@ repeat 4 times:
 
 ```python
 # If statement
-如果 前方有墙():
-    左转()
+if frontBlocked():
+    turnLeft()
 
 # If-else statement
-如果 有星星():
-    收集()
-否则:
-    前进()
-
-# English equivalent
-if frontBlocked():
-    left()
+if hasStar():
+    collect()
 else:
     forward()
 ```
@@ -86,16 +74,9 @@ else:
 
 ```python
 # Conditional loop
-当 没到终点() 时:
-    如果 前方有墙():
-        左转()
-    否则:
-        前进()
-
-# English equivalent
-while not atGoal():
+while notAtGoal():
     if frontBlocked():
-        left()
+        turnLeft()
     else:
         forward()
 ```
@@ -110,14 +91,14 @@ while not atGoal():
 
 ```python
 # Assignment
-星星数 = 0
+stars = 0
 
 # Arithmetic
-星星数 = 星星数 + 1
+stars = stars + 1
 
 # Comparison
-如果 星星数 >= 3:
-    庆祝()
+if stars >= 3:
+    celebrate()
 ```
 
 **Concepts:** Storing and manipulating data
@@ -130,21 +111,21 @@ while not atGoal():
 
 ```python
 # Define function
-定义 走两步():
-    前进()
-    前进()
+def walkTwo():
+    forward()
+    forward()
 
 # Call function
-走两步()
-左转()
-走两步()
+walkTwo()
+turnLeft()
+walkTwo()
 
 # With parameters
-定义 走N步(n):
-    重复 n 次:
-        前进()
+def walkN(n):
+    repeat n times:
+        forward()
 
-走N步(3)
+walkN(3)
 ```
 
 **Concepts:** Code reuse and abstraction
@@ -155,30 +136,29 @@ while not atGoal():
 
 ## Lexical Structure
 
-### Keywords (Bilingual)
+### Keywords
 
 ```typescript
 KEYWORDS = {
   // Control flow
-  '如果': 'IF',      'if': 'IF',
-  '否则': 'ELSE',    'else': 'ELSE',
-  '重复': 'REPEAT',  'repeat': 'REPEAT',
-  '次': 'TIMES',     'times': 'TIMES',
-  '当': 'WHILE',     'while': 'WHILE',
-  '时': 'DO',
+  'if': 'IF',
+  'else': 'ELSE',
+  'repeat': 'REPEAT',
+  'times': 'TIMES',
+  'while': 'WHILE',
 
   // Functions
-  '定义': 'DEF',     'def': 'DEF',
-  '返回': 'RETURN',  'return': 'RETURN',
+  'def': 'DEF',
+  'return': 'RETURN',
 
   // Booleans
-  '真': 'TRUE',      'True': 'TRUE',
-  '假': 'FALSE',     'False': 'FALSE',
+  'True': 'TRUE',
+  'False': 'FALSE',
 
   // Logical
-  '和': 'AND',       'and': 'AND',
-  '或': 'OR',        'or': 'OR',
-  '不': 'NOT',       'not': 'NOT',
+  'and': 'AND',
+  'or': 'OR',
+  'not': 'NOT',
 }
 ```
 
@@ -230,21 +210,21 @@ compound_stmt = if_stmt
               | while_stmt
               | func_def
 
-if_stmt     = ('if' | '如果') expression ':' block
-              [('else' | '否则') ':' block]
+if_stmt     = 'if' expression ':' block
+              ['else' ':' block]
 
-repeat_stmt = ('repeat' | '重复') expression ('times' | '次') ':' block
+repeat_stmt = 'repeat' expression 'times' ':' block
 
-while_stmt  = ('while' | '当') expression [('时')] ':' block
+while_stmt  = 'while' expression ':' block
 
-func_def    = ('def' | '定义') IDENTIFIER '(' params? ')' ':' block
+func_def    = 'def' IDENTIFIER '(' params? ')' ':' block
 
 block       = NEWLINE INDENT statement+ DEDENT
 
 expression  = or_expr
-or_expr     = and_expr (('or' | '或') and_expr)*
-and_expr    = not_expr (('and' | '和') not_expr)*
-not_expr    = ('not' | '不') not_expr | comparison
+or_expr     = and_expr ('or' and_expr)*
+and_expr    = not_expr ('and' not_expr)*
+not_expr    = 'not' not_expr | comparison
 comparison  = arith_expr (comp_op arith_expr)*
 arith_expr  = term (('+' | '-') term)*
 term        = factor (('*' | '/') factor)*
@@ -335,7 +315,7 @@ For educational purposes, the VM supports step-by-step execution:
 ```typescript
 interface VMStepResult {
   done: boolean
-  action: string | null    // 'forward', 'left', etc.
+  action: string | null    // 'forward', 'turnLeft', etc.
   actionArgs: any[]
   highlightLine: number | null
 }
@@ -353,31 +333,35 @@ while (!vm.getState().done) {
 
 ## Game Integration
 
-### Command Bindings
+Commands and sensors are defined in each game's `commands.ts` file:
 
 ```typescript
-const commandBindings = {
-  // Maze commands
-  '前进': (world, player) => world.forward(player),
-  'forward': (world, player) => world.forward(player),
-  '左转': (world, player) => world.turnLeft(player),
-  'left': (world, player) => world.turnLeft(player),
+// src/core/game/maze/commands.ts
+export const MAZE_COMMANDS: CommandDefinition[] = [
+  {
+    id: 'forward',
+    label: 'Forward',
+    codeName: 'forward',
+    handler: (world) => world.moveForward(),
+  },
+  {
+    id: 'turnLeft',
+    label: 'Turn Left',
+    codeName: 'turnLeft',
+    handler: (world) => world.turnLeft(),
+  },
+  // ...
+];
 
-  // Turtle commands
-  '前进': (world, n) => world.forward(n),
-  'forward': (world, n) => world.forward(n),
-}
-```
-
-### Sensor Bindings
-
-```typescript
-const sensorBindings = {
-  '前方有墙': (world, player) => world.frontBlocked(player),
-  'frontBlocked': (world, player) => world.frontBlocked(player),
-  '有星星': (world, player) => world.hasStar(player),
-  'hasStar': (world, player) => world.hasStar(player),
-}
+export const MAZE_CONDITIONS: ConditionDefinition[] = [
+  {
+    id: 'frontBlocked',
+    label: 'Front Blocked',
+    codeName: 'frontBlocked',
+    handler: (world) => world.isFrontBlocked(),
+  },
+  // ...
+];
 ```
 
 ---
@@ -389,7 +373,7 @@ const sensorBindings = {
 ```typescript
 interface SyntaxError {
   type: 'SyntaxError'
-  message: string        // Chinese-friendly message
+  message: string
   line: number
   column: number
   suggestion?: string    // Fix suggestion
@@ -398,10 +382,10 @@ interface SyntaxError {
 // Example
 {
   type: 'SyntaxError',
-  message: '缩进不正确',
+  message: 'Incorrect indentation',
   line: 3,
   column: 0,
-  suggestion: '检查这一行的空格数量是否与上一行一致'
+  suggestion: 'Check that this line has the same number of spaces as the previous line'
 }
 ```
 
@@ -418,9 +402,9 @@ interface RuntimeError {
 // Example
 {
   type: 'RuntimeError',
-  message: '变量 "星星数" 还没有定义',
+  message: 'Variable "stars" is not defined',
   line: 5,
-  suggestion: '在使用变量之前，需要先给它赋值，例如：星星数 = 0'
+  suggestion: 'Before using a variable, you need to assign a value to it, e.g.: stars = 0'
 }
 ```
 
@@ -435,7 +419,7 @@ interface BlockDefinition {
   type: string
   category: 'action' | 'control' | 'sensor' | 'operator' | 'variable' | 'function'
   color: string
-  template: string  // e.g., "重复 {count} 次"
+  template: string  // e.g., "repeat {count} times"
   inputs: InputSlot[]
   hasBody: boolean
 }
@@ -445,7 +429,7 @@ const repeatBlock: BlockDefinition = {
   type: 'repeat',
   category: 'control',
   color: '#FF9800',
-  template: '重复 {count} 次',
+  template: 'repeat {count} times',
   inputs: [{ name: 'count', type: 'number', default: 4 }],
   hasBody: true,
 }
@@ -456,17 +440,15 @@ const repeatBlock: BlockDefinition = {
 ## File Structure
 
 ```
-src/lang/
+src/core/lang/
 ├── index.ts           # Module exports
 ├── lexer.ts           # Tokenization
 ├── parser.ts          # AST generation
 ├── ast.ts             # AST type definitions
-├── compiler.ts        # AST → IR
+├── compiler.ts        # AST -> IR
 ├── ir.ts              # IR opcodes
 ├── vm.ts              # Virtual machine
-├── interpreter.ts     # Legacy interpreter
-├── errors.ts          # Error types
-└── bindings.ts        # UI command definitions
+└── errors.ts          # Error types
 ```
 
 ---
@@ -477,50 +459,50 @@ src/lang/
 
 ```python
 # Sequential
-前进()
-前进()
-前进()
+forward()
+forward()
+forward()
 
 # With loop
-重复 3 次:
-    前进()
+repeat 3 times:
+    forward()
 ```
 
 ### Smart Navigation (Level 3-4)
 
 ```python
 # Left-hand rule maze solver
-当 不 到达终点() 时:
-    如果 左边是空的():
-        左转()
-        前进()
-    否则:
-        如果 前方有墙():
-            右转()
-        否则:
-            前进()
+while notAtGoal():
+    if leftClear():
+        turnLeft()
+        forward()
+    else:
+        if frontBlocked():
+            turnRight()
+        else:
+            forward()
 ```
 
 ### With Functions (Level 6)
 
 ```python
-定义 找路():
-    如果 前方有墙():
-        如果 左边是空的():
-            左转()
-        否则:
-            右转()
+def findPath():
+    if frontBlocked():
+        if leftClear():
+            turnLeft()
+        else:
+            turnRight()
 
-定义 走一步():
-    找路()
-    前进()
-    如果 有星星():
-        收集()
+def takeStep():
+    findPath()
+    forward()
+    if hasStar():
+        collect()
 
-当 不 到达终点() 时:
-    走一步()
+while notAtGoal():
+    takeStep()
 ```
 
 ---
 
-*See also: [Architecture](./architecture.md) | [Game Architecture](./game.md)*
+*See also: [Game Architecture](./game.md)*

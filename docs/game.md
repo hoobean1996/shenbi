@@ -21,6 +21,7 @@ How to create new game types following Shenbi's **World + VM + Canvas** architec
 | **World** | Pure state management | None (pure TypeScript) |
 | **VM** | Code execution bridge | World + lang/vm |
 | **Canvas** | Visual rendering | World + React |
+| **commands.ts** | Single source of truth for commands | World |
 
 ---
 
@@ -30,53 +31,107 @@ How to create new game types following Shenbi's **World + VM + Canvas** architec
 |------|-------|----|----|-------------|
 | **Maze** | `MazeWorld` | `MazeVM` | `MazeCanvas` | Grid navigation |
 | **Turtle** | `TurtleWorld` | `TurtleVM` | `TurtleCanvas` | Logo-style drawing |
-| **Tower Defense** | `TowerDefenseWorld` | `TowerDefenseVM` | `TowerDefenseCanvas` | Strategy puzzles |
+
+---
+
+## File Structure
+
+Games are located in `src/core/game/`:
+
+```
+src/core/game/
+├── index.ts              # Main exports
+├── maze/
+│   ├── index.ts          # Module exports
+│   ├── MazeWorld.ts      # State & logic
+│   ├── MazeVM.ts         # VM bindings
+│   ├── MazeCanvas.tsx    # React renderer
+│   ├── commands.ts       # Command definitions (single source of truth)
+│   └── levels/           # Level definitions
+│       ├── index.ts
+│       ├── types.ts
+│       ├── level01.ts
+│       └── ...
+└── turtle/
+    ├── index.ts
+    ├── TurtleWorld.ts
+    ├── TurtleVM.ts
+    ├── TurtleCanvas.tsx
+    ├── commands.ts
+    └── levels/
+        └── ...
+```
 
 ---
 
 ## Step-by-Step: Creating a New Game
 
-### File Structure
+### Step 1: Define Commands (`commands.ts`)
 
-```
-src/game/mygame/
-├── MyGameWorld.ts      # State & logic
-├── MyGameVM.ts         # VM bindings
-├── MyGameCanvas.tsx    # React renderer
-├── bindings.ts         # Command definitions
-└── index.ts            # Exports
-```
-
----
-
-### Step 1: Define Bindings
-
-Define the commands and sensors your game provides.
+Commands are the **single source of truth** - used by VM, BlockEditor, and CodeGenerator.
 
 ```typescript
-// src/game/mygame/bindings.ts
+// src/core/game/mygame/commands.ts
 
-import { GameCommand, GameSensor } from '../types';
+import { MyGameWorld } from './MyGameWorld';
+import { Value } from '../../lang/ir';
 
-export const MYGAME_COMMANDS: GameCommand[] = [
+export type ArgType = 'none' | 'number' | 'string';
+
+export interface CommandDefinition {
+  id: string;           // Unique ID
+  label: string;        // Display label
+  icon: string;         // Emoji for block UI
+  color: string;        // Block color (hex)
+  codeName: string;     // Code name (e.g., 'forward')
+  argType: ArgType;     // Argument type
+  defaultArg?: number | string;
+  handler: (world: MyGameWorld, args: Value[]) => Value | void;
+}
+
+export interface ConditionDefinition {
+  id: string;
+  label: string;
+  codeName: string;
+  handler: (world: MyGameWorld) => boolean;
+}
+
+export const MYGAME_COLORS = {
+  action: '#3B82F6',  // Blue
+  sensor: '#10B981',  // Green
+} as const;
+
+export const MYGAME_COMMANDS: CommandDefinition[] = [
   {
     id: 'doAction',
-    nameEn: 'doAction',
-    nameZh: '做动作',
-    aliasesZh: ['执行'],
-    description: 'Performs the main action',
+    label: 'Do Action',
+    icon: '⚡',
+    color: MYGAME_COLORS.action,
+    codeName: 'doAction',
+    argType: 'none',
+    handler: (world) => world.doAction(),
   },
-  // ... more commands
 ];
 
-export const MYGAME_SENSORS: GameSensor[] = [
+export const MYGAME_CONDITIONS: ConditionDefinition[] = [
   {
-    id: 'checkState',
-    nameEn: 'checkState',
-    nameZh: '检查状态',
-    description: 'Returns true if state condition is met',
+    id: 'isReady',
+    label: 'Is Ready',
+    codeName: 'isReady',
+    handler: (world) => world.isReady(),
   },
-  // ... more sensors
+];
+
+export const MYGAME_SENSORS: CommandDefinition[] = [
+  {
+    id: 'getScore',
+    label: 'Get Score',
+    icon: '🔢',
+    color: MYGAME_COLORS.sensor,
+    codeName: 'getScore',
+    argType: 'none',
+    handler: (world) => world.getScore(),
+  },
 ];
 ```
 
@@ -87,7 +142,7 @@ export const MYGAME_SENSORS: GameSensor[] = [
 The World is a pure TypeScript class that manages game state.
 
 ```typescript
-// src/game/mygame/MyGameWorld.ts
+// src/core/game/mygame/MyGameWorld.ts
 
 export interface MyGameState {
   score: number;
@@ -110,7 +165,7 @@ export class MyGameWorld {
 
   // ============ Level Loading ============
 
-  loadLevel(levelData: any): void {
+  loadLevel(levelData: MyGameLevel): void {
     this.state = {
       ...this.getDefaultState(),
       // Parse levelData...
@@ -136,8 +191,12 @@ export class MyGameWorld {
 
   // ============ Sensors ============
 
-  checkState(): boolean {
-    return this.state.score > 50;
+  isReady(): boolean {
+    return this.state.score > 0;
+  }
+
+  getScore(): number {
+    return this.state.score;
   }
 
   // ============ State Access ============
@@ -171,14 +230,16 @@ export class MyGameWorld {
 
 ### Step 3: Create the VM
 
-The VM bridges Mini Python execution to World commands.
+The VM bridges Mini Python execution to World commands using the command definitions.
 
 ```typescript
-// src/game/mygame/MyGameVM.ts
+// src/core/game/mygame/MyGameVM.ts
 
 import { VM, VMState, VMStepResult, CommandHandler } from '../../lang/vm';
 import { CompiledProgram, Value } from '../../lang/ir';
+import { compile, compileToIR } from '../../lang/index';
 import { MyGameWorld } from './MyGameWorld';
+import { MYGAME_COMMANDS, MYGAME_CONDITIONS, MYGAME_SENSORS } from './commands';
 
 export interface MyGameVMConfig {
   world: MyGameWorld;
@@ -198,21 +259,37 @@ export class MyGameVM {
   }
 
   private registerBindings(): void {
-    // Register commands (both English and Chinese)
-    this.vm.registerCommand('doAction', () => this.world.doAction());
-    this.vm.registerCommand('做动作', () => this.world.doAction());
-
-    // Register sensors
-    this.vm.registerSensor('checkState', () => this.world.checkState());
-    this.vm.registerSensor('检查状态', () => this.world.checkState());
-
-    // Standard print command
+    // Print command
     const printHandler: CommandHandler = (args: Value[]) => {
-      const message = args.map(a => String(a)).join(' ');
+      const message = args.map((a) => String(a)).join(' ');
       this.onPrint?.(message);
     };
     this.vm.registerCommand('print', printHandler);
-    this.vm.registerCommand('打印', printHandler);
+
+    // Register commands from commands.ts
+    for (const cmd of MYGAME_COMMANDS) {
+      const handler = (args: Value[]) => cmd.handler(this.world, args);
+      this.vm.registerCommand(cmd.codeName, handler);
+    }
+
+    // Register conditions
+    for (const cond of MYGAME_CONDITIONS) {
+      const handler = () => cond.handler(this.world);
+      this.vm.registerCommand(cond.codeName, handler);
+    }
+
+    // Register sensors
+    for (const sensor of MYGAME_SENSORS) {
+      const handler = (args: Value[]) => sensor.handler(this.world, args);
+      this.vm.registerCommand(sensor.codeName, handler);
+    }
+  }
+
+  // Load from source code
+  loadWithSource(userCode: string): void {
+    const ast = compile(userCode);
+    const program = compileToIR(ast);
+    this.vm.load(program);
   }
 
   // ============ VM Delegation ============
@@ -227,43 +304,53 @@ export class MyGameVM {
   getState(): VMState { return this.vm.getState(); }
   getCurrentLine(): number | null { return this.vm.getCurrentLine(); }
   getVariables(): Record<string, Value> { return this.vm.getVariables(); }
+
+  // ============ Debugging Features ============
+
+  addBreakpoint(line: number): void { this.vm.addBreakpoint(line); }
+  removeBreakpoint(line: number): void { this.vm.removeBreakpoint(line); }
+  toggleBreakpoint(line: number): boolean { return this.vm.toggleBreakpoint(line); }
+  getBreakpoints(): number[] { return this.vm.getBreakpoints(); }
+  stepBack(): boolean { return this.vm.stepBack(); }
 }
 ```
-
-**Key Points:**
-- Register both English and Chinese names
-- Delegate all VM methods to inner VM
-- Handle `onPrint` callback for debugging
 
 ---
 
 ### Step 4: Create the Canvas
 
-The Canvas is a React component that renders the World state.
+The Canvas is a React component that renders the World state with theme support.
 
 ```typescript
-// src/game/mygame/MyGameCanvas.tsx
+// src/core/game/mygame/MyGameCanvas.tsx
 
 import { useEffect, useState } from 'react';
 import { MyGameWorld } from './MyGameWorld';
+import { RenderTheme, defaultTheme } from '../../../infrastructure/themes';
 
 interface MyGameCanvasProps {
   world: MyGameWorld;
+  theme?: RenderTheme;
   className?: string;
+  animationDuration?: number;
 }
 
-export function MyGameCanvas({ world, className = '' }: MyGameCanvasProps) {
+export function MyGameCanvas({
+  world,
+  theme = defaultTheme,
+  className = '',
+  animationDuration = 300,
+}: MyGameCanvasProps) {
   const [, forceUpdate] = useState({});
 
   // Subscribe to world changes
   useEffect(() => {
     const unsubscribe = world.onChange(() => {
-      forceUpdate({}); // Trigger re-render
+      forceUpdate({});
     });
     return unsubscribe;
   }, [world]);
 
-  // Get current state for rendering
   const state = world.getState();
 
   return (
@@ -276,117 +363,117 @@ export function MyGameCanvas({ world, className = '' }: MyGameCanvasProps) {
 }
 ```
 
-**Key Points:**
-- Subscribe on mount with `useEffect`
-- Force update pattern for state changes
-- Cleanup with returned unsubscribe function
-
 ---
 
 ### Step 5: Export Module
 
 ```typescript
-// src/game/mygame/index.ts
+// src/core/game/mygame/index.ts
 
 export { MyGameWorld } from './MyGameWorld';
 export type { MyGameState } from './MyGameWorld';
+
 export { MyGameVM } from './MyGameVM';
 export type { MyGameVMConfig } from './MyGameVM';
+
 export { MyGameCanvas } from './MyGameCanvas';
-export { MYGAME_COMMANDS, MYGAME_SENSORS } from './bindings';
+
+// Command definitions (for BlockEditor, CodeGenerator)
+export { MYGAME_COMMANDS, MYGAME_CONDITIONS, MYGAME_SENSORS, MYGAME_COLORS } from './commands';
+export type { CommandDefinition, ConditionDefinition, ArgType } from './commands';
 ```
 
 Update the main game exports:
 
 ```typescript
-// src/game/index.ts
+// src/core/game/index.ts
 
-export * from './maze';
-export * from './turtle';
-export * from './tower-defense';
-export * from './mygame';  // Add this
+// Maze Game
+export { MazeWorld, MazeVM, MazeCanvas } from './maze';
+export type { Direction, CellType, Position, PlayerState, MazeLevel, MazeVMConfig } from './maze';
+
+// Turtle Graphics Game
+export { TurtleWorld, TurtleVM, TurtleCanvas } from './turtle';
+export type { TurtleState, Line, Point, TurtleVMConfig } from './turtle';
+
+// My Game (add this)
+export { MyGameWorld, MyGameVM, MyGameCanvas } from './mygame';
+export type { MyGameState, MyGameVMConfig } from './mygame';
 ```
 
 ---
 
-### Step 6: Add GameType
+### Step 6: Create Levels
+
+Levels are defined as TypeScript files in `levels/` folder:
 
 ```typescript
-// src/levels/types.ts
+// src/core/game/mygame/levels/types.ts
 
-export type GameType = 'maze' | 'turtle' | 'tower-defense' | 'mygame';
+export interface MyGameLevelData {
+  id: string;
+  name: string;
+  description: string;
+  // Level-specific data...
+  availableCommands: string[];
+  availableConditions: string[];
+  winCondition: string;
+  hints: string[];
+}
 ```
-
----
-
-### Step 7: Update CodeRunner
-
-Add support in `src/components/CodeRunner.tsx`:
 
 ```typescript
-import { MyGameWorld, MyGameVM } from '../game/mygame';
+// src/core/game/mygame/levels/level01.ts
 
-interface CodeRunnerProps {
-  // ... existing props
-  myGameWorld?: MyGameWorld;
-}
+import type { MyGameLevelData } from './types';
 
-// In the useEffect for VM creation:
-if (gameType === 'mygame' && myGameWorld) {
-  vmRef.current = new MyGameVM({ world: myGameWorld });
-}
+export const level01: MyGameLevelData = {
+  id: 'mygame-01',
+  name: 'First Level',
+  description: 'Learn the basics',
+  availableCommands: ['doAction'],
+  availableConditions: ['isReady'],
+  winCondition: 'getScore() >= 50',
+  hints: ['Use doAction to increase score'],
+};
 ```
 
----
+```typescript
+// src/core/game/mygame/levels/index.ts
 
-### Step 8: Create Levels
+import { level01 } from './level01';
+import { level02 } from './level02';
 
-Add level files in `public/levels/mygame-adventure/`:
-
-```json
-// level-01.json
-{
-  "id": "mygame-01",
-  "name": "First Level",
-  "description": "Learn the basics",
-  "gameType": "mygame",
-  "availableCommands": ["doAction"],
-  "availableSensors": ["checkState"],
-  "availableBlocks": ["command", "repeat"],
-  "winCondition": "score >= 50",
-  "hints": ["Use doAction to increase score"],
-  "expectedCode": "重复 5 次:\n    doAction()"
-}
+export const MYGAME_LEVELS = [level01, level02];
+export type { MyGameLevelData } from './types';
 ```
 
 ---
 
 ## Best Practices
 
-1. **Keep World pure** - No React, no async, no side effects
-2. **Use onChange pattern** - Let Canvas react to state changes
-3. **Support both languages** - Always register Chinese and English names
-4. **Reset properly** - Restore initial state on code re-run
-5. **Immutable access** - Return copies from getters
-6. **Type everything** - Full TypeScript types for safety
+1. **Single source of truth** - Commands defined once in `commands.ts`
+2. **Keep World pure** - No React, no async, no side effects
+3. **Use onChange pattern** - Let Canvas react to state changes
+4. **Support themes** - Use RenderTheme for visual customization
+5. **Reset properly** - Restore initial state on code re-run
+6. **Immutable access** - Return copies from getters
+7. **Type everything** - Full TypeScript types for safety
 
 ---
 
 ## Checklist for New Games
 
-- [ ] Create `XxxWorld.ts` with state, commands, sensors, onChange
-- [ ] Create `XxxVM.ts` with command/sensor bindings
-- [ ] Create `XxxCanvas.tsx` with rendering logic
-- [ ] Create `bindings.ts` with command definitions
+- [ ] Create `commands.ts` with command/condition/sensor definitions
+- [ ] Create `MyGameWorld.ts` with state and methods
+- [ ] Create `MyGameVM.ts` with command registration
+- [ ] Create `MyGameCanvas.tsx` with rendering logic
 - [ ] Create `index.ts` exports
-- [ ] Update `src/game/index.ts` with exports
-- [ ] Add game type to `src/levels/types.ts`
-- [ ] Add support in `CodeRunner.tsx`
-- [ ] Create adventure component if needed
-- [ ] Create level files in `public/levels/`
-- [ ] Add translations for commands/sensors in `i18n/translations.ts`
-- [ ] Update BlockEditor types if new block types needed
+- [ ] Create `levels/` folder with TypeScript level files
+- [ ] Update `src/core/game/index.ts` with exports
+- [ ] Add translations for commands in `i18n/translations.ts`
+- [ ] Update BlockEditor to support new game type
 
 ---
 
-*See also: [Architecture](./architecture.md) | [Language Design](./language.md)*
+*See also: [Language Design](./language.md)*
