@@ -16,7 +16,6 @@ import {
   Home,
   Settings,
   User,
-  PencilRuler,
   GraduationCap,
 } from 'lucide-react';
 import { useTranslation } from '../../../infrastructure/i18n';
@@ -60,7 +59,6 @@ export function Layout({ children }: LayoutProps) {
   const teacherNavItems = [
     { path: '/t', icon: Home, labelKey: 'nav.home' as const },
     { path: '/t/classes', icon: GraduationCap, labelKey: 'nav.myClasses' as const },
-    { path: '/t/creator', icon: PencilRuler, labelKey: 'nav.creator' as const },
   ];
 
   const navItems = isTeacherView ? teacherNavItems : studentNavItems;
