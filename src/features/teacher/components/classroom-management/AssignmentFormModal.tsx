@@ -7,6 +7,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { X, FileText, Loader2, Calendar } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { classroomApi, AssignmentResponse, ApiError } from '../../../../infrastructure/services/api';
 import { loadLocalAdventures } from '../../../../infrastructure/levels';
 import { error as logError } from '../../../../infrastructure/logging';
@@ -32,7 +34,7 @@ export default function AssignmentFormModal({
   const [description, setDescription] = useState('');
   const [selectedAdventureId, setSelectedAdventureId] = useState<string | null>(null);
   const [selectedLevelIds, setSelectedLevelIds] = useState<string[]>([]);
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState<Date | null>(null);
   const [maxPoints, setMaxPoints] = useState(100);
 
   const [loading, setLoading] = useState(false);
@@ -70,8 +72,7 @@ export default function AssignmentFormModal({
         }
         setMaxPoints(details.max_points);
         if (details.due_date) {
-          const date = new Date(details.due_date);
-          setDueDate(date.toISOString().slice(0, 16));
+          setDueDate(new Date(details.due_date));
         }
       } catch (err) {
         logError(
@@ -113,7 +114,7 @@ export default function AssignmentFormModal({
         title: title.trim(),
         description: description.trim() || null,
         level_ids: selectedLevelIds, // Stored as "adventure_slug/level_slug"
-        due_date: dueDate ? new Date(dueDate).toISOString() : null,
+        due_date: dueDate ? dueDate.toISOString() : null,
         max_points: maxPoints,
       };
 
@@ -262,13 +263,15 @@ export default function AssignmentFormModal({
                     Due Date (optional)
                   </label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="datetime-local"
-                      lang="en"
-                      value={dueDate}
-                      onChange={(e) => setDueDate(e.target.value)}
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10 pointer-events-none" />
+                    <DatePicker
+                      selected={dueDate}
+                      onChange={(date: Date | null) => setDueDate(date)}
+                      showTimeSelect
+                      dateFormat="MMM d, yyyy h:mm aa"
+                      placeholderText="Select date and time"
                       className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#4a7a2a] focus:border-[#4a7a2a] outline-none"
+                      wrapperClassName="w-full"
                     />
                   </div>
                 </div>
