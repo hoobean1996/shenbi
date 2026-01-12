@@ -33,21 +33,24 @@ export default function MemberList({ classroomId, onMemberCountChange }: MemberL
       setMembers(response as ShenbiMemberResponse[]);
       // Count only active members
       const activeCount = response.filter((m) => m.status === 'active').length;
-      onMemberCountChange?.(activeCount);
+      return activeCount;
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.detail || err.message);
       } else {
         setError('Failed to load members');
       }
+      return 0;
     } finally {
       setLoading(false);
     }
-  }, [classroomId, onMemberCountChange]);
+  }, [classroomId]);
 
   useEffect(() => {
-    loadMembers();
-  }, [loadMembers]);
+    loadMembers().then((count) => {
+      onMemberCountChange?.(count);
+    });
+  }, [loadMembers]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRemove = async (member: ShenbiMemberResponse) => {
     const name = member.display_name || 'this student';

@@ -6,11 +6,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { FileSpreadsheet, Loader2, Users } from 'lucide-react';
-import { classroomApi, ApiError } from '../../../../infrastructure/services/api';
+import { classroomApi, ApiError, GradebookEntry } from '../../../../infrastructure/services/api';
 
-// Local type for gradebook response structure
+// Transformed gradebook structure for display
 interface GradebookData {
-  classroom_name: string;
   students: Array<{
     student_id: number;
     student_name: string | null;
@@ -37,10 +36,47 @@ export default function GradebookTable({ classroomId }: GradebookTableProps) {
     try {
       setLoading(true);
       setError(null);
-      const data = await classroomApi.getGradebook(classroomId);
-      // Transform the SDK response to our local format
-      // The SDK returns GradebookEntry[] - we need to restructure it
-      setGradebook(data as unknown as GradebookData);
+      const entries = (await classroomApi.getGradebook(classroomId)) as GradebookEntry[];
+
+      // Transform the API response (GradebookEntry[]) to our display format
+      // Each entry has: student_id, display_name, assignments (array of {assignment_id, title, grade, level_count}), average_grade
+
+      // Extract unique assignments from all entries
+      const assignmentMap = new Map<number, { id: number; title: string; level_count?: number }>();
+      const students: GradebookData['students'] = [];
+
+      for (const entry of entries) {
+        const studentAssignments: Record<number, number | null> = {};
+
+        // Process each assignment for this student
+        if (Array.isArray(entry.assignments)) {
+          for (const assignment of entry.assignments) {
+            const assignmentId = assignment.assignment_id;
+            if (assignmentId && !assignmentMap.has(assignmentId)) {
+              assignmentMap.set(assignmentId, {
+                id: assignmentId,
+                title: assignment.title || `Assignment ${assignmentId}`,
+                level_count: assignment.level_count,
+              });
+            }
+            if (assignmentId) {
+              studentAssignments[assignmentId] = assignment.grade ?? null;
+            }
+          }
+        }
+
+        students.push({
+          student_id: entry.student_id,
+          student_name: entry.display_name,
+          assignments: studentAssignments,
+          average_grade: entry.average_grade,
+        });
+      }
+
+      setGradebook({
+        students,
+        assignments: Array.from(assignmentMap.values()),
+      });
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.detail || err.message);
