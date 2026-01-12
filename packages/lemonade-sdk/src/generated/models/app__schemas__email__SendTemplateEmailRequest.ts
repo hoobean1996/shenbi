@@ -2,7 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SendTemplateEmailRequest = {
+/**
+ * Request to send a templated email.
+ */
+export type app__schemas__email__SendTemplateEmailRequest = {
+    to: string;
     template_name: string;
     variables?: (Record<string, any> | null);
 };

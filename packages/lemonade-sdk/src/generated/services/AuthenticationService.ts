@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { app__schemas__auth__GoogleAuthRequest } from '../models/app__schemas__auth__GoogleAuthRequest';
 import type { DeviceLogin } from '../models/DeviceLogin';
-import type { GoogleAuthRequest } from '../models/GoogleAuthRequest';
 import type { RefreshTokenRequest } from '../models/RefreshTokenRequest';
 import type { SwitchOrgRequest } from '../models/SwitchOrgRequest';
 import type { TokenResponse } from '../models/TokenResponse';
@@ -108,7 +108,7 @@ export class AuthenticationService {
      */
     public static googleLoginApiV1AuthGooglePost(
         xApiKey: string,
-        requestBody: GoogleAuthRequest,
+        requestBody: app__schemas__auth__GoogleAuthRequest,
     ): CancelablePromise<TokenResponse> {
         return __request(OpenAPI, {
             method: 'POST',

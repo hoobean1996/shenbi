@@ -23,17 +23,9 @@ import {
   settingsApi,
   achievementsApi,
   sessionsApi,
-  adventureApi,
   stripeApi,
-  GameType,
 } from '../services/api';
-import type {
-  ProgressResponse,
-  LevelResponse,
-  AdventureResponse,
-  LevelCreate,
-} from '../services/api';
-import type { CompactLevelData } from '../levels/types';
+import type { ProgressResponse } from '../services/api';
 
 /**
  * Convert API progress to frontend LevelProgress format
@@ -47,85 +39,6 @@ function convertApiProgressToLevelProgress(apiProgress: ProgressResponse): Level
     completedAt: apiProgress.first_completed_at
       ? new Date(apiProgress.first_completed_at).getTime()
       : undefined,
-  };
-}
-
-/**
- * Convert API level response to CompactLevelData
- */
-function convertApiLevelToCompactData(level: LevelResponse): CompactLevelData {
-  return {
-    id: level.slug,
-    name: level.name,
-    description: level.description || undefined,
-    gameType: level.game_type as 'maze' | 'turtle' | undefined,
-    grid: level.grid as unknown as string[] | undefined,
-    availableCommands: level.available_commands as unknown as string[] | undefined,
-    availableSensors: level.available_sensors as unknown as string[] | undefined,
-    availableBlocks: level.available_blocks as unknown as string[] | undefined,
-    teachingGoal: level.teaching_goal || undefined,
-    hints: level.hints as unknown as string[] | undefined,
-    // win_condition/fail_condition should be strings - don't double-stringify
-    winCondition:
-      typeof level.win_condition === 'string'
-        ? level.win_condition
-        : level.win_condition
-          ? JSON.stringify(level.win_condition)
-          : undefined,
-    failCondition:
-      typeof level.fail_condition === 'string'
-        ? level.fail_condition
-        : level.fail_condition
-          ? JSON.stringify(level.fail_condition)
-          : undefined,
-    expectedCode: level.expected_code || undefined,
-  };
-}
-
-/**
- * Convert CompactLevelData to API level create format
- */
-function convertCompactDataToApiLevel(data: CompactLevelData, sortOrder: number): LevelCreate {
-  return {
-    slug: data.id || data.name.toLowerCase().replace(/\s+/g, '-'),
-    name: data.name,
-    description: data.description,
-    game_type: data.gameType === 'maze' ? GameType.MAZE : GameType.TURTLE,
-    grid: data.grid as unknown as Record<string, unknown>,
-    available_commands: data.availableCommands,
-    available_sensors: data.availableSensors,
-    available_blocks: data.availableBlocks,
-    teaching_goal: data.teachingGoal,
-    hints: data.hints,
-    win_condition: data.winCondition ? JSON.parse(data.winCondition) : undefined,
-    fail_condition: data.failCondition ? JSON.parse(data.failCondition) : undefined,
-    expected_code: data.expectedCode,
-    sort_order: sortOrder,
-  };
-}
-
-/**
- * Convert API adventure response to CustomAdventure
- */
-function convertApiAdventureToCustom(
-  adventure: AdventureResponse,
-  levels: LevelResponse[]
-): CustomAdventure {
-  return {
-    id: String(adventure.id),
-    userId: String(adventure.app_id), // Use app_id as userId
-    name: adventure.name,
-    description: adventure.description || undefined,
-    icon: adventure.icon || '📚',
-    gameType: adventure.game_type as 'maze',
-    levels: levels.map((l) => ({
-      id: String(l.id),
-      data: convertApiLevelToCompactData(l),
-      createdAt: new Date(l.created_at).getTime(),
-      updatedAt: new Date(l.created_at).getTime(), // SDK doesn't have updated_at
-    })),
-    createdAt: new Date(adventure.created_at).getTime(),
-    updatedAt: new Date(adventure.created_at).getTime(),
   };
 }
 
@@ -380,127 +293,24 @@ export class ApiStorageProvider implements StorageProvider {
   }
 
   // ============================================
-  // Teacher Content Methods (using unified adventureApi)
+  // Teacher Content Methods (deprecated - adventures now in TypeScript)
   // ============================================
 
   async getTeacherContent(): Promise<TeacherContent> {
-    // Returns ALL user-created adventures
-    try {
-      // Get all adventures
-      const adventures = await adventureApi.list(false); // Include unpublished
-
-      // Fetch full level data for each adventure
-      const adventuresWithLevels = await Promise.all(
-        adventures.map(async (adventure) => {
-          const levels = await adventureApi.listLevels(adventure.id);
-          return {
-            id: String(adventure.id),
-            userId: String(adventure.app_id),
-            name: adventure.name,
-            description: adventure.description || undefined,
-            icon: adventure.icon || '📚',
-            gameType: adventure.game_type as 'maze',
-            levels: levels.map((l) => ({
-              id: String(l.id),
-              data: convertApiLevelToCompactData(l),
-              createdAt: new Date(l.created_at).getTime(),
-              updatedAt: new Date(l.created_at).getTime(),
-            })),
-            createdAt: new Date(adventure.created_at).getTime(),
-            updatedAt: new Date(adventure.created_at).getTime(),
-          };
-        })
-      );
-
-      return {
-        adventures: adventuresWithLevels,
-      };
-    } catch {
-      return { adventures: [] };
-    }
+    // Custom adventures are no longer supported via API
+    return { adventures: [] };
   }
 
-  async saveCustomAdventure(adventure: CustomAdventure): Promise<CustomAdventure> {
-    const adventureId = parseInt(adventure.id, 10);
-
-    // Check if adventure exists (id is a number) or is new (id is a string like "new-xxx")
-    if (!isNaN(adventureId)) {
-      // Update existing adventure metadata
-      await adventureApi.update(adventureId, {
-        name: adventure.name,
-        description: adventure.description,
-        icon: adventure.icon,
-        game_type: adventure.gameType === 'maze' ? GameType.MAZE : GameType.TURTLE,
-      });
-
-      // Delete existing levels and recreate them
-      const existingLevels = await adventureApi.listLevels(adventureId);
-      for (const level of existingLevels) {
-        await adventureApi.deleteLevel(adventureId, level.id);
-      }
-
-      // Create new levels
-      for (let i = 0; i < adventure.levels.length; i++) {
-        await adventureApi.createLevel(
-          adventureId,
-          convertCompactDataToApiLevel(adventure.levels[i].data, i)
-        );
-      }
-
-      // Fetch updated adventure
-      const [updatedAdventure, levels] = await Promise.all([
-        adventureApi.get(adventureId),
-        adventureApi.listLevels(adventureId),
-      ]);
-
-      return convertApiAdventureToCustom(updatedAdventure, levels);
-    } else {
-      // Create new adventure
-      const response = await adventureApi.create({
-        slug: adventure.name.toLowerCase().replace(/\s+/g, '-'),
-        name: adventure.name,
-        description: adventure.description,
-        icon: adventure.icon,
-        game_type: adventure.gameType === 'maze' ? GameType.MAZE : GameType.TURTLE,
-      });
-
-      // Create levels
-      for (let i = 0; i < adventure.levels.length; i++) {
-        await adventureApi.createLevel(
-          response.id,
-          convertCompactDataToApiLevel(adventure.levels[i].data, i)
-        );
-      }
-
-      // Fetch the full level data
-      const levels = await adventureApi.listLevels(response.id);
-
-      return convertApiAdventureToCustom(response, levels);
-    }
+  async saveCustomAdventure(_adventure: CustomAdventure): Promise<CustomAdventure> {
+    throw new Error('Custom adventures are no longer supported. Adventures are now managed in TypeScript.');
   }
 
-  async deleteCustomAdventure(adventureId: string): Promise<void> {
-    const id = parseInt(adventureId, 10);
-    if (!isNaN(id)) {
-      await adventureApi.delete(id);
-    }
+  async deleteCustomAdventure(_adventureId: string): Promise<void> {
+    throw new Error('Custom adventures are no longer supported. Adventures are now managed in TypeScript.');
   }
 
-  async getCustomAdventure(adventureId: string): Promise<CustomAdventure | null> {
-    const id = parseInt(adventureId, 10);
-    if (isNaN(id)) {
-      return null;
-    }
-
-    try {
-      const [adventure, levels] = await Promise.all([
-        adventureApi.get(id),
-        adventureApi.listLevels(id),
-      ]);
-      return convertApiAdventureToCustom(adventure, levels);
-    } catch {
-      return null;
-    }
+  async getCustomAdventure(_adventureId: string): Promise<CustomAdventure | null> {
+    return null;
   }
 
   // ============================================

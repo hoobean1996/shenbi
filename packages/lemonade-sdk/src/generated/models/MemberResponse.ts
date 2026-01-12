@@ -2,14 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { OrgRole } from './OrgRole';
 export type MemberResponse = {
     id: number;
-    classroom_id: number;
-    student_id: number;
-    status: string;
+    user_id: number;
+    role: OrgRole;
     joined_at: string;
-    left_at: (string | null);
-    display_name?: (string | null);
-    avatar_url?: (string | null);
+    user_email?: (string | null);
+    user_name?: (string | null);
 };
 

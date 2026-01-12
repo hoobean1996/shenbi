@@ -9,3 +9,4 @@ export type ProgressCreate = {
     completed?: boolean;
     code?: (string | null);
 };
+

@@ -5,8 +5,7 @@
 export type AssignmentCreate = {
     title: string;
     description?: (string | null);
-    adventure_id?: (number | null);
-    level_ids?: (Array<number> | null);
+    level_ids?: (Array<string> | null);
     max_points?: number;
     due_date?: (string | null);
 };

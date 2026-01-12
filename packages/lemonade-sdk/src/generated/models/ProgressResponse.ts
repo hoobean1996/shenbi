@@ -14,3 +14,4 @@ export type ProgressResponse = {
     first_completed_at: (string | null);
     last_attempt_at: (string | null);
 };
+

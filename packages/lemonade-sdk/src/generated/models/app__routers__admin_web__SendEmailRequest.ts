@@ -2,7 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type app__routers__admin_web__GoogleAuthRequest = {
-    id_token: string;
+export type app__routers__admin_web__SendEmailRequest = {
+    subject: string;
+    body: string;
 };
 

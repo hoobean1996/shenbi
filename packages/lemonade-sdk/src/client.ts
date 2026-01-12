@@ -29,7 +29,6 @@ import { StorageService } from './generated/services/StorageService';
 import { EmailService } from './generated/services/EmailService';
 import { GoogleDriveService } from './generated/services/GoogleDriveService';
 import { GoogleWorkspaceService } from './generated/services/GoogleWorkspaceService';
-import { ShenbiAdventuresService } from './generated/services/ShenbiAdventuresService';
 import { ShenbiProgressService } from './generated/services/ShenbiProgressService';
 import { ShenbiAchievementsService } from './generated/services/ShenbiAchievementsService';
 import { ShenbiClassroomsService } from './generated/services/ShenbiClassroomsService';
@@ -40,9 +39,9 @@ import { ShenbiBattlesService } from './generated/services/ShenbiBattlesService'
 import { ShenbiLiveSessionsService } from './generated/services/ShenbiLiveSessionsService';
 import type { UserCreate, UserLogin, DeviceLogin, GoogleAuthRequest, RefreshTokenRequest, SwitchOrgRequest } from './index';
 import type { OrganizationCreate, OrganizationUpdate, InvitationCreate, InvitationAccept, MemberRoleUpdate } from './index';
-import type { EmailTemplateCreate, EmailTemplateUpdate, SendEmailRequest, SendTemplateEmailRequest, EmailPreviewRequest } from './index';
+import type { EmailTemplateCreate, EmailTemplateUpdate, SendEmailRequest, EmailPreviewRequest } from './index';
+import type { app__schemas__email__SendTemplateEmailRequest } from './generated/models/app__schemas__email__SendTemplateEmailRequest';
 import type { JsonUploadRequest, ExportFileRequest, ShareFileRequest } from './index';
-import type { AdventureCreate, AdventureUpdate, LevelCreate, LevelUpdate } from './index';
 import type { ProgressCreate, AchievementCreate } from './index';
 import type { ClassroomCreate, ClassroomUpdate, JoinClassroomRequest, AssignmentCreate, AssignmentUpdate, SubmissionGrade } from './index';
 import type { BattleSessionCreate, ClassroomSessionCreate } from './index';
@@ -272,7 +271,7 @@ export class LemonadeClient {
       send: (data: SendEmailRequest) =>
         EmailService.sendEmailApiV1EmailSendPost(apiKey, data),
 
-      sendTemplate: (data: SendTemplateEmailRequest) =>
+      sendTemplate: (data: app__schemas__email__SendTemplateEmailRequest) =>
         EmailService.sendTemplateEmailApiV1EmailSendTemplatePost(apiKey, data),
 
       preview: (data: EmailPreviewRequest) =>
@@ -385,43 +384,6 @@ export class LemonadeClient {
 
       getStats: () =>
         ShenbiProfileService.getStatsApiV1ShenbiProfileStatsGet(apiKey),
-    };
-  }
-
-  // ============================================================================
-  // Shenbi Adventures Service
-  // ============================================================================
-
-  get shenbiAdventures() {
-    const apiKey = this.apiKey;
-    return {
-      list: (publishedOnly: boolean = true, gameType?: string) =>
-        ShenbiAdventuresService.listAdventuresApiV1ShenbiAdventuresGet(apiKey, publishedOnly, gameType),
-
-      get: (adventureId: number) =>
-        ShenbiAdventuresService.getAdventureApiV1ShenbiAdventuresAdventureIdGet(adventureId, apiKey),
-
-      create: (data: AdventureCreate) =>
-        ShenbiAdventuresService.createAdventureApiV1ShenbiAdventuresPost(apiKey, data),
-
-      update: (adventureId: number, data: AdventureUpdate) =>
-        ShenbiAdventuresService.updateAdventureApiV1ShenbiAdventuresAdventureIdPut(adventureId, apiKey, data),
-
-      delete: (adventureId: number) =>
-        ShenbiAdventuresService.deleteAdventureApiV1ShenbiAdventuresAdventureIdDelete(adventureId, apiKey),
-
-      // Levels
-      listLevels: (adventureId: number) =>
-        ShenbiAdventuresService.listLevelsApiV1ShenbiAdventuresAdventureIdLevelsGet(adventureId, apiKey),
-
-      createLevel: (adventureId: number, data: LevelCreate) =>
-        ShenbiAdventuresService.createLevelApiV1ShenbiAdventuresAdventureIdLevelsPost(adventureId, apiKey, data),
-
-      updateLevel: (adventureId: number, levelId: number, data: LevelUpdate) =>
-        ShenbiAdventuresService.updateLevelApiV1ShenbiAdventuresAdventureIdLevelsLevelIdPut(adventureId, levelId, apiKey, data),
-
-      deleteLevel: (adventureId: number, levelId: number) =>
-        ShenbiAdventuresService.deleteLevelApiV1ShenbiAdventuresAdventureIdLevelsLevelIdDelete(adventureId, levelId, apiKey),
     };
   }
 

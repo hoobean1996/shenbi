@@ -7,7 +7,6 @@ export type AssignmentResponse = {
     classroom_id: number;
     title: string;
     description: (string | null);
-    adventure_id: (number | null);
     level_ids: null;
     max_points: number;
     due_date: (string | null);

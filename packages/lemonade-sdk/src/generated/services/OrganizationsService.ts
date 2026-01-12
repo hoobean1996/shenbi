@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { app__schemas__organization__MemberResponse } from '../models/app__schemas__organization__MemberResponse';
 import type { CheckoutSessionResponse } from '../models/CheckoutSessionResponse';
 import type { InvitationAccept } from '../models/InvitationAccept';
 import type { InvitationCreate } from '../models/InvitationCreate';
 import type { InvitationResponse } from '../models/InvitationResponse';
+import type { MemberResponse } from '../models/MemberResponse';
 import type { MemberRoleUpdate } from '../models/MemberRoleUpdate';
 import type { OrganizationCreate } from '../models/OrganizationCreate';
 import type { OrganizationDetailResponse } from '../models/OrganizationDetailResponse';
@@ -135,12 +135,12 @@ export class OrganizationsService {
      * List Members
      * List all members of the organization.
      * @param xApiKey
-     * @returns app__schemas__organization__MemberResponse Successful Response
+     * @returns MemberResponse Successful Response
      * @throws ApiError
      */
     public static listMembersApiV1OrganizationsCurrentMembersGet(
         xApiKey: string,
-    ): CancelablePromise<Array<app__schemas__organization__MemberResponse>> {
+    ): CancelablePromise<Array<MemberResponse>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/organizations/current/members',
@@ -158,14 +158,14 @@ export class OrganizationsService {
      * @param userId
      * @param xApiKey
      * @param requestBody
-     * @returns app__schemas__organization__MemberResponse Successful Response
+     * @returns MemberResponse Successful Response
      * @throws ApiError
      */
     public static updateMemberRoleApiV1OrganizationsCurrentMembersUserIdPatch(
         userId: number,
         xApiKey: string,
         requestBody: MemberRoleUpdate,
-    ): CancelablePromise<app__schemas__organization__MemberResponse> {
+    ): CancelablePromise<MemberResponse> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/v1/organizations/current/members/{user_id}',

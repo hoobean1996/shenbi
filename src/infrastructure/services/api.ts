@@ -8,17 +8,9 @@
 import { getLemonClient } from '../../features/shared/contexts/AuthContext';
 
 // Re-export SDK types for use throughout the app
-export { GameType, AssignmentStatus } from '@lemonade/sdk';
+export { AssignmentStatus } from '@lemonade/sdk';
 
 export type {
-  // Adventure types
-  AdventureListResponse,
-  AdventureResponse,
-  AdventureCreate,
-  AdventureUpdate,
-  LevelResponse,
-  LevelCreate,
-  LevelUpdate,
   // Progress types
   ProgressResponse,
   ProgressCreate,
@@ -117,45 +109,6 @@ async function wrapSdkCall<T>(fn: () => Promise<T>): Promise<T> {
     throw error;
   }
 }
-
-/**
- * Adventure API
- */
-export const adventureApi = {
-  list: (publishedOnly = true, gameType?: string) =>
-    wrapSdkCall(() => getLemonClient().shenbiAdventures.list(publishedOnly, gameType)),
-
-  get: (adventureId: number) =>
-    wrapSdkCall(() => getLemonClient().shenbiAdventures.get(adventureId)),
-
-  create: (data: Parameters<ReturnType<typeof getLemonClient>['shenbiAdventures']['create']>[0]) =>
-    wrapSdkCall(() => getLemonClient().shenbiAdventures.create(data)),
-
-  update: (
-    adventureId: number,
-    data: Parameters<ReturnType<typeof getLemonClient>['shenbiAdventures']['update']>[1]
-  ) => wrapSdkCall(() => getLemonClient().shenbiAdventures.update(adventureId, data)),
-
-  delete: (adventureId: number) =>
-    wrapSdkCall(() => getLemonClient().shenbiAdventures.delete(adventureId)),
-
-  listLevels: (adventureId: number) =>
-    wrapSdkCall(() => getLemonClient().shenbiAdventures.listLevels(adventureId)),
-
-  createLevel: (
-    adventureId: number,
-    data: Parameters<ReturnType<typeof getLemonClient>['shenbiAdventures']['createLevel']>[1]
-  ) => wrapSdkCall(() => getLemonClient().shenbiAdventures.createLevel(adventureId, data)),
-
-  updateLevel: (
-    adventureId: number,
-    levelId: number,
-    data: Parameters<ReturnType<typeof getLemonClient>['shenbiAdventures']['updateLevel']>[2]
-  ) => wrapSdkCall(() => getLemonClient().shenbiAdventures.updateLevel(adventureId, levelId, data)),
-
-  deleteLevel: (adventureId: number, levelId: number) =>
-    wrapSdkCall(() => getLemonClient().shenbiAdventures.deleteLevel(adventureId, levelId)),
-};
 
 /**
  * Profile API

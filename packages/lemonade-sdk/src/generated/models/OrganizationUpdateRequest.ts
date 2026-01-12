@@ -2,7 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type GoogleAuthRequest = {
-    id_token: string;
+export type OrganizationUpdateRequest = {
+    name: string;
+    slug: string;
+    description?: (string | null);
 };
 

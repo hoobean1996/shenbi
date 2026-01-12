@@ -2,18 +2,13 @@
  * Assignment Form Modal
  *
  * Modal for creating or editing an assignment.
+ * Now uses local TypeScript adventures instead of API.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { X, FileText, Loader2, Calendar } from 'lucide-react';
-import {
-  classroomApi,
-  adventureApi,
-  AssignmentResponse,
-  AdventureListResponse,
-  ApiError,
-} from '../../../../infrastructure/services/api';
-import LevelPicker from './LevelPicker';
+import { classroomApi, AssignmentResponse, ApiError } from '../../../../infrastructure/services/api';
+import { loadLocalAdventures } from '../../../../infrastructure/levels';
 import { error as logError } from '../../../../infrastructure/logging';
 
 interface AssignmentFormModalProps {
@@ -35,31 +30,23 @@ export default function AssignmentFormModal({
 
   const [title, setTitle] = useState(assignment?.title || '');
   const [description, setDescription] = useState('');
-  const [adventureId, setAdventureId] = useState<number | null>(null);
-  const [levelIds, setLevelIds] = useState<number[]>([]);
+  const [selectedAdventureId, setSelectedAdventureId] = useState<string | null>(null);
+  const [selectedLevelIds, setSelectedLevelIds] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState('');
   const [maxPoints, setMaxPoints] = useState(100);
 
-  const [adventures, setAdventures] = useState<AdventureListResponse[]>([]);
-  const [loadingAdventures, setLoadingAdventures] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load adventures
-  useEffect(() => {
-    async function loadAdventures() {
-      try {
-        const response = await adventureApi.list(true);
-        setAdventures(response);
-      } catch (err) {
-        logError('Failed to load adventures', err, undefined, 'AssignmentFormModal');
-      } finally {
-        setLoadingAdventures(false);
-      }
-    }
-    loadAdventures();
-  }, []);
+  // Load local adventures (synchronous)
+  const adventures = useMemo(() => loadLocalAdventures().adventures, []);
+
+  // Get selected adventure
+  const selectedAdventure = useMemo(
+    () => adventures.find((a) => a.id === selectedAdventureId),
+    [adventures, selectedAdventureId]
+  );
 
   // Load assignment details if editing
   useEffect(() => {
@@ -69,11 +56,20 @@ export default function AssignmentFormModal({
         setLoadingDetails(true);
         const details = await classroomApi.getAssignment(classroomId, assignment.id);
         setDescription(details.description || '');
-        setAdventureId(details.adventure_id);
-        setLevelIds(details.level_ids || []);
+        // level_ids are now stored as "adventure_slug/level_slug" strings
+        // Cast to string[] since SDK types are incorrect
+        const levelIds = (details.level_ids as unknown as string[]) || [];
+        if (levelIds.length > 0) {
+          // Extract adventure ID from first level
+          const firstLevelId = levelIds[0];
+          if (typeof firstLevelId === 'string' && firstLevelId.includes('/')) {
+            const [advId] = firstLevelId.split('/');
+            setSelectedAdventureId(advId);
+          }
+          setSelectedLevelIds(levelIds);
+        }
         setMaxPoints(details.max_points);
         if (details.due_date) {
-          // Format for datetime-local input
           const date = new Date(details.due_date);
           setDueDate(date.toISOString().slice(0, 16));
         }
@@ -99,12 +95,12 @@ export default function AssignmentFormModal({
       return;
     }
 
-    if (!adventureId) {
+    if (!selectedAdventureId) {
       setError('Please select an adventure');
       return;
     }
 
-    if (levelIds.length === 0) {
+    if (selectedLevelIds.length === 0) {
       setError('Please select at least one level');
       return;
     }
@@ -116,8 +112,7 @@ export default function AssignmentFormModal({
       const data = {
         title: title.trim(),
         description: description.trim() || undefined,
-        adventure_id: adventureId,
-        level_ids: levelIds,
+        level_ids: selectedLevelIds, // Now stored as "adventure_slug/level_slug"
         due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
         max_points: maxPoints,
       };
@@ -201,37 +196,63 @@ export default function AssignmentFormModal({
               {/* Adventure Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Adventure *</label>
-                {loadingAdventures ? (
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Loading adventures...
-                  </div>
-                ) : (
-                  <select
-                    value={adventureId || ''}
-                    onChange={(e) => {
-                      setAdventureId(e.target.value ? parseInt(e.target.value) : null);
-                      setLevelIds([]); // Reset level selection
-                    }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#4a7a2a] focus:border-[#4a7a2a] outline-none"
-                  >
-                    <option value="">Select an adventure...</option>
-                    {adventures.map((adv) => (
-                      <option key={adv.id} value={adv.id}>
-                        {adv.icon} {adv.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
+                <select
+                  value={selectedAdventureId || ''}
+                  onChange={(e) => {
+                    setSelectedAdventureId(e.target.value || null);
+                    setSelectedLevelIds([]); // Reset level selection
+                  }}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#4a7a2a] focus:border-[#4a7a2a] outline-none"
+                >
+                  <option value="">Select an adventure...</option>
+                  {adventures.map((adv) => (
+                    <option key={adv.id} value={adv.id}>
+                      {adv.icon} {adv.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* Level Picker */}
-              {adventureId && (
-                <LevelPicker
-                  adventureId={adventureId}
-                  selectedLevelIds={levelIds}
-                  onSelectionChange={setLevelIds}
-                />
+              {/* Level Selection */}
+              {selectedAdventure && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Levels * ({selectedLevelIds.length} selected)
+                  </label>
+                  <div className="border border-gray-300 rounded-xl p-3 max-h-48 overflow-y-auto space-y-2">
+                    {selectedAdventure.levels.map((level) => {
+                      const levelId = `${selectedAdventure.id}/${level.id}`;
+                      const isSelected = selectedLevelIds.includes(levelId);
+                      return (
+                        <label
+                          key={level.id}
+                          className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                            isSelected ? 'bg-[#e8f5e0]' : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedLevelIds([...selectedLevelIds, levelId]);
+                              } else {
+                                setSelectedLevelIds(selectedLevelIds.filter((id) => id !== levelId));
+                              }
+                            }}
+                            className="w-4 h-4 text-[#4a7a2a] rounded focus:ring-[#4a7a2a]"
+                          />
+                          <div>
+                            <div className="font-medium text-gray-800">{level.name}</div>
+                            {level.description && (
+                              <div className="text-sm text-gray-500">{level.description}</div>
+                            )}
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
 
               {/* Due Date & Max Points */}

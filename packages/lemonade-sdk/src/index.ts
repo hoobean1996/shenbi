@@ -13,8 +13,6 @@ export { OpenAPI } from './generated/core/OpenAPI';
 export type { OpenAPIConfig } from './generated/core/OpenAPI';
 
 // Models
-export type { app__routers__admin_web__GoogleAuthRequest } from './generated/models/app__routers__admin_web__GoogleAuthRequest';
-export type { app__schemas__organization__MemberResponse } from './generated/models/app__schemas__organization__MemberResponse';
 export type { AppCreate } from './generated/models/AppCreate';
 export type { AppResponse } from './generated/models/AppResponse';
 export { BillingInterval } from './generated/models/BillingInterval';
@@ -46,6 +44,8 @@ export type { InvitationResponse } from './generated/models/InvitationResponse';
 export { InvitationStatus } from './generated/models/InvitationStatus';
 export type { JsonUploadRequest } from './generated/models/JsonUploadRequest';
 export type { MemberResponse } from './generated/models/MemberResponse';
+// Shenbi-specific member response (for classroom members)
+export type { app__schemas__shenbi__classroom__MemberResponse as ShenbiMemberResponse } from './generated/models/app__schemas__shenbi__classroom__MemberResponse';
 export type { MemberRoleUpdate } from './generated/models/MemberRoleUpdate';
 export type { OrganizationCreate } from './generated/models/OrganizationCreate';
 export type { OrganizationDetailResponse } from './generated/models/OrganizationDetailResponse';
@@ -88,7 +88,6 @@ export { SubscriptionsService } from './generated/services/SubscriptionsService'
 
 // Shenbi Services
 export { ShenbiAchievementsService } from './generated/services/ShenbiAchievementsService';
-export { ShenbiAdventuresService } from './generated/services/ShenbiAdventuresService';
 export { ShenbiBattlesService } from './generated/services/ShenbiBattlesService';
 export { ShenbiClassroomsService } from './generated/services/ShenbiClassroomsService';
 export { ShenbiLiveSessionsService } from './generated/services/ShenbiLiveSessionsService';
@@ -100,10 +99,6 @@ export { ShenbiSettingsService } from './generated/services/ShenbiSettingsServic
 // Shenbi Models
 export type { AchievementCreate } from './generated/models/AchievementCreate';
 export type { AchievementResponse } from './generated/models/AchievementResponse';
-export type { AdventureCreate } from './generated/models/AdventureCreate';
-export type { AdventureListResponse } from './generated/models/AdventureListResponse';
-export type { AdventureResponse } from './generated/models/AdventureResponse';
-export type { AdventureUpdate } from './generated/models/AdventureUpdate';
 export type { AssignmentCreate } from './generated/models/AssignmentCreate';
 export type { AssignmentResponse } from './generated/models/AssignmentResponse';
 export { AssignmentStatus } from './generated/models/AssignmentStatus';
@@ -138,12 +133,8 @@ export type { ClassroomResponse } from './generated/models/ClassroomResponse';
 export type { ClassroomSessionCreate } from './generated/models/ClassroomSessionCreate';
 export type { ClassroomSessionResponse } from './generated/models/ClassroomSessionResponse';
 export type { ClassroomUpdate } from './generated/models/ClassroomUpdate';
-export { GameType } from './generated/models/GameType';
 export type { GradebookEntry } from './generated/models/GradebookEntry';
 export type { JoinClassroomRequest } from './generated/models/JoinClassroomRequest';
-export type { LevelCreate } from './generated/models/LevelCreate';
-export type { LevelResponse } from './generated/models/LevelResponse';
-export type { LevelUpdate } from './generated/models/LevelUpdate';
 export type { ProfileResponse } from './generated/models/ProfileResponse';
 export type { ProfileUpdate } from './generated/models/ProfileUpdate';
 export type { ProgressCreate } from './generated/models/ProgressCreate';

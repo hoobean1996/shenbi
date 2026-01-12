@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { app__schemas__shenbi__classroom__MemberResponse } from '../models/app__schemas__shenbi__classroom__MemberResponse';
 import type { AssignmentCreate } from '../models/AssignmentCreate';
 import type { AssignmentResponse } from '../models/AssignmentResponse';
 import type { AssignmentUpdate } from '../models/AssignmentUpdate';
@@ -21,7 +22,6 @@ import type { LiveSessionSetLevelResponse } from '../models/LiveSessionSetLevelR
 import type { LiveSessionStartResponse } from '../models/LiveSessionStartResponse';
 import type { LiveSessionStudentResponse } from '../models/LiveSessionStudentResponse';
 import type { LiveSessionUpdateProgress } from '../models/LiveSessionUpdateProgress';
-import type { MemberResponse } from '../models/MemberResponse';
 import type { SubmissionGrade } from '../models/SubmissionGrade';
 import type { SubmissionResponse } from '../models/SubmissionResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -527,13 +527,13 @@ export class ShenbiClassroomsService {
      * List classroom members.
      * @param classroomId
      * @param xApiKey
-     * @returns MemberResponse Successful Response
+     * @returns app__schemas__shenbi__classroom__MemberResponse Successful Response
      * @throws ApiError
      */
     public static listMembersApiV1ShenbiClassroomsClassroomIdMembersGet(
         classroomId: number,
         xApiKey: string,
-    ): CancelablePromise<Array<MemberResponse>> {
+    ): CancelablePromise<Array<app__schemas__shenbi__classroom__MemberResponse>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/shenbi/classrooms/{classroom_id}/members',

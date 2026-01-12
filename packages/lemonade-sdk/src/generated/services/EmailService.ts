@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { app__schemas__email__SendTemplateEmailRequest } from '../models/app__schemas__email__SendTemplateEmailRequest';
 import type { EmailPreviewRequest } from '../models/EmailPreviewRequest';
 import type { EmailPreviewResponse } from '../models/EmailPreviewResponse';
 import type { EmailResponse } from '../models/EmailResponse';
@@ -9,7 +10,6 @@ import type { EmailTemplateCreate } from '../models/EmailTemplateCreate';
 import type { EmailTemplateResponse } from '../models/EmailTemplateResponse';
 import type { EmailTemplateUpdate } from '../models/EmailTemplateUpdate';
 import type { SendEmailRequest } from '../models/SendEmailRequest';
-import type { SendTemplateEmailRequest } from '../models/SendTemplateEmailRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -182,7 +182,7 @@ export class EmailService {
      */
     public static sendTemplateEmailApiV1EmailSendTemplatePost(
         xApiKey: string,
-        requestBody: SendTemplateEmailRequest,
+        requestBody: app__schemas__email__SendTemplateEmailRequest,
     ): CancelablePromise<EmailResponse> {
         return __request(OpenAPI, {
             method: 'POST',

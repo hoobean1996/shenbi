@@ -6,9 +6,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Users, UserMinus, Loader2, Search, UserCheck, UserX, Clock } from 'lucide-react';
-import { classroomApi, MemberResponse, ApiError } from '../../../../infrastructure/services/api';
+import { classroomApi, ApiError } from '../../../../infrastructure/services/api';
+import type { ShenbiMemberResponse } from '@lemonade/sdk';
 
-// Local type for membership status (SDK doesn't export this)
+// Local type for membership status
 type MembershipStatus = 'active' | 'inactive' | 'removed' | 'left';
 
 interface MemberListProps {
@@ -17,7 +18,7 @@ interface MemberListProps {
 }
 
 export default function MemberList({ classroomId, onMemberCountChange }: MemberListProps) {
-  const [members, setMembers] = useState<MemberResponse[]>([]);
+  const [members, setMembers] = useState<ShenbiMemberResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,9 +30,9 @@ export default function MemberList({ classroomId, onMemberCountChange }: MemberL
       setLoading(true);
       setError(null);
       const response = await classroomApi.listMembers(classroomId);
-      setMembers(response);
+      setMembers(response as ShenbiMemberResponse[]);
       // Count only active members
-      const activeCount = response.filter((m: MemberResponse) => m.status === 'active').length;
+      const activeCount = response.filter((m) => m.status === 'active').length;
       onMemberCountChange?.(activeCount);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -48,7 +49,7 @@ export default function MemberList({ classroomId, onMemberCountChange }: MemberL
     loadMembers();
   }, [loadMembers]);
 
-  const handleRemove = async (member: MemberResponse) => {
+  const handleRemove = async (member: ShenbiMemberResponse) => {
     const name = member.display_name || 'this student';
     if (!confirm(`Remove ${name} from the classroom?`)) {
       return;
