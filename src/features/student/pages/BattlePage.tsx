@@ -13,7 +13,7 @@ import { useBattle, BattleStatus } from '../../../core/battle';
 import { BattleLobby, BattleCountdown } from '../components/battle';
 import { MazeAdventure } from '../components/adventures';
 import { LevelDefinition } from '../../../core/engine';
-import { parseLevel, loadAdventuresFromApi } from '../../../infrastructure/levels/loader';
+import { parseLevel, loadLocalAdventures } from '../../../infrastructure/levels/loader';
 import { useProfile } from '../../../infrastructure/storage';
 import { useLanguage } from '../../../infrastructure/i18n';
 import { defaultTheme } from '../../../infrastructure/themes';
@@ -107,40 +107,36 @@ export default function BattlePage() {
 
   const uiStatus = getUIStatus(battleState.status);
 
-  // Load maze levels on mount or when language changes
+  // Load maze levels on mount
   useEffect(() => {
-    const loadMazeLevels = async () => {
-      setIsLoadingLevels(true);
-      setLoadError(null);
-      try {
-        const { adventures } = await loadAdventuresFromApi(language);
-        const levels: LevelDefinition[] = [];
+    setIsLoadingLevels(true);
+    setLoadError(null);
+    try {
+      const { adventures } = loadLocalAdventures();
+      const levels: LevelDefinition[] = [];
 
-        for (const adventure of adventures) {
-          // Only include maze-type adventures (or adventures without explicit gameType)
-          if (!adventure.gameType || adventure.gameType === 'maze') {
-            // Filter to levels that have grid (new format) or entities (old format)
-            const mazeLevelsFromAdventure = adventure.levels.filter(
-              (l: LevelDefinition) => l.grid && l.grid.length > 0
-            );
-            levels.push(...mazeLevelsFromAdventure);
-          }
+      for (const adventure of adventures) {
+        // Only include maze-type adventures (or adventures without explicit gameType)
+        if (!adventure.gameType || adventure.gameType === 'maze') {
+          // Filter to levels that have grid (new format) or entities (old format)
+          const mazeLevelsFromAdventure = adventure.levels.filter(
+            (l: LevelDefinition) => l.grid && l.grid.length > 0
+          );
+          levels.push(...mazeLevelsFromAdventure);
         }
-
-        // Add the default battle level as first option
-        const defaultParsed = parseLevel(DEFAULT_BATTLE_LEVEL);
-        setMazeLevels([defaultParsed, ...levels]);
-        setSelectedLevel(defaultParsed);
-      } catch (err) {
-        logError('Failed to load levels', err, undefined, 'BattlePage');
-        setLoadError(err instanceof Error ? err.message : 'Failed to load levels');
-      } finally {
-        setIsLoadingLevels(false);
       }
-    };
 
-    loadMazeLevels();
-  }, [language]);
+      // Add the default battle level as first option
+      const defaultParsed = parseLevel(DEFAULT_BATTLE_LEVEL);
+      setMazeLevels([defaultParsed, ...levels]);
+      setSelectedLevel(defaultParsed);
+    } catch (err) {
+      logError('Failed to load levels', err, undefined, 'BattlePage');
+      setLoadError(err instanceof Error ? err.message : 'Failed to load levels');
+    } finally {
+      setIsLoadingLevels(false);
+    }
+  }, []);
 
   // Auto-join when visiting /battle/:roomCode
   useEffect(() => {

@@ -12,7 +12,7 @@ import { TeacherLobby } from '../components/TeacherLobby';
 import { TeacherDashboard } from '../components/TeacherDashboard';
 import { LevelDefinition } from '../../../core/engine';
 import { useProfile } from '../../../infrastructure/storage';
-import { loadAdventuresFromApi } from '../../../infrastructure/levels';
+import { loadLocalAdventures } from '../../../infrastructure/levels';
 import { useLanguage } from '../../../infrastructure/i18n';
 import { ConnectionError } from '../../shared/components/ConnectionError';
 import { Loader2, Star, Home, RotateCcw } from 'lucide-react';
@@ -59,25 +59,22 @@ export default function TeacherClassroomPage() {
   // Local selected level (before starting session)
   const [selectedLevel, setSelectedLevel] = useState<LevelDefinition | null>(null);
 
-  // Load levels on mount
+  // Load levels on mount from local TypeScript files
   useEffect(() => {
-    async function loadLevels() {
-      setIsLoadingLevels(true);
-      setLoadError(null);
-      try {
-        const { adventures } = await loadAdventuresFromApi(language);
-        // Flatten all levels from all adventures
-        const allLevels = adventures.flatMap((a) => a.levels);
-        setLevels(allLevels);
-      } catch (err) {
-        logError('Failed to load levels', err, undefined, 'TeacherClassroomPage');
-        setLoadError(err instanceof Error ? err.message : 'Failed to load levels');
-      } finally {
-        setIsLoadingLevels(false);
-      }
+    setIsLoadingLevels(true);
+    setLoadError(null);
+    try {
+      const { adventures } = loadLocalAdventures();
+      // Flatten all levels from all adventures
+      const allLevels = adventures.flatMap((a) => a.levels);
+      setLevels(allLevels);
+    } catch (err) {
+      logError('Failed to load levels', err, undefined, 'TeacherClassroomPage');
+      setLoadError(err instanceof Error ? err.message : 'Failed to load levels');
+    } finally {
+      setIsLoadingLevels(false);
     }
-    loadLevels();
-  }, [language]);
+  }, []);
 
   // Auto-start session when coming from class detail page with classId
   useEffect(() => {

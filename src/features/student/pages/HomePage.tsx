@@ -16,34 +16,31 @@ import {
   BadgeCheck,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { loadAdventuresFromApi, ParsedAdventure } from '../../../infrastructure/levels';
+import { loadLocalAdventures, ParsedAdventure } from '../../../infrastructure/levels';
 import type { AdventureComplexity } from '../../../infrastructure/levels/types';
 import { useLanguage } from '../../../infrastructure/i18n';
 import { ConnectionError } from '../../shared/components/ConnectionError';
 import { error as logError } from '../../../infrastructure/logging';
 
 export default function HomePage() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [adventures, setAdventures] = useState<ParsedAdventure[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Load adventures on mount or when language changes
+  // Load adventures from local TypeScript files on mount
   useEffect(() => {
-    async function loadAdventures() {
-      try {
-        setIsLoading(true);
-        const { adventures: loadedAdventures } = await loadAdventuresFromApi(language);
-        setAdventures(loadedAdventures);
-      } catch (err) {
-        logError('Failed to load adventures', err, undefined, 'HomePage');
-        setLoadError(err instanceof Error ? err.message : 'Failed to load adventures');
-      } finally {
-        setIsLoading(false);
-      }
+    try {
+      setIsLoading(true);
+      const { adventures: loadedAdventures } = loadLocalAdventures();
+      setAdventures(loadedAdventures);
+    } catch (err) {
+      logError('Failed to load adventures', err, undefined, 'HomePage');
+      setLoadError(err instanceof Error ? err.message : 'Failed to load adventures');
+    } finally {
+      setIsLoading(false);
     }
-    loadAdventures();
-  }, [language]);
+  }, []);
 
   return (
     <div className="min-h-full bg-white">
