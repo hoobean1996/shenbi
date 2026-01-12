@@ -18,6 +18,10 @@ import { warn } from '../logging';
 
 // Import local TypeScript levels
 import { mazeLevels, type MazeLevelData } from '../../core/game/maze/levels';
+import {
+  turtleLevels,
+  type TurtleLevelData,
+} from '../../core/game/turtle/levels';
 
 /**
  * Parsed Adventure with full level definitions
@@ -319,6 +323,30 @@ function convertMazeLevelToDefinition(level: MazeLevelData): LevelDefinition {
 }
 
 /**
+ * Convert local TurtleLevelData to LevelDefinition
+ */
+function convertTurtleLevelToDefinition(level: TurtleLevelData): LevelDefinition {
+  return {
+    id: level.id,
+    name: level.name,
+    description: level.description,
+    width: 400,
+    height: 400,
+    grid: [],
+    entities: [],
+    availableCommands: level.availableCommands,
+    availableSensors: level.availableSensors,
+    availableBlocks: level.availableBlocks as BlockCategory[],
+    teachingGoal: level.teachingGoal,
+    hints: level.hints,
+    gameType: 'turtle',
+    winCondition: level.winCondition,
+    failCondition: level.failCondition,
+    requiredTier: level.requiredTier,
+  };
+}
+
+/**
  * Load all adventures from local TypeScript level files
  * This is the primary way to load levels - no API needed
  */
@@ -334,7 +362,18 @@ export function loadLocalAdventures(): { adventures: ParsedAdventure[] } {
     levels: mazeLevels.map(convertMazeLevelToDefinition),
   };
 
+  // Create turtle adventure from local levels
+  const turtleAdventure: ParsedAdventure = {
+    id: 'turtle-graphics',
+    name: 'Turtle Graphics Adventure',
+    description: 'Learn to draw amazing patterns with the turtle!',
+    icon: '🐢',
+    gameType: 'turtle',
+    complexity: 'beginner',
+    levels: turtleLevels.map(convertTurtleLevelToDefinition),
+  };
+
   return {
-    adventures: [mazeAdventure],
+    adventures: [mazeAdventure, turtleAdventure],
   };
 }
