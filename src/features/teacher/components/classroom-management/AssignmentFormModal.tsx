@@ -111,9 +111,9 @@ export default function AssignmentFormModal({
 
       const data = {
         title: title.trim(),
-        description: description.trim() || undefined,
-        level_ids: selectedLevelIds, // Now stored as "adventure_slug/level_slug"
-        due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
+        description: description.trim() || null,
+        level_ids: selectedLevelIds, // Stored as "adventure_slug/level_slug"
+        due_date: dueDate ? new Date(dueDate).toISOString() : null,
         max_points: maxPoints,
       };
 
@@ -265,6 +265,7 @@ export default function AssignmentFormModal({
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type="datetime-local"
+                      lang="en"
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#4a7a2a] focus:border-[#4a7a2a] outline-none"
