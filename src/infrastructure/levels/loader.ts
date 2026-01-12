@@ -277,7 +277,11 @@ export async function loadAdventuresFromApi(language?: Language): Promise<{
 /**
  * Convert local MazeLevelData to LevelDefinition
  */
-function convertMazeLevelToDefinition(level: MazeLevelData): LevelDefinition {
+function convertMazeLevelToDefinition(
+  level: MazeLevelData,
+  index: number,
+  adventureNumericId: number
+): LevelDefinition {
   const grid = level.grid;
   const height = grid.length;
   const width = Math.max(...grid.map((row) => row.length));
@@ -303,6 +307,8 @@ function convertMazeLevelToDefinition(level: MazeLevelData): LevelDefinition {
 
   return {
     id: level.id,
+    numericId: index + 1,
+    adventureNumericId,
     name: level.name,
     description: level.description,
     width,
@@ -325,9 +331,15 @@ function convertMazeLevelToDefinition(level: MazeLevelData): LevelDefinition {
 /**
  * Convert local TurtleLevelData to LevelDefinition
  */
-function convertTurtleLevelToDefinition(level: TurtleLevelData): LevelDefinition {
+function convertTurtleLevelToDefinition(
+  level: TurtleLevelData,
+  index: number,
+  adventureNumericId: number
+): LevelDefinition {
   return {
     id: level.id,
+    numericId: index + 1,
+    adventureNumericId,
     name: level.name,
     description: level.description,
     width: 400,
@@ -346,6 +358,10 @@ function convertTurtleLevelToDefinition(level: TurtleLevelData): LevelDefinition
   };
 }
 
+// Stable numeric IDs for local adventures (used for progress tracking)
+const MAZE_ADVENTURE_ID = 1;
+const TURTLE_ADVENTURE_ID = 2;
+
 /**
  * Load all adventures from local TypeScript level files
  * This is the primary way to load levels - no API needed
@@ -354,23 +370,29 @@ export function loadLocalAdventures(): { adventures: ParsedAdventure[] } {
   // Create maze adventure from local levels
   const mazeAdventure: ParsedAdventure = {
     id: 'robot-maze',
+    numericId: MAZE_ADVENTURE_ID,
     name: 'Robot Maze Adventure',
     description: 'Help the robot navigate through mazes!',
     icon: '🤖',
     gameType: 'maze',
     complexity: 'beginner',
-    levels: mazeLevels.map(convertMazeLevelToDefinition),
+    levels: mazeLevels.map((level, index) =>
+      convertMazeLevelToDefinition(level, index, MAZE_ADVENTURE_ID)
+    ),
   };
 
   // Create turtle adventure from local levels
   const turtleAdventure: ParsedAdventure = {
     id: 'turtle-graphics',
+    numericId: TURTLE_ADVENTURE_ID,
     name: 'Turtle Graphics Adventure',
     description: 'Learn to draw amazing patterns with the turtle!',
     icon: '🐢',
     gameType: 'turtle',
     complexity: 'beginner',
-    levels: turtleLevels.map(convertTurtleLevelToDefinition),
+    levels: turtleLevels.map((level, index) =>
+      convertTurtleLevelToDefinition(level, index, TURTLE_ADVENTURE_ID)
+    ),
   };
 
   return {
